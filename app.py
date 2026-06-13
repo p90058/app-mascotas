@@ -11,7 +11,7 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(
-    page_title=" Alerta Mascotas", 
+    page_title="🐾 Alerta Mascotas", 
     layout="wide", 
     page_icon="🐶",
     initial_sidebar_state="collapsed"
@@ -204,64 +204,66 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- COMPONENTE JAVASCRIPT PARA GEOLOCALIZACIÓN ---
+# --- COMPONENTE JAVASCRIPT PARA GEOLOCALIZACIÓN AUTOMÁTICA ---
 geo_html = """
-<div style="text-align: center; padding: 1rem;">
-    <button id="btn-geo" onclick="obtenerUbicacion()" style="
+<div id="geo-container" style="text-align: center; padding: 1rem;">
+    <div id="geo-status" style="font-weight: 600; margin: 1rem 0;"></div>
+    <div id="geo-coords" style="font-size: 0.9rem; color: #666; margin: 0.5rem 0;"></div>
+    <button id="btn-geo-retry" onclick="obtenerUbicacion()" style="
         background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
         color: white;
-        padding: 1rem 2rem;
+        padding: 0.75rem 1.5rem;
         border: none;
-        border-radius: 15px;
-        font-size: 1.2rem;
+        border-radius: 10px;
+        font-size: 1rem;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 4px 15px rgba(76,175,80,0.4);
-        margin: 1rem 0;
+        margin: 0.5rem;
+        display: none;
     ">
-        📍 OBTENER MI UBICACIÓN GPS
+        🔄 Reintentar GPS
     </button>
-    <div id="geo-status" style="margin-top: 1rem; font-weight: 600;"></div>
-    <div id="geo-coords" style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;"></div>
 </div>
 
 <script>
+// Ejecutar automáticamente al cargar
+window.onload = function() {
+    setTimeout(obtenerUbicacion, 1000);
+};
+
 function obtenerUbicacion() {
     const statusDiv = document.getElementById('geo-status');
     const coordsDiv = document.getElementById('geo-coords');
-    const btn = document.getElementById('btn-geo');
+    const btnRetry = document.getElementById('btn-geo-retry');
     
     if (!navigator.geolocation) {
         statusDiv.innerHTML = '<span style="color: #f44336;">❌ Tu navegador no soporta geolocalización</span>';
+        btnRetry.style.display = 'inline-block';
         return;
     }
     
-    statusDiv.innerHTML = '<span style="color: #2196F3;">⏳ Obteniendo ubicación...</span>';
-    btn.disabled = true;
-    btn.style.opacity = '0.6';
+    statusDiv.innerHTML = '<span style="color: #2196F3;">⏳ Obteniendo ubicación automáticamente...</span>';
     
     navigator.geolocation.getCurrentPosition(
         function(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             
-            statusDiv.innerHTML = '<span style="color: #4CAF50;">✅ ¡Ubicación obtenida!</span>';
-            coordsDiv.innerHTML = `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
+            statusDiv.innerHTML = '<span style="color: #4CAF50; font-size: 1.1rem;">✅ ¡Ubicación obtenida automáticamente!</span>';
+            coordsDiv.innerHTML = `<b>Lat:</b> ${lat.toFixed(6)}, <b>Lon:</b> ${lon.toFixed(6)}`;
+            btnRetry.style.display = 'none';
             
             // Enviar a Streamlit
             const streamlit = window.parent.document.querySelector('iframe')?.contentWindow?.Streamlit;
             if (streamlit) {
-                streamlit.setComponentValue({lat: lat, lon: lon});
+                streamlit.setComponentValue({lat: lat, lon: lon, success: true});
             }
-            
-            btn.disabled = false;
-            btn.style.opacity = '1';
         },
         function(error) {
             let mensaje = '';
             switch(error.code) {
                 case error.PERMISSION_DENIED:
-                    mensaje = '❌ Permiso denegado. Permite el acceso a la ubicación en tu navegador.';
+                    mensaje = '❌ Permiso denegado. Por favor, permite el acceso a la ubicación.';
                     break;
                 case error.POSITION_UNAVAILABLE:
                     mensaje = '❌ Información de ubicación no disponible.';
@@ -270,11 +272,11 @@ function obtenerUbicacion() {
                     mensaje = '❌ La solicitud de ubicación expiró.';
                     break;
                 default:
-                    mensaje = '❌ Error desconocido.';
+                    mensaje = '❌ Error al obtener ubicación.';
             }
             statusDiv.innerHTML = `<span style="color: #f44336;">${mensaje}</span>`;
-            btn.disabled = false;
-            btn.style.opacity = '1';
+            coordsDiv.innerHTML = '<i>Usa los campos manuales de abajo</i>';
+            btnRetry.style.display = 'inline-block';
         },
         {
             enableHighAccuracy: true,
@@ -287,8 +289,8 @@ function obtenerUbicacion() {
 """
 
 # Mostrar Logo
-st.markdown('<div class="logo-container" style="font-size: 5rem;"></div>', unsafe_allow_html=True)
-st.markdown('<h1 class="main-header"> Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
+st.markdown('<div class="logo-container" style="font-size: 5rem;">🐾</div>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs(["📸 Reportar Ahora", "🔔 Crear Alerta de Búsqueda", "🗺️ Buscar Mascotas"])
 
@@ -296,28 +298,28 @@ tab1, tab2, tab3 = st.tabs(["📸 Reportar Ahora", "🔔 Crear Alerta de Búsque
 with tab1:
     st.subheader("📝 Registrar Mascota Perdida o Encontrada")
     
-    st.markdown('<div class="info-box"> <b>Paso 1:</b> Obtén tu ubicación GPS. <b>Paso 2:</b> Completa los datos. <b>Paso 3:</b> Publica la alerta.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box">📱 <b>La ubicación se obtiene automáticamente.</b> Si falla, ingresa las coordenadas manualmente.</div>', unsafe_allow_html=True)
     
     if 'latitud' not in st.session_state:
         st.session_state.latitud = None
         st.session_state.longitud = None
     
     st.markdown('<div class="location-box">', unsafe_allow_html=True)
-    st.markdown("### 📍 Paso 1: Obtener Ubicación")
+    st.markdown("### 📍 Ubicación GPS")
     
-    # Botón JavaScript para GPS
-    st.components.v1.html(geo_html, height=200)
+    # Componente JavaScript que se ejecuta automáticamente
+    st.components.v1.html(geo_html, height=180)
     
-    # Fallback manual
+    # Fallback manual (siempre visible por si acaso)
     st.markdown("---")
-    st.markdown("**¿No funciona el GPS? Ingresa las coordenadas manualmente:**")
+    st.markdown("**📍 Ingreso manual de coordenadas (si el GPS falla):**")
     col_lat, col_lon = st.columns(2)
     with col_lat:
         lat_manual = st.number_input("Latitud", value=st.session_state.latitud or -34.6037, format="%.6f", key="lat_manual")
     with col_lon:
         lon_manual = st.number_input("Longitud", value=st.session_state.longitud or -58.3816, format="%.6f", key="lon_manual")
     
-    if st.button("💾 Usar estas coordenadas", key="btn_coords_manual"):
+    if st.button("💾 Usar coordenadas manuales", key="btn_coords_manual"):
         st.session_state.latitud = lat_manual
         st.session_state.longitud = lon_manual
         st.success(f"✅ Coordenadas guardadas: {lat_manual:.6f}, {lon_manual:.6f}")
@@ -327,7 +329,7 @@ with tab1:
     if st.session_state.latitud and st.session_state.longitud:
         st.success(f"✅ **Ubicación lista:** Lat {st.session_state.latitud:.5f}, Lon {st.session_state.longitud:.5f}")
     else:
-        st.warning("️ **Sin ubicación:** Usa el botón GPS o ingresa coordenadas manualmente.")
+        st.warning("⚠️ **Sin ubicación:** Esperando GPS o usa los campos manuales.")
 
     st.markdown("---")
     st.markdown("### 📋 Paso 2: Datos de la Mascota")
@@ -336,7 +338,7 @@ with tab1:
     
     with col1:
         estado = st.selectbox("Estado del reporte", ["Perdida 🔴", "Encontrada 🟢"], key="estado_reporte")
-        especie = st.selectbox("Especie", ["🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="especie_reporte")
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="especie_reporte")
         raza = st.text_input("Raza", placeholder="Ej: Labrador, Mestizo", key="raza_reporte")
         nombre = st.text_input("Nombre de la mascota", placeholder="Ej: Max, Luna", key="nombre_reporte")
     
@@ -358,7 +360,7 @@ with tab1:
 
     if st.button("🚨 Publicar Alerta", type="primary", key="btn_publicar"):
         if not st.session_state.latitud or not st.session_state.longitud:
-            st.error("❌ Primero debes obtener tu ubicación.")
+            st.error("❌ Primero debes obtener tu ubicación (GPS automático o campos manuales).")
         elif not foto or not nombre:
             st.error("❌ Sube una foto y escribe el nombre.")
         else:
@@ -399,7 +401,7 @@ with tab1:
                     st.session_state.longitud = None
                     st.balloons()
                 except Exception as e:
-                    st.error(f" Error: {str(e)}")
+                    st.error(f"❌ Error: {str(e)}")
 
 # ==================== TAB 2: CREAR ALERTA ====================
 with tab2:
@@ -409,7 +411,7 @@ with tab2:
     
     with col1:
         tipo_alerta = st.selectbox("Tipo", ["Busco PERDIDA 🔴", "Reporté ENCONTRADA 🟢"], key="tipo_alerta_sel")
-        especie_alerta = st.selectbox("Especie", ["🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="especie_alerta")
+        especie_alerta = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="especie_alerta")
         raza_alerta = st.text_input("Raza", key="raza_alerta")
         nombre_alerta = st.text_input("Nombre", key="nombre_alerta")
     
@@ -422,7 +424,7 @@ with tab2:
     email_alerta = st.text_input("📧 Email", key="email_alerta")
     descripcion_alerta = st.text_area("Señas", height=100, key="descripcion_alerta")
 
-    if st.button(" Crear Alerta", type="primary", key="btn_crear_alerta"):
+    if st.button("🔔 Crear Alerta", type="primary", key="btn_crear_alerta"):
         if not nombre_alerta:
             st.error("❌ Escribe el nombre.")
         else:
@@ -459,7 +461,7 @@ with tab2:
             for alerta in alertas[:10]:
                 st.markdown(f"""
                 <div class="alerta-card">
-                    <span class="badge-alerta"> ACTIVA</span>
+                    <span class="badge-alerta">🔔 ACTIVA</span>
                     <h4>{alerta.get('nombre', 'Sin nombre')}</h4>
                     <p><b>Tipo:</b> {alerta.get('tipo_alerta', 'N/A')}</p>
                     <p><b>Especie:</b> {alerta.get('especie', 'N/A')}</p>
@@ -495,7 +497,7 @@ with tab3:
         with col_f1:
             filtro_estado = st.selectbox("Estado", ["Todos", "Perdida", "Encontrada"], key="filtro_estado")
         with col_f2:
-            filtro_especie = st.selectbox("Especie", ["Todas", " Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="filtro_especie")
+            filtro_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="filtro_especie")
         
         df_filtrado = df.copy()
         if filtro_estado != "Todos":
