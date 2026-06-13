@@ -208,7 +208,7 @@ st.markdown("""
 st.markdown('<div class="logo-container" style="font-size: 5rem;">🐾</div>', unsafe_allow_html=True)
 st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["📸 Reportar Ahora", " Crear Alerta de Búsqueda", "️ Buscar Mascotas"])
+tab1, tab2, tab3 = st.tabs(["📸 Reportar Ahora", "🔔 Crear Alerta de Búsqueda", "🗺️ Buscar Mascotas"])
 
 # ==================== TAB 1: REPORTAR ====================
 with tab1:
@@ -229,7 +229,7 @@ with tab1:
     with col_lon:
         lon_manual = st.number_input("Longitud", value=st.session_state.longitud or -58.3816, format="%.6f", key="lon_manual")
     
-    if st.button(" Guardar coordenadas", key="btn_coords_manual"):
+    if st.button("💾 Guardar coordenadas", key="btn_coords_manual"):
         st.session_state.latitud = lat_manual
         st.session_state.longitud = lon_manual
         st.success(f"✅ Coordenadas guardadas: {lat_manual:.6f}, {lon_manual:.6f}")
@@ -248,7 +248,7 @@ with tab1:
     
     with col1:
         estado = st.selectbox("Estado del reporte", ["Perdida 🔴", "Encontrada 🟢"], key="estado_reporte")
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", " Ave", "Otro"], key="especie_reporte")
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="especie_reporte")
         raza = st.text_input("Raza", placeholder="Ej: Labrador, Mestizo", key="raza_reporte")
         nombre = st.text_input("Nombre de la mascota", placeholder="Ej: Max, Luna", key="nombre_reporte")
     
@@ -356,14 +356,14 @@ with tab1:
 
 # ==================== TAB 2: CREAR ALERTA ====================
 with tab2:
-    st.subheader(" Crear Alerta de Búsqueda")
+    st.subheader("🔔 Crear Alerta de Búsqueda")
     
-    st.markdown('<div class="info-box">️ <b>¿Cómo funciona?</b> Crea una alerta con las características de tu mascota. Cuando alguien publique un reporte con características similares, te mostraremos las coincidencias automáticamente.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box">ℹ️ <b>¿Cómo funciona?</b> Crea una alerta con las características de tu mascota. Cuando alguien publique un reporte con características similares, te mostraremos las coincidencias automáticamente.</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        tipo_alerta = st.selectbox("Tipo de alerta", ["Busco mascota PERDIDA 🔴", "Reporté mascota ENCONTRADA "], key="tipo_alerta_sel")
+        tipo_alerta = st.selectbox("Tipo de alerta", ["Busco mascota PERDIDA 🔴", "Reporté mascota ENCONTRADA 🟢"], key="tipo_alerta_sel")
         especie_alerta = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="especie_alerta")
         raza_alerta = st.text_input("Raza", placeholder="Ej: Labrador, Mestizo", key="raza_alerta")
         nombre_alerta = st.text_input("Nombre de la mascota", placeholder="Ej: Max, Luna", key="nombre_alerta")
@@ -374,7 +374,7 @@ with tab2:
         sexo_alerta = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"], key="sexo_alerta")
         contacto_alerta = st.text_input("📞 Teléfono", placeholder="+54 9 11 1234-5678", key="contacto_alerta")
     
-    email_alerta = st.text_input(" Email (opcional)", placeholder="tu@email.com", key="email_alerta")
+    email_alerta = st.text_input("📧 Email (opcional)", placeholder="tu@email.com", key="email_alerta")
     descripcion_alerta = st.text_area("Señas particulares", placeholder="Collar, cicatrices, comportamiento", height=100, key="descripcion_alerta")
 
     if st.button("🔔 Crear Alerta de Búsqueda", type="primary", key="btn_crear_alerta"):
@@ -497,11 +497,11 @@ with tab2:
                     </div>
                     """, unsafe_allow_html=True)
             else:
-                st.info("️ No hay alertas que coincidan con los filtros.")
+                st.info("ℹ️ No hay alertas que coincidan con los filtros.")
         else:
-            st.info("️ No hay alertas de búsqueda activas.")
+            st.info("ℹ️ No hay alertas de búsqueda activas.")
     except Exception as e:
-        st.info("️ No hay alertas disponibles.")
+        st.info("ℹ️ No hay alertas disponibles.")
 
 # ==================== TAB 3: BUSCAR MASCOTAS ====================
 with tab3:
@@ -530,9 +530,9 @@ with tab3:
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
         
         with col_f1:
-            filtro_estado = st.selectbox("Estado", ["Todos", "Perdida 🔴", "Encontrada "], key="filtro_estado")
+            filtro_estado = st.selectbox("Estado", ["Todos", "Perdida 🔴", "Encontrada 🟢"], key="filtro_estado")
         with col_f2:
-            filtro_especie = st.selectbox("Especie", ["Todas", " Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="filtro_especie")
+            filtro_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="filtro_especie")
         with col_f3:
             razas_unicas = sorted(df['raza'].dropna().unique().tolist()) if 'raza' in df.columns else []
             filtro_raza = st.selectbox("Raza", ["Todas"] + razas_unicas, key="filtro_raza")
@@ -556,9 +556,11 @@ with tab3:
         if filtro_color != "Todos":
             df_filtrado = df_filtrado[df_filtrado['color'] == filtro_color]
         
+        # ✅ CORRECCIÓN DEL MAPA - Renombrar columnas
         if not df_filtrado.empty:
             st.subheader(f"📍 Mapa ({len(df_filtrado)} resultados)")
-            st.map(df_filtrado[["latitud", "longitud"]])
+            map_df = df_filtrado.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})
+            st.map(map_df[["latitude", "longitude"]])
         
         perdidos = df_filtrado[df_filtrado['estado'].str.contains('Perdida', na=False)]
         encontrados = df_filtrado[df_filtrado['estado'].str.contains('Encontrada', na=False)]
@@ -616,6 +618,6 @@ with tab3:
                     st.markdown('</div>', unsafe_allow_html=True)
         
         if df_filtrado.empty:
-            st.info("️ No se encontraron mascotas con esos filtros.")
+            st.info("ℹ️ No se encontraron mascotas con esos filtros.")
     else:
         st.info("🐾 No hay reportes activos en este momento. ¡Sé el primero en reportar!")
