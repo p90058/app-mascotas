@@ -3,7 +3,7 @@ from supabase import create_client
 import pandas as pd
 from datetime import datetime
 import uuid
-from streamlit_javascript import st_javascript
+import requests
 
 # CONFIGURACIÓN
 SUPABASE_URL = "https://iaxtfsqipwbvexkfcprv.supabase.co"
@@ -11,7 +11,7 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.set_page_config(page_title="Alerta Mascotas", layout="wide")
+st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
 
 # CSS
 st.markdown("""
@@ -31,6 +31,13 @@ st.markdown("""
         margin: 0.5rem 0;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
+    .gps-box {
+        background: #e8f5e9;
+        border: 2px solid #4CAF50;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
     #MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
@@ -44,6 +51,8 @@ if 'lat' not in st.session_state:
     st.session_state.lat = None
 if 'lon' not in st.session_state:
     st.session_state.lon = None
+if 'location_source' not in st.session_state:
+    st.session_state.location_source = None
 
 # LOGIN ADMIN
 if st.session_state.show_admin and not st.session_state.is_admin:
@@ -65,11 +74,11 @@ if st.session_state.show_admin and not st.session_state.is_admin:
     st.stop()
 
 # APP
-st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta</h1></div>', unsafe_allow_html=True)
+st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
 with st.sidebar:
     if st.session_state.is_admin:
-        if st.button(" Salir"):
+        if st.button("🚪 Salir"):
             st.session_state.is_admin = False
             st.rerun()
 
@@ -92,37 +101,42 @@ with tab1:
     
     tipo = st.selectbox("Tipo", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="f_tipo")
     
-    # GPS CON streamlit-javascript
-    st.markdown("### 📍 Ubicación GPS")
+    # GPS AUTOMÁTICO
+    st.markdown('<div class="gps-box">', unsafe_allow_html=True)
+    st.markdown("### 📍 Ubicación")
     
     if st.session_state.lat and st.session_state.lon:
-        st.success(f"✅ Ubicación: {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
-        if st.button("🔄 Nueva ubicación", key="btn_reset"):
+        source_text = "📡 GPS" if st.session_state.location_source == "gps" else "🌐 IP (aproximada)"
+        st.success(f"✅ Ubicación obtenida ({source_text})")
+        st.info(f"Lat: {st.session_state.lat:.6f}, Lon: {st.session_state.lon:.6f}")
+        if st.button("🔄 Actualizar ubicación", key="btn_reset"):
             st.session_state.lat = None
             st.session_state.lon = None
+            st.session_state.location_source = None
             st.rerun()
     else:
-        # Botón para obtener GPS
-        if st.button("📍 Obtener mi ubicación automáticamente", key="btn_gps", type="primary"):
-            with st.spinner("⏳ Solicitando permiso de ubicación..."):
+        st.markdown("**Presiona el botón para obtener tu ubicación automáticamente:**")
+        
+        if st.button(" Obtener mi ubicación", key="btn_gps", type="primary", use_container_width=True):
+            with st.spinner("⏳ Obteniendo ubicación..."):
                 try:
-                    # JavaScript que obtiene la ubicación
+                    # Intentar GPS primero
+                    from streamlit_javascript import st_javascript
+                    
                     js_code = """
                     new Promise((resolve, reject) => {
                         if (!navigator.geolocation) {
-                            reject('GPS no soportado');
+                            reject('no_gps');
                             return;
                         }
                         navigator.geolocation.getCurrentPosition(
-                            (pos) => resolve({lat: pos.coords.latitude, lon: pos.coords.longitude}),
-                            (err) => {
-                                let msg = 'Error';
-                                if (err.code === 1) msg = 'Permiso denegado';
-                                else if (err.code === 2) msg = 'Ubicación no disponible';
-                                else if (err.code === 3) msg = 'Tiempo agotado';
-                                reject(msg);
-                            },
-                            {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
+                            (pos) => resolve({
+                                lat: pos.coords.latitude,
+                                lon: pos.coords.longitude,
+                                source: 'gps'
+                            }),
+                            (err) => reject('error_' + err.code),
+                            {enableHighAccuracy: true, timeout: 10000}
                         );
                     })
                     """
@@ -132,20 +146,50 @@ with tab1:
                     if result and isinstance(result, dict) and 'lat' in result:
                         st.session_state.lat = float(result['lat'])
                         st.session_state.lon = float(result['lon'])
-                        st.success(f"✅ Ubicación obtenida: {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
+                        st.session_state.location_source = 'gps'
+                        st.success("✅ Ubicación GPS obtenida")
                         st.rerun()
                     else:
-                        st.error("❌ No se pudo obtener la ubicación")
-                        
+                        # Fallback: geolocalización por IP
+                        st.info("📡 GPS no disponible, usando ubicación por IP...")
+                        try:
+                            response = requests.get('https://ipapi.co/json/', timeout=5)
+                            data = response.json()
+                            if 'latitude' in data and 'longitude' in data:
+                                st.session_state.lat = float(data['latitude'])
+                                st.session_state.lon = float(data['longitude'])
+                                st.session_state.location_source = 'ip'
+                                st.success("✅ Ubicación obtenida por IP")
+                                st.rerun()
+                            else:
+                                st.error("❌ No se pudo obtener la ubicación")
+                        except:
+                            st.error("❌ Error al obtener ubicación por IP")
+                            
                 except Exception as e:
-                    st.error(f"❌ Error: {str(e)}")
-                    st.info("💡 Asegúrate de permitir el acceso a la ubicación cuando el navegador lo solicite")
+                    # Si streamlit-javascript no está instalado, usar solo IP
+                    st.info("📡 Obteniendo ubicación por IP...")
+                    try:
+                        response = requests.get('https://ipapi.co/json/', timeout=5)
+                        data = response.json()
+                        if 'latitude' in data and 'longitude' in data:
+                            st.session_state.lat = float(data['latitude'])
+                            st.session_state.lon = float(data['longitude'])
+                            st.session_state.location_source = 'ip'
+                            st.success("✅ Ubicación obtenida")
+                            st.rerun()
+                        else:
+                            st.error("❌ No se pudo obtener la ubicación")
+                    except Exception as e2:
+                        st.error(f"❌ Error: {str(e2)}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # DATOS MASCOTA
     col1, col2 = st.columns(2)
     with col1:
         estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="f_estado")
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="f_especie")
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", " Ave", "Otro"], key="f_especie")
         raza = st.text_input("Raza", key="f_raza")
         nombre_mascota = st.text_input("Nombre", key="f_nombre_mascota")
     with col2:
@@ -161,7 +205,7 @@ with tab1:
         if not nombre or not email or not telefono:
             st.error("❌ Completa Nombre, Email y Teléfono")
         elif not st.session_state.lat:
-            st.error("❌ Primero obtén la ubicación GPS")
+            st.error("❌ Primero obtén la ubicación")
         elif not foto:
             st.error("❌ Sube una foto")
         elif not nombre_mascota:
@@ -169,27 +213,15 @@ with tab1:
         else:
             with st.spinner("Guardando..."):
                 try:
-                    # Guardar usuario con manejo de errores detallado
-                    user_data = {
-                        "email": email,
-                        "nombre": nombre,
-                        "telefono": telefono,
-                        "tipo_mascota": tipo,
-                        "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "activo": True
-                    }
-                    
-                    # Intentar upsert
+                    # Guardar usuario
                     try:
-                        supabase.table("usuarios").upsert(user_data, on_conflict="email").execute()
-                        st.info(f"✅ Usuario guardado: {nombre}")
-                    except Exception as e:
-                        st.warning(f"⚠️ No se pudo guardar usuario: {e}")
-                        # Intentar insert directo
-                        try:
-                            supabase.table("usuarios").insert(user_data).execute()
-                        except:
-                            pass
+                        supabase.table("usuarios").upsert({
+                            "email": email, "nombre": nombre, "telefono": telefono,
+                            "tipo_mascota": tipo, "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "activo": True
+                        }, on_conflict="email").execute()
+                    except:
+                        pass
                     
                     # Subir foto
                     ext = foto.name.split('.')[-1]
@@ -198,24 +230,15 @@ with tab1:
                     foto_url = supabase.storage.from_("fotos-mascotas").get_public_url(fname)
                     
                     # Guardar reporte
-                    reporte_data = {
-                        "estado": estado,
-                        "especie": especie,
-                        "raza": raza,
-                        "nombre": nombre_mascota,
-                        "color": color,
-                        "tamano": tamano,
-                        "sexo": sexo,
-                        "descripcion": descripcion,
+                    supabase.table("reportes").insert({
+                        "estado": estado, "especie": especie, "raza": raza,
+                        "nombre": nombre_mascota, "color": color, "tamano": tamano,
+                        "sexo": sexo, "descripcion": descripcion,
                         "latitud": st.session_state.lat,
                         "longitud": st.session_state.lon,
                         "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "foto_url": foto_url,
-                        "contacto": contacto,
-                        "usuario_email": email
-                    }
-                    
-                    supabase.table("reportes").insert(reporte_data).execute()
+                        "foto_url": foto_url, "contacto": contacto, "usuario_email": email
+                    }).execute()
                     
                     st.success("✅ ¡Publicado!")
                     st.balloons()
@@ -223,7 +246,7 @@ with tab1:
                     st.session_state.lon = None
                     st.rerun()
                 except Exception as e:
-                    st.error(f" Error: {e}")
+                    st.error(f"❌ Error: {e}")
 
 # TAB 2: VER
 with tab2:
@@ -236,7 +259,7 @@ with tab2:
         with col1:
             f_estado = st.selectbox("Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         df_f = df.copy()
         if f_estado != "Todos":
@@ -260,7 +283,7 @@ with tab2:
                         </div>
                         """, unsafe_allow_html=True)
     else:
-        st.info("🐾 Sin reportes")
+        st.info(" Sin reportes")
 
 # TAB 3: ADMIN
 if st.session_state.is_admin:
@@ -276,7 +299,7 @@ if st.session_state.is_admin:
                     with c1:
                         st.markdown(f"**{row['nombre']}** - {row['estado']}")
                     with c2:
-                        if st.button("🗑️", key=f"d{row['id']}"):
+                        if st.button("️", key=f"d{row['id']}"):
                             supabase.table("reportes").delete().eq("id", row['id']).execute()
                             st.rerun()
         
@@ -298,7 +321,7 @@ if st.session_state.is_admin:
 # FOOTER
 st.markdown("---")
 if not st.session_state.is_admin:
-    if st.button("🔐 Acceso Admin", key="bfa"):
+    if st.button(" Acceso Admin", key="bfa"):
         st.session_state.show_admin = True
         st.rerun()
 st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
