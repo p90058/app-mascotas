@@ -14,9 +14,9 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
+st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="")
 
-# CSS
+# CSS - Botones grandes estilizados
 st.markdown("""
 <style>
     .header {
@@ -30,59 +30,41 @@ st.markdown("""
     }
     .header h1 { font-size: 1.8rem; margin: 0; }
     
-    .nav-btn-container {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        margin: 2rem 0;
-        flex-wrap: wrap;
-        padding: 0 10px;
-    }
-    .nav-btn {
-        flex: 1;
-        min-width: 280px;
-        max-width: 450px;
-        padding: 40px 30px;
-        border-radius: 20px;
-        border: none;
-        cursor: pointer;
-        font-size: 22px;
-        font-weight: bold;
-        color: white;
-        text-align: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-    }
-    .nav-btn:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 35px rgba(0,0,0,0.25);
-    }
-    .nav-btn:active {
-        transform: translateY(-2px);
-    }
-    .nav-btn-reportar {
-        background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%);
-    }
-    .nav-btn-ver {
-        background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
-    }
-    .nav-btn-icon { font-size: 60px; }
-    .nav-btn-title { font-size: 24px; font-weight: bold; }
-    .nav-btn-subtitle {
-        font-size: 14px;
-        font-weight: normal;
-        opacity: 0.95;
-        text-align: center;
-        line-height: 1.4;
+    /* Estilizar botones de Streamlit para que se vean grandes */
+    div[data-testid="stHorizontalBlock"] > div > div > button {
+        width: 100% !important;
+        padding: 40px 30px !important;
+        border-radius: 20px !important;
+        border: none !important;
+        font-size: 22px !important;
+        font-weight: bold !important;
+        color: white !important;
+        text-align: center !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        transition: all 0.3s ease !important;
+        min-height: 200px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 15px !important;
     }
     
-    /* Ocultar botones pequeños de Streamlit */
-    .hidden-buttons {
-        display: none !important;
+    div[data-testid="stHorizontalBlock"] > div:first-child > div > button {
+        background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%) !important;
+    }
+    
+    div[data-testid="stHorizontalBlock"] > div:last-child > div > button {
+        background: linear-gradient(135deg, #4834d4 0%, #686de0 100%) !important;
+    }
+    
+    div[data-testid="stHorizontalBlock"] > div > div > button:hover {
+        transform: translateY(-5px) !important;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.25) !important;
+    }
+    
+    div[data-testid="stHorizontalBlock"] > div > div > button:active {
+        transform: translateY(-2px) !important;
     }
     
     #MainMenu, footer { visibility: hidden; }
@@ -90,27 +72,20 @@ st.markdown("""
     @media (max-width: 768px) {
         .header { padding: 1.5rem 1rem; }
         .header h1 { font-size: 1.4rem; }
-        .nav-btn-container {
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
+        div[data-testid="stHorizontalBlock"] > div > div > button {
+            padding: 35px 25px !important;
+            font-size: 20px !important;
+            min-height: 180px !important;
         }
-        .nav-btn {
-            min-width: 100%;
-            max-width: 100%;
-            padding: 35px 25px;
-        }
-        .nav-btn-icon { font-size: 50px; }
-        .nav-btn-title { font-size: 20px; }
-        .nav-btn-subtitle { font-size: 13px; }
     }
     
     @media (max-width: 480px) {
         .header h1 { font-size: 1.2rem; }
-        .nav-btn { padding: 30px 20px; }
-        .nav-btn-icon { font-size: 45px; }
-        .nav-btn-title { font-size: 18px; }
-        .nav-btn-subtitle { font-size: 12px; }
+        div[data-testid="stHorizontalBlock"] > div > div > button {
+            padding: 30px 20px !important;
+            font-size: 18px !important;
+            min-height: 160px !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -123,77 +98,18 @@ if 'show_admin' not in st.session_state:
 if 'vista_actual' not in st.session_state:
     st.session_state.vista_actual = 'reportar'
 
-# ════════════════════════════════════════════════════════════
-# BOTONES OCULTOS DE STREAMLIT (funcionan pero no se ven)
+# ═══════════════════════════════════════════════════════════
+# SOLO DOS BOTONES GRANDES (funcionan y se ven grandes)
 # ═════════════════════════════════════════════════════════════
 col_nav1, col_nav2 = st.columns(2)
 with col_nav1:
-    if st.button("📸 Reportar Mascota", key="btn_reportar_hidden", use_container_width=True, type="primary"):
+    if st.button("\n\nReportar Mascota\n\nPublica una alerta de mascota perdida o encontrada", key="btn_reportar", use_container_width=True):
         st.session_state.vista_actual = 'reportar'
         st.rerun()
 with col_nav2:
-    if st.button("🔍 Ver Alertas", key="btn_ver_hidden", use_container_width=True):
+    if st.button("🔍\n\nVer Alertas\n\nConsulta las alertas activas con fotos y detalles", key="btn_ver", use_container_width=True):
         st.session_state.vista_actual = 'ver'
         st.rerun()
-
-# Ocultar visualmente los botones de Streamlit
-st.markdown("""
-<style>
-    button[key="btn_reportar_hidden"],
-    button[key="btn_ver_hidden"] {
-        display: none !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ════════════════════════════════════════════════════════════
-# BOTONES GRANDES VISIBLES QUE ACTIVAN LOS OCULTOS
-# ════════════════════════════════════════════════════════════
-st.markdown("""
-<div class="nav-btn-container">
-    <button class="nav-btn nav-btn-reportar" onclick="triggerButton('btn_reportar_hidden')">
-        <span class="nav-btn-icon">📸</span>
-        <span class="nav-btn-title">Reportar Mascota</span>
-        <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
-    </button>
-    <button class="nav-btn nav-btn-ver" onclick="triggerButton('btn_ver_hidden')">
-        <span class="nav-btn-icon">🔍</span>
-        <span class="nav-btn-title">Ver Alertas</span>
-        <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
-    </button>
-</div>
-
-<script>
-function triggerButton(key) {
-    // Buscar el botón de Streamlit por su key
-    var buttons = document.querySelectorAll('button');
-    for (var i = 0; i < buttons.length; i++) {
-        if (buttons[i].getAttribute('data-testid') === 'stButton' && 
-            buttons[i].textContent.includes(key.replace('_hidden', '').replace('btn_', ''))) {
-            buttons[i].click();
-            return;
-        }
-    }
-    
-    // Método alternativo: buscar en el DOM de Streamlit
-    var allElements = document.querySelectorAll('*');
-    for (var j = 0; j < allElements.length; j++) {
-        var elem = allElements[j];
-        if (elem.className && elem.className.includes('stButton')) {
-            var btn = elem.querySelector('button');
-            if (btn && btn.textContent.includes('Reportar') && key === 'btn_reportar_hidden') {
-                btn.click();
-                return;
-            }
-            if (btn && btn.textContent.includes('Ver Alertas') && key === 'btn_ver_hidden') {
-                btn.click();
-                return;
-            }
-        }
-    }
-}
-</script>
-""", unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -209,9 +125,9 @@ if st.session_state.show_admin and not st.session_state.is_admin:
             st.session_state.show_admin = False
             st.rerun()
         else:
-            st.error("❌ Incorrecto")
+            st.error(" Incorrecto")
     
-    if st.button("⬅️ Volver"):
+    if st.button("️ Volver"):
         st.session_state.show_admin = False
         st.rerun()
     st.stop()
@@ -412,7 +328,7 @@ if st.session_state.vista_actual == 'reportar':
                     <label>Estado *</label>
                     <select id="estado" required>
                         <option>Perdida 🔴</option>
-                        <option>Encontrada 🟢</option>
+                        <option>Encontrada </option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -461,7 +377,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="form-group">
-                <label>📷 Foto de la mascota *</label>
+                <label> Foto de la mascota *</label>
                 <div class="file-upload">
                     <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
                     <label for="foto" class="file-upload-label" id="fileLabel">
@@ -533,7 +449,7 @@ if st.session_state.vista_actual == 'reportar':
                     },
                     function(err) {
                         let msg = 'Error';
-                        if (err.code === 1) msg = '❌ Permiso denegado. Permite el acceso.';
+                        if (err.code === 1) msg = ' Permiso denegado. Permite el acceso.';
                         else if (err.code === 2) msg = '❌ Ubicación no disponible.';
                         else if (err.code === 3) msg = '❌ Tiempo agotado.';
                         status.className = 'status error';
@@ -553,7 +469,7 @@ if st.session_state.vista_actual == 'reportar':
                 const fotoFile = document.getElementById('foto').files[0];
                 
                 if (!lat || !lon) { status.className = 'status error'; status.textContent = '❌ Primero obtén la ubicación GPS'; return; }
-                if (!fotoFile) { status.className = 'status error'; status.textContent = '❌ Debes subir una foto'; return; }
+                if (!fotoFile) { status.className = 'status error'; status.textContent = ' Debes subir una foto'; return; }
                 
                 btn.disabled = true;
                 status.className = 'status info';
@@ -656,7 +572,7 @@ elif st.session_state.vista_actual == 'ver':
             f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         with col3:
             razas_unicas = sorted([r for r in df['raza'].dropna().unique().tolist() if r and str(r).strip()]) if 'raza' in df.columns else []
-            f_raza = st.selectbox("🐕 Raza", ["Todas"] + razas_unicas, key="fr")
+            f_raza = st.selectbox(" Raza", ["Todas"] + razas_unicas, key="fr")
         
         col4, col5 = st.columns(2)
         with col4:
@@ -734,10 +650,10 @@ elif st.session_state.vista_actual == 'ver':
                 
                 if 'Perdida' in str(estado):
                     color_marcador = 'red'
-                    icono = '🔴'
+                    icono = ''
                 else:
                     color_marcador = 'green'
-                    icono = '🟢'
+                    icono = ''
                 
                 popup_html = f"""
                 <div style="width: 340px; font-family: Arial, sans-serif;">
@@ -808,7 +724,7 @@ elif st.session_state.vista_actual == 'ver':
                                 <p><strong>Tamaño:</strong> {row.get('tamano', 'N/A')}</p>
                                 <p><strong>Sexo:</strong> {row.get('sexo', 'N/A')}</p>
                                 <p><strong>📅 Fecha:</strong> {row['fecha']}</p>
-                                <p><strong>📞 Contacto:</strong> {row.get('contacto', 'N/A')}</p>
+                                <p><strong> Contacto:</strong> {row.get('contacto', 'N/A')}</p>
                                 {f"<p><strong>📝 Descripción:</strong> {row.get('descripcion', '')}</p>" if row.get('descripcion') else ''}
                             </div>
                             """, unsafe_allow_html=True)
