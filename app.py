@@ -10,27 +10,86 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
+st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="")
 
-# CSS
+# CSS MEJORADO - Más grande y profesional
 st.markdown("""
 <style>
     .header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 2rem;
-        border-radius: 15px;
+        padding: 3rem;
+        border-radius: 20px;
         text-align: center;
         margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    .header h1 {
+        font-size: 2.5rem;
+        margin: 0;
     }
     .card {
         background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        border-left: 6px solid #667eea;
+    }
+    .card img {
         border-radius: 10px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     }
     #MainMenu, footer { visibility: hidden; }
+    
+    /* Estilos para las tarjetas de reporte */
+    .reporte-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        border: 2px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    .reporte-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .reporte-perdida {
+        border-left: 8px solid #FF5252;
+        background: linear-gradient(135deg, #FFF5F5 0%, #FFE5E5 100%);
+    }
+    .reporte-encontrada {
+        border-left: 8px solid #4CAF50;
+        background: linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%);
+    }
+    .badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    .badge-perdida {
+        background: #FF5252;
+        color: white;
+    }
+    .badge-encontrada {
+        background: #4CAF50;
+        color: white;
+    }
+    .foto-container {
+        text-align: center;
+        margin: 1rem 0;
+    }
+    .foto-container img {
+        max-width: 300px;
+        max-height: 300px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -42,7 +101,7 @@ if 'show_admin' not in st.session_state:
 
 # LOGIN ADMIN
 if st.session_state.show_admin and not st.session_state.is_admin:
-    st.markdown('<div class="header"><h1> Admin</h1></div>', unsafe_allow_html=True)
+    st.markdown('<div class="header"><h1>🔐 Admin</h1></div>', unsafe_allow_html=True)
     codigo = st.text_input("Código")
     password = st.text_input("Contraseña", type="password")
     
@@ -74,8 +133,8 @@ else:
     tab1, tab2 = st.tabs(["Reportar", "Ver"])
 
 # ═════════════════════════════════════════════════════════════
-# TAB 1: REPORTAR
-# ═══════════════════════════════════════════════════════════════
+# TAB 1: REPORTAR - FORMULARIO MÁS GRANDE
+# ═════════════════════════════════════════════════════════════
 with tab1:
     st.subheader("📝 Registrar Mascota")
     
@@ -86,93 +145,99 @@ with tab1:
         <meta charset="UTF-8">
         <style>
             * { box-sizing: border-box; font-family: Arial, sans-serif; }
-            body { padding: 20px; background: #f5f5f5; margin: 0; }
-            .form-group { margin-bottom: 15px; }
-            label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+            body { padding: 30px; background: #f5f5f5; margin: 0; }
+            .form-group { margin-bottom: 20px; }
+            label { display: block; font-weight: bold; margin-bottom: 8px; color: #333; font-size: 16px; }
             input, select, textarea {
                 width: 100%;
-                padding: 10px;
+                padding: 15px;
                 border: 2px solid #ddd;
-                border-radius: 8px;
-                font-size: 14px;
+                border-radius: 10px;
+                font-size: 16px;
             }
             input:focus, select:focus, textarea:focus {
                 border-color: #667eea;
                 outline: none;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             }
-            .row { display: flex; gap: 10px; }
+            .row { display: flex; gap: 15px; }
             .row > div { flex: 1; }
             .btn-gps {
                 width: 100%;
-                padding: 15px;
+                padding: 20px;
                 background: linear-gradient(135deg, #4CAF50, #45a049);
                 color: white;
                 border: none;
-                border-radius: 10px;
-                cursor: pointer;
-                font-weight: bold;
-                font-size: 16px;
-                margin: 15px 0;
-            }
-            .btn-gps:hover { opacity: 0.9; }
-            .btn-gps:disabled { opacity: 0.6; cursor: not-allowed; }
-            .btn-submit {
-                width: 100%;
-                padding: 15px;
-                background: linear-gradient(135deg, #667eea, #764ba2);
-                color: white;
-                border: none;
-                border-radius: 10px;
+                border-radius: 12px;
                 cursor: pointer;
                 font-weight: bold;
                 font-size: 18px;
-                margin-top: 20px;
+                margin: 20px 0;
+                box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
             }
-            .btn-submit:hover { opacity: 0.9; }
+            .btn-gps:hover { opacity: 0.9; transform: translateY(-2px); }
+            .btn-gps:disabled { opacity: 0.6; cursor: not-allowed; }
+            .btn-submit {
+                width: 100%;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border: none;
+                border-radius: 12px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 20px;
+                margin-top: 30px;
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            }
+            .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); }
             .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
             .status {
-                padding: 10px;
-                border-radius: 8px;
-                margin: 10px 0;
+                padding: 15px;
+                border-radius: 10px;
+                margin: 15px 0;
                 font-weight: bold;
+                font-size: 16px;
                 display: none;
             }
             .status.success { background: #d4edda; color: #155724; display: block; }
             .status.error { background: #f8d7da; color: #721c24; display: block; }
             .status.info { background: #d1ecf1; color: #0c5460; display: block; }
             .section-title {
-                font-size: 18px;
+                font-size: 22px;
                 font-weight: bold;
-                margin: 20px 0 10px 0;
-                padding-bottom: 5px;
-                border-bottom: 2px solid #667eea;
+                margin: 30px 0 15px 0;
+                padding-bottom: 10px;
+                border-bottom: 3px solid #667eea;
                 color: #333;
             }
             .gps-box {
                 background: #e8f5e9;
-                border: 2px solid #4CAF50;
-                border-radius: 10px;
-                padding: 15px;
-                margin: 15px 0;
+                border: 3px solid #4CAF50;
+                border-radius: 15px;
+                padding: 25px;
+                margin: 20px 0;
             }
             #coords-display {
                 background: white;
-                padding: 10px;
-                border-radius: 8px;
-                margin-top: 10px;
+                padding: 15px;
+                border-radius: 10px;
+                margin-top: 15px;
                 display: none;
+                font-size: 16px;
             }
             .file-upload { position: relative; display: inline-block; width: 100%; }
             .file-upload input[type="file"] { display: none; }
             .file-upload-label {
                 display: block;
-                padding: 12px;
+                padding: 20px;
                 background: #f0f0f0;
-                border: 2px dashed #ccc;
-                border-radius: 8px;
+                border: 3px dashed #ccc;
+                border-radius: 12px;
                 text-align: center;
                 cursor: pointer;
                 transition: all 0.3s;
+                font-size: 16px;
             }
             .file-upload-label:hover {
                 background: #e0e0e0;
@@ -183,12 +248,12 @@ with tab1:
                 border-color: #28a745;
                 color: #155724;
             }
-            #preview-container { margin-top: 10px; display: none; }
+            #preview-container { margin-top: 15px; display: none; }
             #preview-container img {
                 max-width: 100%;
-                max-height: 200px;
-                border-radius: 8px;
-                border: 2px solid #ddd;
+                max-height: 300px;
+                border-radius: 12px;
+                border: 3px solid #ddd;
             }
         </style>
     </head>
@@ -222,9 +287,9 @@ with tab1:
             </div>
             
             <div class="gps-box">
-                <div class="section-title" style="border:none; margin:0 0 10px 0;">📍 Ubicación GPS</div>
+                <div class="section-title" style="border:none; margin:0 0 15px 0;">📍 Ubicación GPS</div>
                 <button type="button" class="btn-gps" id="btnGPS" onclick="getGPS()">
-                     Obtener mi ubicación automáticamente
+                    📍 Obtener mi ubicación automáticamente
                 </button>
                 <div id="gpsStatus" class="status"></div>
                 <div id="coords-display">
@@ -236,7 +301,7 @@ with tab1:
                 <input type="hidden" id="lon" value="">
             </div>
             
-            <div class="section-title">🐾 Datos de la Mascota</div>
+            <div class="section-title"> Datos de la Mascota</div>
             <div class="row">
                 <div class="form-group">
                     <label>Estado *</label>
@@ -248,10 +313,10 @@ with tab1:
                 <div class="form-group">
                     <label>Especie *</label>
                     <select id="especie" required>
-                        <option>🐕 Perro</option>
+                        <option> Perro</option>
                         <option>🐈 Gato</option>
                         <option>🐰 Conejo</option>
-                        <option> Ave</option>
+                        <option>🐦 Ave</option>
                         <option>Otro</option>
                     </select>
                 </div>
@@ -290,8 +355,6 @@ with tab1:
                 </div>
             </div>
             
-            <!-- ELIMINADO: Campo Teléfono de contacto (ya está arriba) -->
-            
             <div class="form-group">
                 <label>📷 Foto de la mascota *</label>
                 <div class="file-upload">
@@ -307,7 +370,7 @@ with tab1:
             
             <div class="form-group">
                 <label>📝 Descripción</label>
-                <textarea id="descripcion" rows="3" placeholder="Señas particulares..."></textarea>
+                <textarea id="descripcion" rows="4" placeholder="Señas particulares..."></textarea>
             </div>
             
             <div id="submitStatus" class="status"></div>
@@ -347,7 +410,7 @@ with tab1:
                 
                 if (!navigator.geolocation) {
                     status.className = 'status error';
-                    status.textContent = '❌ Tu navegador no soporta GPS';
+                    status.textContent = ' Tu navegador no soporta GPS';
                     return;
                 }
                 
@@ -423,14 +486,12 @@ with tab1:
                 const sexo = document.getElementById('sexo').value;
                 const descripcion = document.getElementById('descripcion').value;
                 
-                // El contacto ahora es el mismo teléfono cargado arriba
                 const contacto = telefono;
                 
                 const now = new Date();
                 const fecha = now.toISOString().slice(0, 19).replace('T', ' ');
                 
                 try {
-                    // 1. Guardar usuario
                     try {
                         await fetch(SUPABASE_URL + '/rest/v1/usuarios', {
                             method: 'POST',
@@ -451,7 +512,6 @@ with tab1:
                         });
                     } catch(e) { console.log('Usuario:', e); }
                     
-                    // 2. Subir foto a Supabase Storage
                     const fileExtension = fotoFile.name.split('.').pop().toLowerCase();
                     const fileName = Date.now() + '_' + Math.random().toString(36).substr(2, 9) + '.' + fileExtension;
                     const filePath = 'fotos-mascotas/' + fileName;
@@ -472,7 +532,6 @@ with tab1:
                     
                     const fotoUrl = SUPABASE_URL + '/storage/v1/object/public/' + filePath;
                     
-                    // 3. Guardar reporte
                     const reporteData = {
                         estado: estado,
                         especie: especie,
@@ -531,13 +590,13 @@ with tab1:
     </html>
     """
     
-    st.components.v1.html(form_html, height=1500)
+    st.components.v1.html(form_html, height=1800)
 
-# ══════════════════════════════════════════════════════════════
-# TAB 2: VER
-# ══════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════
+# TAB 2: VER - CON FOTOS Y DISEÑO MEJORADO
+# ═════════════════════════════════════════════════════════════
 with tab2:
-    st.subheader("🔍 Reportes")
+    st.subheader("🔍 Reportes de Mascotas")
     datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
     
     if datos:
@@ -546,7 +605,7 @@ with tab2:
         with col1:
             f_estado = st.selectbox("Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         df_f = df.copy()
         if f_estado != "Todos":
@@ -555,26 +614,55 @@ with tab2:
             df_f = df_f[df_f['especie'] == f_especie]
         
         if not df_f.empty:
+            st.markdown(f"**{len(df_f)} reporte(s) encontrado(s)**")
             st.map(df_f.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})[["latitude", "longitude"]])
             
-            for est, emoji in [("Perdida", "🔴"), ("Encontrada", "🟢")]:
+            for est, emoji, clase in [("Perdida", "🔴", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
                     for _, row in subset.iterrows():
-                        st.markdown(f"""
-                        <div class="card">
-                            <b>{row['nombre']}</b> - {row['estado']}<br>
-                            {row.get('especie', 'N/A')} | {row.get('raza', 'N/A')}<br>
-                            📅 {row['fecha']} | 📞 {row.get('contacto', 'N/A')}
+                        foto_url = row.get('foto_url', '')
+                        nombre = row['nombre']
+                        estado_text = row['estado']
+                        especie = row.get('especie', 'N/A')
+                        raza = row.get('raza', 'N/A')
+                        color = row.get('color', 'N/A')
+                        tamano = row.get('tamano', 'N/A')
+                        sexo = row.get('sexo', 'N/A')
+                        fecha = row['fecha']
+                        contacto = row.get('contacto', 'N/A')
+                        descripcion = row.get('descripcion', '')
+                        
+                        # Crear tarjeta con foto
+                        card_html = f"""
+                        <div class="reporte-card {clase}">
+                            <span class="badge badge-{est.lower()}">{emoji} {estado_text}</span>
+                            <h2 style="margin: 10px 0;">🐾 {nombre}</h2>
+                            
+                            <div class="foto-container">
+                                <img src="{foto_url}" alt="{nombre}" onerror="this.style.display='none'">
+                            </div>
+                            
+                            <div style="margin-top: 20px;">
+                                <p><strong>Especie:</strong> {especie}</p>
+                                <p><strong>Raza:</strong> {raza}</p>
+                                <p><strong>Color:</strong> {color}</p>
+                                <p><strong>Tamaño:</strong> {tamano}</p>
+                                <p><strong>Sexo:</strong> {sexo}</p>
+                                <p><strong>📅 Fecha:</strong> {fecha}</p>
+                                <p><strong> Contacto:</strong> {contacto}</p>
+                                {f'<p><strong>📝 Descripción:</strong> {descripcion}</p>' if descripcion else ''}
+                            </div>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """
+                        st.markdown(card_html, unsafe_allow_html=True)
     else:
-        st.info(" Sin reportes")
+        st.info("🐾 Sin reportes")
 
-# ══════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════
 # TAB 3: ADMIN
-# ═══════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════
 if st.session_state.is_admin:
     with tab3:
         st.subheader("⚙️ Admin")
@@ -613,4 +701,4 @@ if not st.session_state.is_admin:
     if st.button("🔐 Acceso Admin", key="bfa"):
         st.session_state.show_admin = True
         st.rerun()
-st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta </div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
