@@ -60,7 +60,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
     st.stop()
 
 # APP PRINCIPAL
-st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
+st.markdown('<div class="header"><h1 style="margin:0;"> Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
 with st.sidebar:
     if st.session_state.is_admin:
@@ -74,15 +74,12 @@ else:
     tab1, tab2 = st.tabs(["Reportar", "Ver"])
 
 # ══════════════════════════════════════════════════════════════
-# TAB 1: REPORTAR - FORMULARIO HTML COMPLETO CON GPS
+# TAB 1: REPORTAR - FORMULARIO HTML COMPLETO CON GPS + SUBIDA DE FOTOS
 # ═══════════════════════════════════════════════════════════════
 with tab1:
     st.subheader(" Registrar Mascota")
     
-    # FORMULARIO HTML COMPLETO QUE INCLUYE GPS
-    # Esto funciona porque el GPS se ejecuta DENTRO del componente HTML
-    # No hay problemas de iframe cross-origin
-    
+    # FORMULARIO HTML COMPLETO CON GPS Y SUBIDA DE FOTOS
     form_html = """
     <!DOCTYPE html>
     <html>
@@ -166,6 +163,43 @@ with tab1:
                 margin-top: 10px;
                 display: none;
             }
+            .file-upload {
+                position: relative;
+                display: inline-block;
+                width: 100%;
+            }
+            .file-upload input[type="file"] {
+                display: none;
+            }
+            .file-upload-label {
+                display: block;
+                padding: 12px;
+                background: #f0f0f0;
+                border: 2px dashed #ccc;
+                border-radius: 8px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            .file-upload-label:hover {
+                background: #e0e0e0;
+                border-color: #667eea;
+            }
+            .file-upload-label.has-file {
+                background: #d4edda;
+                border-color: #28a745;
+                color: #155724;
+            }
+            #preview-container {
+                margin-top: 10px;
+                display: none;
+            }
+            #preview-container img {
+                max-width: 100%;
+                max-height: 200px;
+                border-radius: 8px;
+                border: 2px solid #ddd;
+            }
         </style>
     </head>
     <body>
@@ -212,7 +246,7 @@ with tab1:
                 <input type="hidden" id="lon" value="">
             </div>
             
-            <div class="section-title"> Datos de la Mascota</div>
+            <div class="section-title">🐾 Datos de la Mascota</div>
             <div class="row">
                 <div class="form-group">
                     <label>Estado *</label>
@@ -272,8 +306,16 @@ with tab1:
             </div>
             
             <div class="form-group">
-                <label>Foto (URL o deja vacío)</label>
-                <input type="text" id="fotoUrl" placeholder="URL de la foto (opcional)">
+                <label> Foto de la mascota *</label>
+                <div class="file-upload">
+                    <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
+                    <label for="foto" class="file-upload-label" id="fileLabel">
+                        📁 Haz clic para seleccionar una foto (JPG, PNG)
+                    </label>
+                </div>
+                <div id="preview-container">
+                    <img id="preview" src="" alt="Vista previa">
+                </div>
             </div>
             
             <div class="form-group">
@@ -293,7 +335,28 @@ with tab1:
             const SUPABASE_URL = 'https://iaxtfsqipwbvexkfcprv.supabase.co';
             const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlheHRmc3FpcHdidmV4a2ZjcHJ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTI5NjkxNSwiZXhwIjoyMDk2ODcyOTE1fQ.7ineE_CVWjbMMWzURUZl87q5z8tE8V7K1xoh4pfwiDI';
             
-            // GPS - Funciona porque está DENTRO del componente HTML
+            // Manejar selección de archivo
+            function handleFileSelect(event) {
+                const file = event.target.files[0];
+                const label = document.getElementById('fileLabel');
+                const preview = document.getElementById('preview');
+                const previewContainer = document.getElementById('preview-container');
+                
+                if (file) {
+                    label.textContent = '✅ ' + file.name;
+                    label.classList.add('has-file');
+                    
+                    // Mostrar vista previa
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+            
+            // GPS
             function getGPS() {
                 const btn = document.getElementById('btnGPS');
                 const status = document.getElementById('gpsStatus');
@@ -347,6 +410,7 @@ with tab1:
                 
                 const lat = document.getElementById('lat').value;
                 const lon = document.getElementById('lon').value;
+                const fotoFile = document.getElementById('foto').files[0];
                 
                 if (!lat || !lon) {
                     status.className = 'status error';
@@ -354,9 +418,15 @@ with tab1:
                     return;
                 }
                 
+                if (!fotoFile) {
+                    status.className = 'status error';
+                    status.textContent = '❌ Debes subir una foto';
+                    return;
+                }
+                
                 btn.disabled = true;
                 status.className = 'status info';
-                status.textContent = '⏳ Guardando...';
+                status.textContent = '⏳ Subiendo foto y guardando...';
                 
                 const nombre = document.getElementById('nombre').value;
                 const email = document.getElementById('email').value;
@@ -371,7 +441,6 @@ with tab1:
                 const sexo = document.getElementById('sexo').value;
                 const contacto = document.getElementById('contacto').value || telefono;
                 const descripcion = document.getElementById('descripcion').value;
-                const fotoUrl = document.getElementById('fotoUrl').value;
                 
                 const now = new Date();
                 const fecha = now.toISOString().slice(0, 19).replace('T', ' ');
@@ -398,7 +467,29 @@ with tab1:
                         });
                     } catch(e) { console.log('Usuario:', e); }
                     
-                    // 2. Guardar reporte
+                    // 2. Subir foto a Supabase Storage
+                    const fileExtension = fotoFile.name.split('.').pop().toLowerCase();
+                    const fileName = Date.now() + '_' + Math.random().toString(36).substr(2, 9) + '.' + fileExtension;
+                    const filePath = 'fotos-mascotas/' + fileName;
+                    
+                    const uploadResponse = await fetch(SUPABASE_URL + '/storage/v1/object/' + filePath, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': 'Bearer ' + SUPABASE_KEY,
+                            'Content-Type': fotoFile.type
+                        },
+                        body: fotoFile
+                    });
+                    
+                    if (!uploadResponse.ok) {
+                        throw new Error('Error al subir la foto');
+                    }
+                    
+                    // Obtener URL pública de la foto
+                    const fotoUrl = SUPABASE_URL + '/storage/v1/object/public/' + filePath;
+                    
+                    // 3. Guardar reporte (SIN usuario_email)
                     const reporteData = {
                         estado: estado,
                         especie: especie,
@@ -411,9 +502,8 @@ with tab1:
                         latitud: parseFloat(lat),
                         longitud: parseFloat(lon),
                         fecha: fecha,
-                        foto_url: fotoUrl || '',
-                        contacto: contacto,
-                        usuario_email: email
+                        foto_url: fotoUrl,
+                        contacto: contacto
                     };
                     
                     const response = await fetch(SUPABASE_URL + '/rest/v1/reportes', {
@@ -435,8 +525,11 @@ with tab1:
                         document.getElementById('lat').value = '';
                         document.getElementById('lon').value = '';
                         document.getElementById('coords-display').style.display = 'none';
+                        document.getElementById('preview-container').style.display = 'none';
+                        document.getElementById('fileLabel').textContent = '📁 Haz clic para seleccionar una foto (JPG, PNG)';
+                        document.getElementById('fileLabel').classList.remove('has-file');
                         
-                        // Notificar a Streamlit que se publicó
+                        // Notificar a Streamlit
                         if (window.parent) {
                             window.parent.postMessage({ type: 'published' }, '*');
                         }
@@ -447,7 +540,7 @@ with tab1:
                     }
                 } catch (error) {
                     status.className = 'status error';
-                    status.textContent = '❌ Error de conexión: ' + error.message;
+                    status.textContent = '❌ Error: ' + error.message;
                 }
                 
                 btn.disabled = false;
@@ -457,7 +550,7 @@ with tab1:
     </html>
     """
     
-    st.components.v1.html(form_html, height=1400)
+    st.components.v1.html(form_html, height=1500)
 
 # ══════════════════════════════════════════════════════════════
 # TAB 2: VER
@@ -472,7 +565,7 @@ with tab2:
         with col1:
             f_estado = st.selectbox("Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox("Especie", ["Todas", " Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         df_f = df.copy()
         if f_estado != "Todos":
@@ -483,7 +576,7 @@ with tab2:
         if not df_f.empty:
             st.map(df_f.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})[["latitude", "longitude"]])
             
-            for est, emoji in [("Perdida", ""), ("Encontrada", "🟢")]:
+            for est, emoji in [("Perdida", "🔴"), ("Encontrada", "🟢")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
@@ -492,13 +585,13 @@ with tab2:
                         <div class="card">
                             <b>{row['nombre']}</b> - {row['estado']}<br>
                             {row.get('especie', 'N/A')} | {row.get('raza', 'N/A')}<br>
-                            📅 {row['fecha']} | 📞 {row.get('contacto', 'N/A')}
+                            📅 {row['fecha']} |  {row.get('contacto', 'N/A')}
                         </div>
                         """, unsafe_allow_html=True)
     else:
         st.info("🐾 Sin reportes")
 
-# ══════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════
 # TAB 3: ADMIN
 # ═══════════════════════════════════════════════════════════════
 if st.session_state.is_admin:
