@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS PROFESIONALES ---
+# --- ESTILOS CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
@@ -80,7 +80,6 @@ st.markdown("""
         display: inline-block;
         margin-bottom: 0.75rem;
         font-size: 0.9rem;
-        letter-spacing: 0.5px;
     }
     
     .badge-encontrada {
@@ -92,7 +91,6 @@ st.markdown("""
         display: inline-block;
         margin-bottom: 0.75rem;
         font-size: 0.9rem;
-        letter-spacing: 0.5px;
     }
     
     .section-title {
@@ -139,22 +137,48 @@ st.markdown("""
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
     
+    .alerta-card {
+        background: linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%);
+        border-left: 6px solid #FFC107;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .coincidencia-card {
+        background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+        border: 3px solid #4CAF50;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 20px rgba(76,175,80,0.3);
+    }
+    
+    .badge-alerta {
+        background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+        color: #333;
+        padding: 0.4rem 1rem;
+        border-radius: 25px;
+        font-weight: 800;
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .badge-coincidencia {
+        background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 25px;
+        font-weight: 800;
+        display: inline-block;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    
-    .stSelectbox label, .stTextInput label, .stTextArea label {
-        font-weight: 700;
-        color: #333;
-    }
-    
-    .stTextInput > div > div > input {
-        border-radius: 10px;
-        border: 2px solid #e0e0e0;
-    }
-    
-    .stTextInput > div > div > input:focus {
-        border-color: #FF6B6B;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -166,14 +190,14 @@ except:
 
 st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs([" Reportar Ahora", "🗺️ Buscar Mascotas"])
+tab1, tab2, tab3 = st.tabs(["📸 Reportar Ahora", "🔔 Crear Alerta de Búsqueda", "🗺️ Buscar Mascotas"])
 
+# ==================== TAB 1: REPORTAR ====================
 with tab1:
     st.subheader("📝 Registrar Mascota Perdida o Encontrada")
     
     st.markdown('<div class="info-box">📱 <b>Importante:</b> Permite el acceso a la ubicación cuando el navegador lo solicite para geolocalizar automáticamente el reporte.</div>', unsafe_allow_html=True)
     
-    # SENSOR GPS AUTOMÁTICO
     location = streamlit_geolocation()
     lat = location.get('latitude', None)
     lon = location.get('longitude', None)
@@ -183,13 +207,12 @@ with tab1:
     else:
         st.warning("⚠️ Esperando permiso de ubicación... (Toca 'Permitir' en tu celular)")
 
-    # FORMULARIO MEJORADO CON CAMPOS ESPECÍFICOS
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("### 📋 Información Básica")
-        estado = st.selectbox("Estado del reporte", ["Perdida 🔴", "Encontrada 🟢"])
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"])
+        estado = st.selectbox("Estado del reporte", ["Perdida 🔴", "Encontrada "])
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", " Conejo", "🐦 Ave", "Otro"])
         raza = st.text_input("Raza", placeholder="Ej: Labrador, Mestizo, Siamés, etc.")
         nombre = st.text_input("Nombre de la mascota", placeholder="Ej: Max, Luna, etc.")
     
@@ -198,7 +221,7 @@ with tab1:
         color = st.text_input("Color principal", placeholder="Ej: Marrón, Negro, Blanco, Atigrado")
         tamano = st.selectbox("Tamaño", ["Pequeño (hasta 10kg)", "Mediano (10-25kg)", "Grande (más de 25kg)", "No especificado"])
         sexo = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"])
-        contacto = st.text_input("📞 Teléfono de contacto", placeholder="Ej: +54 9 11 1234-5678")
+        contacto = st.text_input(" Teléfono de contacto", placeholder="Ej: +54 9 11 1234-5678")
 
     st.markdown("### 📷 Foto y Descripción")
     col_foto, col_desc = st.columns([1, 2])
@@ -210,15 +233,14 @@ with tab1:
         descripcion = st.text_area("Señas particulares", placeholder="Collar, cicatrices, comportamiento, última vez visto, etc.", height=120)
         ubicacion_detalle = st.text_input("Ubicación detallada", placeholder="Ej: Calle Falsa 123, Parque Central, cerca de...")
 
-    if st.button(" Publicar Alerta", type="primary"):
+    if st.button("🚨 Publicar Alerta", type="primary"):
         if not lat or not lon:
             st.error("❌ No se pudo obtener la ubicación. Asegúrate de dar permiso al navegador.")
         elif not foto or not nombre:
-            st.error("❌ Por favor, sube una foto y escribe el nombre.")
+            st.error(" Por favor, sube una foto y escribe el nombre.")
         else:
-            with st.spinner("🔄 Subiendo foto y guardando datos..."):
+            with st.spinner(" Subiendo foto y guardando datos..."):
                 try:
-                    # A. Subir foto a Supabase Storage
                     file_extension = foto.name.split('.')[-1]
                     file_name = f"{uuid.uuid4()}.{file_extension}"
                     
@@ -230,7 +252,6 @@ with tab1:
                     
                     foto_url = supabase.storage.from_("fotos-mascotas").get_public_url(file_name)
                     
-                    # B. Guardar datos en la base de datos
                     data = {
                         "estado": estado,
                         "especie": especie,
@@ -249,22 +270,184 @@ with tab1:
                     }
                     
                     supabase.table("reportes").insert(data).execute()
-                    st.success("✅ ¡Alerta publicada con éxito! Gracias por ayudar.")
+                    
+                    # BUSCAR COINCIDENCIAS AUTOMÁTICAS
+                    estado_opuesto = "Encontrada" if "Perdida" in estado else "Perdida"
+                    
+                    response_coincidencias = supabase.table("reportes").select("*").eq("estado", estado_opuesto).execute()
+                    coincidencias = response_coincidencias.data
+                    
+                    coincidencias_filtradas = []
+                    for c in coincidencias:
+                        score = 0
+                        if c.get('especie') == especie:
+                            score += 3
+                        if c.get('raza') and raza and c['raza'].lower() == raza.lower():
+                            score += 2
+                        if c.get('color') and color and c['color'].lower() == color.lower():
+                            score += 2
+                        if c.get('tamano') == tamano:
+                            score += 1
+                        if c.get('sexo') == sexo:
+                            score += 1
+                        
+                        if score >= 3:
+                            coincidencias_filtradas.append((c, score))
+                    
+                    st.success("✅ ¡Alerta publicada con éxito!")
+                    
+                    if coincidencias_filtradas:
+                        st.warning(f" ¡Se encontraron {len(coincidencias_filtradas)} coincidencias potenciales!")
+                        st.markdown("### 🎯 Coincidencias encontradas:")
+                        
+                        for c, score in sorted(coincidencias_filtradas, key=lambda x: x[1], reverse=True)[:5]:
+                            st.markdown(f"""
+                            <div class="coincidencia-card">
+                                <span class="badge-coincidencia">🎯 COINCIDENCIA ({score} puntos)</span>
+                                <h4>{c['nombre']}</h4>
+                                <p><b>Especie:</b> {c.get('especie', 'N/A')}</p>
+                                <p><b>Raza:</b> {c.get('raza', 'N/A')}</p>
+                                <p><b>Color:</b> {c.get('color', 'N/A')}</p>
+                                <p><b>Fecha:</b> {c['fecha']}</p>
+                                <p><b>Contacto:</b> {c.get('contacto', 'N/A')}</p>
+                                <img src="{c['foto_url']}" style="max-width: 200px; border-radius: 10px;">
+                            </div>
+                            """, unsafe_allow_html=True)
+                    
                     st.balloons()
                 except Exception as e:
                     st.error(f"❌ Error al guardar: {str(e)}")
 
+# ==================== TAB 2: CREAR ALERTA ====================
 with tab2:
+    st.subheader("🔔 Crear Alerta de Búsqueda")
+    
+    st.markdown('<div class="info-box"> <b>¿Cómo funciona?</b> Crea una alerta con las características de tu mascota. Cuando alguien publique un reporte con características similares, te mostraremos las coincidencias automáticamente.</div>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 📋 ¿Qué estás buscando?")
+        tipo_alerta = st.selectbox("Tipo de alerta", ["Busco mascota PERDIDA 🔴", "Reporté mascota ENCONTRADA 🟢"])
+        especie_alerta = st.selectbox("Especie", ["🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"])
+        raza_alerta = st.text_input("Raza", placeholder="Ej: Labrador, Mestizo, etc.")
+        nombre_alerta = st.text_input("Nombre de la mascota", placeholder="Ej: Max, Luna, etc.")
+    
+    with col2:
+        st.markdown("### 🎨 Características")
+        color_alerta = st.text_input("Color principal", placeholder="Ej: Marrón, Negro, Blanco")
+        tamano_alerta = st.selectbox("Tamaño", ["Pequeño (hasta 10kg)", "Mediano (10-25kg)", "Grande (más de 25kg)", "No especificado"])
+        sexo_alerta = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"])
+        contacto_alerta = st.text_input("📞 Teléfono de contacto", placeholder="Ej: +54 9 11 1234-5678")
+    
+    ubicacion_alerta = st.text_input("📍 Última ubicación conocida", placeholder="Ej: Calle Falsa 123, Parque Central")
+    email_alerta = st.text_input("📧 Email (opcional, para notificaciones futuras)", placeholder="tu@email.com")
+    descripcion_alerta = st.text_area("Señas particulares", placeholder="Collar, cicatrices, comportamiento, etc.", height=100)
+
+    if st.button("🔔 Crear Alerta de Búsqueda", type="primary"):
+        if not nombre_alerta:
+            st.error("❌ Por favor, escribe el nombre de la mascota.")
+        else:
+            try:
+                data_alerta = {
+                    "tipo_alerta": tipo_alerta,
+                    "especie": especie_alerta,
+                    "raza": raza_alerta,
+                    "color": color_alerta,
+                    "tamano": tamano_alerta,
+                    "sexo": sexo_alerta,
+                    "ubicacion_detalle": ubicacion_alerta,
+                    "contacto": contacto_alerta,
+                    "email": email_alerta,
+                    "fecha_creacion": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "activa": True
+                }
+                
+                supabase.table("alertas_busqueda").insert(data_alerta).execute()
+                
+                # BUSCAR COINCIDENCIAS INMEDIATAS
+                estado_buscar = "Encontrada" if "PERDIDA" in tipo_alerta else "Perdida"
+                
+                response_reportes = supabase.table("reportes").select("*").eq("estado", estado_buscar).execute()
+                reportes = response_reportes.data
+                
+                coincidencias_alerta = []
+                for r in reportes:
+                    score = 0
+                    if r.get('especie') == especie_alerta:
+                        score += 3
+                    if r.get('raza') and raza_alerta and r['raza'].lower() == raza_alerta.lower():
+                        score += 2
+                    if r.get('color') and color_alerta and r['color'].lower() == color_alerta.lower():
+                        score += 2
+                    if r.get('tamano') == tamano_alerta:
+                        score += 1
+                    if r.get('sexo') == sexo_alerta:
+                        score += 1
+                    
+                    if score >= 3:
+                        coincidencias_alerta.append((r, score))
+                
+                st.success("✅ ¡Alerta creada con éxito!")
+                
+                if coincidencias_alerta:
+                    st.warning(f"🎯 ¡Se encontraron {len(coincidencias_alerta)} coincidencias con reportes existentes!")
+                    st.markdown("###  Coincidencias encontradas:")
+                    
+                    for r, score in sorted(coincidencias_alerta, key=lambda x: x[1], reverse=True)[:5]:
+                        st.markdown(f"""
+                        <div class="coincidencia-card">
+                            <span class="badge-coincidencia">🎯 COINCIDENCIA ({score} puntos)</span>
+                            <h4>{r['nombre']}</h4>
+                            <p><b>Especie:</b> {r.get('especie', 'N/A')}</p>
+                            <p><b>Raza:</b> {r.get('raza', 'N/A')}</p>
+                            <p><b>Color:</b> {r.get('color', 'N/A')}</p>
+                            <p><b>Fecha:</b> {r['fecha']}</p>
+                            <p><b>Contacto:</b> {r.get('contacto', 'N/A')}</p>
+                            <img src="{r['foto_url']}" style="max-width: 200px; border-radius: 10px;">
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.info("ℹ️ No hay coincidencias en este momento. Te notificaremos cuando aparezca un reporte similar.")
+                
+                st.balloons()
+            except Exception as e:
+                st.error(f" Error al crear alerta: {str(e)}")
+    
+    # MOSTRAR ALERTAS ACTIVAS DEL USUARIO
+    st.markdown("---")
+    st.subheader(" Alertas de Búsqueda Activas")
+    
+    response_alertas = supabase.table("alertas_busqueda").select("*").eq("activa", True).order("fecha_creacion", desc=True).execute()
+    alertas = response_alertas.data
+    
+    if alertas:
+        for alerta in alertas[:10]:
+            st.markdown(f"""
+            <div class="alerta-card">
+                <span class="badge-alerta">🔔 ALERTA ACTIVA</span>
+                <h4>{alerta.get('nombre', 'Sin nombre')}</h4>
+                <p><b>Tipo:</b> {alerta['tipo_alerta']}</p>
+                <p><b>Especie:</b> {alerta.get('especie', 'N/A')}</p>
+                <p><b>Raza:</b> {alerta.get('raza', 'N/A')}</p>
+                <p><b>Color:</b> {alerta.get('color', 'N/A')}</p>
+                <p><b>Fecha creada:</b> {alerta['fecha_creacion']}</p>
+                <p><b>Contacto:</b> {alerta.get('contacto', 'N/A')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("No hay alertas de búsqueda activas.")
+
+# ==================== TAB 3: BUSCAR MASCOTAS ====================
+with tab3:
     st.subheader("🔍 Buscar Mascotas Reportadas")
     
-    # Cargar todos los datos
     response = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute()
     datos = response.data
     
     if datos:
         df = pd.DataFrame(datos)
         
-        # ESTADÍSTICAS RÁPIDAS
         total_perdidos = len(df[df['estado'].str.contains('Perdida', na=False)])
         total_encontrados = len(df[df['estado'].str.contains('Encontrada', na=False)])
         
@@ -276,7 +459,6 @@ with tab2:
         with col_s3:
             st.markdown(f'<div class="stats-box"><h3 style="color:#FF6B6B; margin:0;">{len(df)}</h3><p style="margin:0; color:#666;">Total Reportes</p></div>', unsafe_allow_html=True)
         
-        # SISTEMA DE FILTROS
         st.markdown('<div class="filter-container">', unsafe_allow_html=True)
         st.markdown("### 🎯 Filtros de Búsqueda")
         
@@ -285,7 +467,7 @@ with tab2:
         with col_f1:
             filtro_estado = st.selectbox("Estado", ["Todos", "Perdida 🔴", "Encontrada "])
         with col_f2:
-            filtro_especie = st.selectbox("Especie", ["Todas", " Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"])
+            filtro_especie = st.selectbox("Especie", ["Todas", " Perro", "🐈 Gato", " Conejo", "🐦 Ave", "Otro"])
         with col_f3:
             filtro_raza = st.selectbox("Raza", ["Todas"] + sorted(df['raza'].dropna().unique().tolist()))
         with col_f4:
@@ -293,7 +475,6 @@ with tab2:
         
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # APLICAR FILTROS
         df_filtrado = df.copy()
         
         if filtro_estado != "Todos":
@@ -308,16 +489,13 @@ with tab2:
         if filtro_color != "Todos":
             df_filtrado = df_filtrado[df_filtrado['color'] == filtro_color]
         
-        # MOSTRAR MAPA
         if not df_filtrado.empty:
             st.subheader(f"📍 Mapa ({len(df_filtrado)} resultados)")
             st.map(df_filtrado[["latitud", "longitud"]])
         
-        # SEPARAR PERDIDOS Y ENCONTRADOS
         perdidos = df_filtrado[df_filtrado['estado'].str.contains('Perdida', na=False)]
         encontrados = df_filtrado[df_filtrado['estado'].str.contains('Encontrada', na=False)]
         
-        # MOSTRAR PERDIDOS
         if not perdidos.empty:
             st.markdown(f'<h2 class="section-title perdidos-title">🔴 Mascotas Perdidas ({len(perdidos)})</h2>', unsafe_allow_html=True)
             for _, row in perdidos.iterrows():
@@ -344,7 +522,6 @@ with tab2:
                         st.markdown(f"[️ Ver en Google Maps](https://www.google.com/maps?q={row['latitud']},{row['longitud']})")
                     st.markdown('</div>', unsafe_allow_html=True)
         
-        # MOSTRAR ENCONTRADOS
         if not encontrados.empty:
             st.markdown(f'<h2 class="section-title encontrados-title">🟢 Mascotas Encontradas ({len(encontrados)})</h2>', unsafe_allow_html=True)
             for _, row in encontrados.iterrows():
@@ -367,7 +544,7 @@ with tab2:
                             st.markdown(f"**📍 Ubicación:** {row['ubicacion_detalle']}")
                         st.markdown(f"**📅 Fecha:** {row['fecha']}")
                         if row.get('contacto'):
-                            st.markdown(f"**📞 Contacto:** {row['contacto']}")
+                            st.markdown(f"** Contacto:** {row['contacto']}")
                         st.markdown(f"[️ Ver en Google Maps](https://www.google.com/maps?q={row['latitud']},{row['longitud']})")
                     st.markdown('</div>', unsafe_allow_html=True)
         
