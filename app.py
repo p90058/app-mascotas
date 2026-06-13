@@ -3,24 +3,25 @@ from supabase import create_client
 import pandas as pd
 from datetime import datetime
 import uuid
-import time
 
-# CONFIGURACIÓN
+# CONFIGURACIÓN SUPABASE
 SUPABASE_URL = "https://iaxtfsqipwbvexkfcprv.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlheHRmc3FpcHdidmV4a2ZjcHJ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTI5NjkxNSwiZXhwIjoyMDk2ODcyOTE1fQ.7ineE_CVWjbMMWzURUZl87q5z8tE8V7K1xoh4pfwiDI"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
+st.set_page_config(page_title="🐾 Alerta Mascotas", layout="wide", page_icon="🐶")
 
-# CSS
+# CSS STYLES
 st.markdown("""
 <style>
-    .main-header { text-align: center; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; color: white; margin-bottom: 2rem; }
-    .btn-gps { width: 100%; padding: 1.5rem; font-size: 1.4rem; background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
-    .success-box { background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%); color: white; padding: 1.5rem; border-radius: 12px; margin: 1rem 0; font-weight: bold; text-align: center; }
+    .main-header { text-align: center; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; color: white; margin-bottom: 2rem; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
+    .btn-gps { width: 100%; padding: 1.5rem; font-size: 1.4rem; background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(76,175,80,0.4); transition: all 0.3s; }
+    .btn-gps:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(76,175,80,0.6); }
+    .success-box { background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%); color: white; padding: 1.5rem; border-radius: 12px; margin: 1rem 0; font-weight: bold; text-align: center; box-shadow: 0 4px 15px rgba(76,175,80,0.3); }
     .location-box { background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); border: 3px solid #81C784; padding: 2rem; border-radius: 15px; margin: 1.5rem 0; }
-    .reporte-card { background: white; border-radius: 15px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .reporte-card { background: white; border-radius: 15px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-left: 6px solid #667eea; }
+    .error-msg { background: #ffebee; color: #c62828; padding: 1rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid #c62828; }
     #MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
@@ -28,40 +29,55 @@ st.markdown("""
 # INICIALIZAR SESSION STATE
 if 'is_admin' not in st.session_state:
     st.session_state.is_admin = False
-if 'show_admin' not in st.session_state:
-    st.session_state.show_admin = False
-if 'gps_listo' not in st.session_state:
-    st.session_state.gps_listo = False
-if 'user_lat' not in st.session_state:
-    st.session_state.user_lat = None
-if 'user_lon' not in st.session_state:
-    st.session_state.user_lon = None
+if 'show_admin_login' not in st.session_state:
+    st.session_state.show_admin_login = False
+if 'gps_lat' not in st.session_state:
+    st.session_state.gps_lat = None
+if 'gps_lon' not in st.session_state:
+    st.session_state.gps_lon = None
+if 'gps_capturado' not in st.session_state:
+    st.session_state.gps_capturado = False
 
-# CAPTURAR GPS DE URL
-params = st.query_params
-if "lat" in params and "lon" in params:
-    st.session_state.user_lat = float(params["lat"])
-    st.session_state.user_lon = float(params["lon"])
-    st.session_state.gps_listo = True
-    st.query_params.clear()
+# CAPTURAR GPS DE URL (cuando redirige el JavaScript)
+if "lat" in st.query_params and "lon" in st.query_params:
+    try:
+        st.session_state.gps_lat = float(st.query_params["lat"])
+        st.session_state.gps_lon = float(st.query_params["lon"])
+        st.session_state.gps_capturado = True
+        st.query_params.clear()
+        st.rerun()
+    except:
+        pass
 
-# LOGIN ADMIN
-if st.session_state.show_admin and not st.session_state.is_admin:
-    st.markdown('<h1 class="main-header">🔐 Acceso Admin</h1>', unsafe_allow_html=True)
-    codigo = st.text_input("Código")
-    password = st.text_input("Contraseña", type="password")
+# FUNCIÓN LOGIN ADMIN
+def login_admin(codigo, password):
+    if codigo == "ADMIN2024" and password == "admin123":
+        st.session_state.is_admin = True
+        st.session_state.show_admin_login = False
+        return True
+    return False
+
+# PANTALLA LOGIN ADMIN
+if st.session_state.show_admin_login and not st.session_state.is_admin:
+    st.markdown('<div style="font-size: 5rem; text-align: center;">🔐</div>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">Acceso Administrador</h1>', unsafe_allow_html=True)
     
-    if st.button("Ingresar"):
-        if codigo == "ADMIN2024" and password == "admin123":
-            st.session_state.is_admin = True
-            st.session_state.show_admin = False
-            st.success("✅ Bienvenido!")
-            st.rerun()
-        else:
-            st.error("❌ Incorrecto")
+    with st.form(key="login_form"):
+        codigo = st.text_input("Código de administrador", key="admin_codigo")
+        password = st.text_input("Contraseña", type="password", key="admin_password")
+        submit = st.form_submit_button("🔓 Ingresar", use_container_width=True)
+        
+        if submit:
+            if login_admin(codigo, password):
+                st.success("✅ Bienvenido Administrador!")
+                st.balloons()
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("❌ Código o contraseña incorrectos")
     
-    if st.button("⬅️ Volver"):
-        st.session_state.show_admin = False
+    if st.button("⬅️ Volver a la app", key="btn_volver"):
+        st.session_state.show_admin_login = False
         st.rerun()
     st.stop()
 
@@ -69,251 +85,389 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 st.markdown('<div style="font-size: 5rem; text-align: center;">🐾</div>', unsafe_allow_html=True)
 st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
+# SIDEBAR
 with st.sidebar:
+    st.markdown("### Menú")
     if st.session_state.is_admin:
-        st.markdown("### 👑 Admin")
-        if st.button("🚪 Salir"):
+        st.markdown("### 👑 Panel Admin")
+        st.info("Tienes acceso completo")
+        if st.button("🚪 Cerrar Sesión", key="btn_logout", use_container_width=True):
             st.session_state.is_admin = False
             st.rerun()
+    else:
+        st.info("👤 Modo Visitante")
 
+# TABS
 if st.session_state.is_admin:
-    tab1, tab2, tab3 = st.tabs(["📸 Reportar", "🗺️ Ver", "⚙️ Admin"])
+    tab1, tab2, tab3 = st.tabs(["📸 Reportar Mascota", "🗺️ Ver Reportes", "⚙️ Panel Admin"])
 else:
-    tab1, tab2 = st.tabs(["📸 Reportar", "🗺️ Ver"])
+    tab1, tab2 = st.tabs(["📸 Reportar Mascota", "🗺️ Ver Reportes"])
 
 # ==================== TAB 1: REPORTAR ====================
 with tab1:
-    st.subheader("📝 Registrar Mascota")
+    st.subheader("📝 Registrar Mascota Perdida o Encontrada")
+    st.markdown("Completa todos los campos para publicar una alerta")
     
-    # DATOS USUARIO
+    # DATOS DEL USUARIO
     st.markdown("### 👤 Tus Datos")
     col1, col2, col3 = st.columns(3)
     with col1:
-        nombre = st.text_input("Nombre", key="f_nombre")
+        nombre_usuario = st.text_input("Tu Nombre completo", key="inp_nombre", placeholder="Ej: Juan Pérez")
     with col2:
-        email = st.text_input("Email", key="f_email")
+        email_usuario = st.text_input("📧 Email", key="inp_email", placeholder="tu@email.com")
     with col3:
-        telefono = st.text_input("Teléfono", key="f_telefono")
+        telefono_usuario = st.text_input("📞 Teléfono", key="inp_telefono", placeholder="+54 9 11 1234-5678")
     
-    tipo_mascota = st.selectbox("Tipo", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="f_tipo")
+    tipo_mascota = st.selectbox("🐾 Tipo de mascota", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="inp_tipo")
     
-    # GPS - IMPLEMENTACIÓN FUNCIONAL
+    # GPS - IMPLEMENTACIÓN CORREGIDA
     st.markdown('<div class="location-box">', unsafe_allow_html=True)
-    st.markdown("### 📍 Ubicación GPS")
+    st.markdown("### 📍 Ubicación GPS de la Mascota")
+    st.markdown("Presiona el botón para obtener tu ubicación automáticamente")
     
-    # Formulario oculto para capturar GPS
-    with st.form(key="gps_form", clear_on_submit=False):
-        lat_input = st.number_input("Latitud", value=st.session_state.user_lat if st.session_state.user_lat else 0.0, format="%.6f", key="lat_num")
-        lon_input = st.number_input("Longitud", value=st.session_state.user_lon if st.session_state.user_lon else 0.0, format="%.6f", key="lon_num")
-        submit_gps = st.form_submit_button("💾 Guardar Ubicación Manual", use_container_width=True)
-        
-        if submit_gps and lat_input != 0.0 and lon_input != 0.0:
-            st.session_state.user_lat = lat_input
-            st.session_state.user_lon = lon_input
-            st.session_state.gps_listo = True
-            st.success("✅ Ubicación guardada")
-            st.rerun()
-    
-    # Botón GPS automático
-    if st.session_state.gps_listo and st.session_state.user_lat and st.session_state.user_lon:
+    if st.session_state.gps_capturado and st.session_state.gps_lat and st.session_state.gps_lon:
         st.markdown(f"""
         <div class="success-box">
-            ✅ UBICACIÓN CAPTURADA<br><br>
-            📍 Lat: {st.session_state.user_lat:.6f}<br>
-            📍 Lon: {st.session_state.user_lon:.6f}
+            ✅ UBICACIÓN CAPTURADA CORRECTAMENTE<br><br>
+            📍 Latitud: {st.session_state.gps_lat:.6f}<br>
+            📍 Longitud: {st.session_state.gps_lon:.6f}<br><br>
+            <small>✓ Ubicación lista para publicar</small>
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("🔄 Nueva Ubicación", key="btn_reset_gps"):
-            st.session_state.gps_listo = False
-            st.session_state.user_lat = None
-            st.session_state.user_lon = None
+        if st.button("🔄 Capturar Nueva Ubicación", key="btn_reset_gps", use_container_width=True):
+            st.session_state.gps_capturado = False
+            st.session_state.gps_lat = None
+            st.session_state.gps_lon = None
             st.rerun()
     else:
+        # BOTÓN GPS CON JAVASCRIPT FUNCIONAL
         st.markdown("""
-        <button class="btn-gps" id="btnGPS" onclick="getGPS()">📍 Enviar ubicación de la mascota</button>
-        <div id="gpsMsg" style="margin-top:1rem; font-weight:bold; text-align:center;"></div>
+        <button id="btnGPS" class="btn-gps" onclick="solicitarGPS()">
+            📍 Enviar ubicación de la mascota
+        </button>
+        <div id="gpsStatus" style="margin-top: 1.5rem; font-weight: bold; font-size: 1.1rem; text-align: center;"></div>
         
         <script>
-        function getGPS() {
-            const msg = document.getElementById('gpsMsg');
+        function solicitarGPS() {
+            const statusDiv = document.getElementById('gpsStatus');
             const btn = document.getElementById('btnGPS');
             
+            // Verificar si el navegador soporta geolocalización
             if (!navigator.geolocation) {
-                msg.innerHTML = '<span style="color:red">❌ No soporta GPS</span>';
+                statusDiv.innerHTML = '<span style="color: #d32f2f;">❌ Tu navegador no soporta geolocalización</span>';
                 return;
             }
             
-            msg.innerHTML = '<span style="color:blue">⏳ Obteniendo...</span>';
+            statusDiv.innerHTML = '<span style="color: #1976d2;">⏳ Solicitando permiso de ubicación...</span>';
             btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.innerHTML = '⏳ Esperando permiso...';
             
+            // Solicitar ubicación con alta precisión
             navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-                    msg.innerHTML = '<span style="color:green">✅ ¡Listo! Redirigiendo...</span>';
+                // ÉXITO
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
                     
-                    // Actualizar inputs de Streamlit
-                    setTimeout(() => {
+                    statusDiv.innerHTML = '<span style="color: #388e3c; font-size: 1.3rem;">✅ ¡Permiso concedido!<br>Obteniendo coordenadas...</span>';
+                    
+                    // Esperar un momento y redirigir con parámetros
+                    setTimeout(function() {
                         window.location.href = '?lat=' + lat + '&lon=' + lon;
-                    }, 500);
+                    }, 1000);
                 },
-                (err) => {
-                    msg.innerHTML = '<span style="color:red">❌ Error: ' + err.message + '</span>';
+                // ERROR
+                function(error) {
+                    let mensaje = '';
+                    let color = '#d32f2f';
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            mensaje = '❌ Permiso denegado.<br>Debes permitir el acceso a la ubicación en tu navegador.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            mensaje = '❌ Información de ubicación no disponible.';
+                            break;
+                        case error.TIMEOUT:
+                            mensaje = '❌ La solicitud expiró.<br>Intenta nuevamente.';
+                            break;
+                        default:
+                            mensaje = '❌ Error desconocido.';
+                    }
+                    
+                    statusDiv.innerHTML = '<span style="color: ' + color + ';">' + mensaje + '</span>';
                     btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.innerHTML = '📍 Enviar ubicación de la mascota';
                 },
-                {enableHighAccuracy: true, timeout: 15000}
+                // OPCIONES
+                {
+                    enableHighAccuracy: true,  // Usar GPS de alta precisión
+                    timeout: 15000,             // Esperar máximo 15 segundos
+                    maximumAge: 0               // No usar caché
+                }
             );
         }
         </script>
         
-        <div style="margin-top:1rem; padding:1rem; background:white; border-radius:10px;">
-            <b>💡 Si el botón no funciona:</b><br>
-            1. Permite el acceso a ubicación cuando el navegador pregunte<br>
-            2. O ingresa las coordenadas manualmente arriba<br>
-            3. Haz clic en "Guardar Ubicación Manual"
+        <div style="margin-top: 1.5rem; padding: 1rem; background: white; border-radius: 10px; border-left: 4px solid #2196f3;">
+            <b>💡 Instrucciones:</b><br>
+            1. Presiona el botón verde de arriba<br>
+            2. Cuando el navegador pregunte "¿Permitir acceso a la ubicación?", haz clic en <b>"Permitir"</b> o <b>"Allow"</b><br>
+            3. Espera 2-5 segundos a que se capturen las coordenadas<br>
+            4. La página se recargará automáticamente con tu ubicación<br><br>
+            <b>⚠️ Importante:</b> Asegúrate de tener activado el GPS en tu dispositivo
         </div>
         """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # DATOS MASCOTA
+    # DATOS DE LA MASCOTA
     st.markdown("### 🐾 Datos de la Mascota")
     col1, col2 = st.columns(2)
     with col1:
-        estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="f_estado")
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="f_especie")
-        raza = st.text_input("Raza", key="f_raza")
-        nombre_mascota = st.text_input("Nombre", key="f_nombre_mascota")
+        estado_reporte = st.selectbox("Estado del reporte", ["Perdida 🔴", "Encontrada 🟢"], key="inp_estado")
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="inp_especie")
+        raza = st.text_input("Raza", placeholder="Ej: Labrador, Mestizo, Siamés...", key="inp_raza")
+        nombre_mascota = st.text_input("Nombre de la mascota", placeholder="Ej: Max, Luna, Rocky...", key="inp_nombre_mascota")
+    
     with col2:
-        color = st.text_input("Color", key="f_color")
-        tamano = st.selectbox("Tamaño", ["Pequeño", "Mediano", "Grande"], key="f_tamano")
-        sexo = st.selectbox("Sexo", ["Macho", "Hembra"], key="f_sexo")
-        contacto = st.text_input("Teléfono contacto", value=telefono if telefono else "", key="f_contacto")
+        color = st.text_input("Color principal", placeholder="Ej: Marrón, Negro, Blanco, Atigrado...", key="inp_color")
+        tamano = st.selectbox("Tamaño", ["Pequeño (hasta 10kg)", "Mediano (10-25kg)", "Grande (más de 25kg)"], key="inp_tamano")
+        sexo = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"], key="inp_sexo")
+        contacto = st.text_input("📞 Teléfono de contacto", value=telefono_usuario if telefono_usuario else "", key="inp_contacto")
     
-    foto = st.file_uploader("📷 Foto", type=["jpg", "png", "jpeg"], key="f_foto")
-    descripcion = st.text_area("Descripción", key="f_desc")
+    foto = st.file_uploader("📷 Subir Foto de la mascota", type=["jpg", "png", "jpeg"], key="inp_foto", help="Sube una foto clara de la mascota")
+    descripcion = st.text_area("📝 Descripción / Señas particulares", placeholder="Ej: Collar rojo, cicatriz en la pata, muy amigable, última vez visto cerca del parque...", key="inp_descripcion", height=100)
     
-    # PUBLICAR
-    if st.button("🚨 PUBLICAR ALERTA", type="primary", use_container_width=True, key="btn_pub"):
-        if not nombre or not email or not telefono:
-            st.error("❌ Completa Nombre, Email y Teléfono")
-        elif not st.session_state.gps_listo or not st.session_state.user_lat:
-            st.error("❌ Primero obtén la ubicación GPS (botón verde o manual)")
-        elif not foto:
-            st.error("❌ Sube una foto")
-        elif not nombre_mascota:
-            st.error("❌ Escribe el nombre de la mascota")
+    # BOTÓN PUBLICAR
+    st.markdown("---")
+    if st.button("🚨 PUBLICAR ALERTA", type="primary", use_container_width=True, key="btn_publicar", help="Publica la alerta en la red"):
+        # VALIDACIONES
+        errores = []
+        
+        if not nombre_usuario.strip():
+            errores.append("Nombre del usuario")
+        if not email_usuario.strip():
+            errores.append("Email")
+        if not telefono_usuario.strip():
+            errores.append("Teléfono")
+        if not st.session_state.gps_capturado or not st.session_state.gps_lat:
+            errores.append("Ubicación GPS (presiona el botón verde)")
+        if foto is None:
+            errores.append("Foto de la mascota")
+        if not nombre_mascota.strip():
+            errores.append("Nombre de la mascota")
+        
+        if errores:
+            st.error(f"❌ Por favor completa: {', '.join(errores)}")
         else:
-            with st.spinner("Guardando..."):
+            with st.spinner("🔄 Procesando y guardando reporte..."):
                 try:
-                    # Guardar usuario
+                    # 1. Guardar/Actualizar usuario
                     supabase.table("usuarios").upsert({
-                        "email": email, "nombre": nombre, "telefono": telefono,
-                        "tipo_mascota": tipo_mascota, "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "email": email_usuario,
+                        "nombre": nombre_usuario,
+                        "telefono": telefono_usuario,
+                        "tipo_mascota": tipo_mascota,
+                        "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "activo": True
                     }, on_conflict="email").execute()
                     
-                    # Subir foto
-                    ext = foto.name.split('.')[-1]
-                    fname = f"{uuid.uuid4()}.{ext}"
-                    supabase.storage.from_("fotos-mascotas").upload(fname, foto.getvalue(), file_options={"content-type": foto.type})
-                    foto_url = supabase.storage.from_("fotos-mascotas").get_public_url(fname)
+                    # 2. Subir foto a Storage
+                    file_extension = foto.name.split('.')[-1].lower()
+                    file_name = f"{uuid.uuid4()}.{file_extension}"
                     
-                    # Guardar reporte con GPS
+                    supabase.storage.from_("fotos-mascotas").upload(
+                        file_name,
+                        foto.getvalue(),
+                        file_options={"content-type": foto.type}
+                    )
+                    
+                    foto_url = supabase.storage.from_("fotos-mascotas").get_public_url(file_name)
+                    
+                    # 3. Insertar reporte
                     supabase.table("reportes").insert({
-                        "estado": estado, "especie": especie, "raza": raza,
-                        "nombre": nombre_mascota, "color": color, "tamano": tamano,
-                        "sexo": sexo, "descripcion": descripcion,
-                        "latitud": st.session_state.user_lat,
-                        "longitud": st.session_state.user_lon,
-                        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "foto_url": foto_url, "contacto": contacto, "usuario_email": email
+                        "estado": estado_reporte,
+                        "especie": especie,
+                        "raza": raza,
+                        "nombre": nombre_mascota,
+                        "color": color,
+                        "tamano": tamano,
+                        "sexo": sexo,
+                        "descripcion": descripcion,
+                        "latitud": st.session_state.gps_lat,
+                        "longitud": st.session_state.gps_lon,
+                        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "foto_url": foto_url,
+                        "contacto": contacto,
+                        "usuario_email": email_usuario
                     }).execute()
                     
-                    st.success("✅ ¡Publicado!")
+                    # ÉXITO
+                    st.success("✅ ¡Alerta publicada con éxito!")
                     st.balloons()
-                    st.session_state.gps_listo = False
-                    st.session_state.user_lat = None
-                    st.session_state.user_lon = None
+                    
+                    # Limpiar GPS
+                    st.session_state.gps_capturado = False
+                    st.session_state.gps_lat = None
+                    st.session_state.gps_lon = None
+                    
+                    # Recargar
+                    time.sleep(2)
                     st.rerun()
+                    
                 except Exception as e:
-                    st.error(f"❌ Error: {e}")
+                    st.error(f"❌ Error al guardar: {str(e)}")
 
-# ==================== TAB 2: VER ====================
+# ==================== TAB 2: VER REPORTES ====================
 with tab2:
-    st.subheader("🔍 Reportes")
-    datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
+    st.subheader("🔍 Mascotas Reportadas")
     
-    if datos:
+    # Obtener reportes
+    response = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute()
+    datos = response.data
+    
+    if datos and len(datos) > 0:
         df = pd.DataFrame(datos)
+        
+        # Estadísticas
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            total = len(df)
+            st.metric("Total Reportes", total)
+        with col2:
+            perdidos = len(df[df['estado'].str.contains('Perdida', na=False)])
+            st.metric("Perdidos", perdidos)
+        with col3:
+            encontrados = len(df[df['estado'].str.contains('Encontrada', na=False)])
+            st.metric("Encontrados", encontrados)
+        
+        st.markdown("---")
+        
+        # Filtros
         col1, col2 = st.columns(2)
         with col1:
-            f_estado = st.selectbox("Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
+            filtro_estado = st.selectbox("Filtrar por estado", ["Todos", "Perdida", "Encontrada"], key="filtro_estado")
         with col2:
-            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            filtro_especie = st.selectbox("Filtrar por especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="filtro_especie")
         
-        df_f = df.copy()
-        if f_estado != "Todos":
-            df_f = df_f[df_f['estado'].str.contains(f_estado, na=False)]
-        if f_especie != "Todas":
-            df_f = df_f[df_f['especie'] == f_especie]
+        # Aplicar filtros
+        df_filtrado = df.copy()
+        if filtro_estado != "Todos":
+            df_filtrado = df_filtrado[df_filtrado['estado'].str.contains(filtro_estado, na=False, case=False)]
+        if filtro_especie != "Todas":
+            df_filtrado = df_filtrado[df_filtrado['especie'] == filtro_especie]
         
-        if not df_f.empty:
-            st.map(df_f.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})[["latitude", "longitude"]])
-            
-            for est, emoji in [("Perdida", "🔴"), ("Encontrada", "🟢")]:
-                subset = df_f[df_f['estado'].str.contains(est, na=False)]
-                if not subset.empty:
-                    st.markdown(f"### {emoji} {est}s ({len(subset)})")
-                    for _, row in subset.iterrows():
-                        st.markdown(f"""
-                        <div class="reporte-card">
-                            <b>{row['nombre']}</b> - {row['estado']}<br>
-                            {row.get('especie', 'N/A')} | {row.get('raza', 'N/A')}<br>
-                            📅 {row['fecha']} | 📞 {row.get('contacto', 'N/A')}
-                        </div>
-                        """, unsafe_allow_html=True)
+        # Mostrar mapa
+        if not df_filtrado.empty:
+            st.subheader(f"📍 Mapa de Ubicación ({len(df_filtrado)} reportes)")
+            mapa_df = df_filtrado.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})
+            st.map(mapa_df[["latitude", "longitude"]])
+            st.markdown("---")
+        
+        # Mostrar reportes
+        for estado_tipo, emoji in [("Perdida", "🔴"), ("Encontrada", "🟢")]:
+            subset = df_filtrado[df_filtrado['estado'].str.contains(estado_tipo, na=False, case=False)]
+            if not subset.empty:
+                st.markdown(f"### {emoji} {estado_tipo}s ({len(subset)})")
+                for _, row in subset.iterrows():
+                    st.markdown(f"""
+                    <div class="reporte-card">
+                        <h3>🐾 {row['nombre']}</h3>
+                        <p><b>Estado:</b> {row['estado']} | <b>Especie:</b> {row.get('especie', 'N/A')}</p>
+                        <p><b>Raza:</b> {row.get('raza', 'No especificada')} | <b>Color:</b> {row.get('color', 'No especificado')}</p>
+                        <p><b>Tamaño:</b> {row.get('tamano', 'N/A')} | <b>Sexo:</b> {row.get('sexo', 'N/A')}</p>
+                        <p><b>📅 Fecha:</b> {row['fecha']}</p>
+                        <p><b>📞 Contacto:</b> {row.get('contacto', 'No disponible')}</p>
+                        {f"<p><b>📝 Descripción:</b> {row.get('descripcion', '')}</p>" if row.get('descripcion') else ''}
+                    </div>
+                    """, unsafe_allow_html=True)
     else:
-        st.info("🐾 Sin reportes")
+        st.info("🐾 No hay reportes registrados todavía. ¡Sé el primero en publicar!")
 
 # ==================== TAB 3: ADMIN ====================
 if st.session_state.is_admin:
     with tab3:
-        st.subheader("⚙️ Admin")
-        at1, at2 = st.tabs(["🗑️ Reportes", "👥 Usuarios"])
+        st.subheader("⚙️ Panel de Administración")
         
-        with at1:
+        admin_tab1, admin_tab2 = st.tabs(["🗑️ Gestionar Reportes", "👥 Gestionar Usuarios"])
+        
+        with admin_tab1:
+            st.markdown("### Eliminar Reportes")
             reports = supabase.table("reportes").select("*").order("fecha", desc=True).execute().data
-            if reports:
-                for row in reports:
-                    c1, c2 = st.columns([4, 1])
-                    with c1:
-                        st.markdown(f"**{row['nombre']}** - {row['estado']}")
-                    with c2:
-                        if st.button("🗑️", key=f"d{row['id']}"):
-                            supabase.table("reportes").delete().eq("id", row['id']).execute()
-                            st.rerun()
-        
-        with at2:
-            c1, c2, c3 = st.columns(3)
-            with c1: ne = st.text_input("Email", key="ne")
-            with c2: nn = st.text_input("Nombre", key="nn")
-            with c3: nt = st.text_input("Tel", key="nt")
             
-            if st.button("Agregar", key="ba"):
-                if ne and nn:
-                    supabase.table("usuarios").insert({
-                        "email": ne, "nombre": nn, "telefono": nt,
-                        "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"), "activo": True
-                    }).execute()
-                    st.success("✅ Agregado")
-                    st.rerun()
+            if reports and len(reports) > 0:
+                st.markdown(f"**Total de reportes:** {len(reports)}")
+                st.markdown("---")
+                
+                for row in reports:
+                    with st.container():
+                        col1, col2 = st.columns([4, 1])
+                        with col1:
+                            st.markdown(f"**{row['nombre']}** - {row['estado']}")
+                            st.markdown(f"*Especie:* {row.get('especie', 'N/A')} | *Fecha:* {row['fecha']}")
+                        with col2:
+                            if st.button("🗑️ Eliminar", key=f"del_{row['id']}", type="secondary"):
+                                try:
+                                    supabase.table("reportes").delete().eq("id", row['id']).execute()
+                                    st.success("✅ Eliminado")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error: {e}")
+                        st.markdown("---")
+            else:
+                st.info("No hay reportes para gestionar")
+        
+        with admin_tab2:
+            st.markdown("### Agregar Nuevo Usuario")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                n_email = st.text_input("Email", key="n_email")
+            with col2:
+                n_nombre = st.text_input("Nombre", key="n_nombre")
+            with col3:
+                n_tel = st.text_input("Teléfono", key="n_tel")
+            
+            if st.button("Agregar Usuario", key="btn_add_user", type="primary"):
+                if n_email and n_nombre:
+                    try:
+                        supabase.table("usuarios").insert({
+                            "email": n_email,
+                            "nombre": n_nombre,
+                            "telefono": n_tel,
+                            "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "activo": True
+                        }).execute()
+                        st.success("✅ Usuario agregado correctamente")
+                        time.sleep(1)
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error al agregar: {str(e)}")
+                else:
+                    st.error("❌ Email y Nombre son obligatorios")
+            
+            st.markdown("---")
+            st.markdown("### Usuarios Registrados")
+            usuarios = supabase.table("usuarios").select("*").order("fecha_registro", desc=True).execute().data
+            
+            if usuarios:
+                for user in usuarios:
+                    st.markdown(f"**{user['nombre']}** - {user['email']} (Tel: {user.get('telefono', 'N/A')})")
+            else:
+                st.info("No hay usuarios registrados")
 
 # FOOTER
 st.markdown("---")
-if not st.session_state.is_admin:
-    if st.button("🔐 Acceso Admin", key="bfa"):
-        st.session_state.show_admin = True
-        st.rerun()
-st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
+col1, col2 = st.columns([4, 1])
+with col1:
+    st.markdown("<div style='text-align: left; color: #999; padding: 1rem;'>© 2026 Red de Alerta de Mascotas 🐾</div>", unsafe_allow_html=True)
+with col2:
+    if not st.session_state.is_admin:
+        if st.button("🔐 Acceso Admin", key="btn_footer_admin"):
+            st.session_state.show_admin_login = True
+            st.rerun()
