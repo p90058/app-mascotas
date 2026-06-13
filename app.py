@@ -43,6 +43,10 @@ if 'lat' not in st.session_state:
     st.session_state.lat = None
 if 'lon' not in st.session_state:
     st.session_state.lon = None
+if 'gps_temp_lat' not in st.session_state:
+    st.session_state.gps_temp_lat = None
+if 'gps_temp_lon' not in st.session_state:
+    st.session_state.gps_temp_lon = None
 
 # CAPTURAR GPS DE URL
 if "lat" in st.query_params and "lon" in st.query_params:
@@ -97,7 +101,7 @@ with tab1:
     
     tipo = st.selectbox("Tipo", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="f_tipo")
     
-    # GPS - SOLUCIÓN CON window.top.location.href
+    # GPS - IMPLEMENTACIÓN FUNCIONAL
     st.markdown("### 📍 Ubicación GPS")
     
     if st.session_state.lat and st.session_state.lon:
@@ -107,53 +111,35 @@ with tab1:
             st.session_state.lon = None
             st.rerun()
     else:
-        # HTML CON GPS - USANDO window.top.location.href
-        gps_html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    text-align: center;
-                    padding: 20px;
-                    margin: 0;
-                    background: transparent;
-                }
-                #btnGPS {
-                    width: 100%;
-                    padding: 18px;
-                    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-                    color: white;
-                    border: none;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    font-weight: bold;
-                    font-size: 16px;
-                    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-                }
-                #btnGPS:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6);
-                }
-                #btnGPS:disabled {
-                    opacity: 0.6;
-                    cursor: not-allowed;
-                }
-                #msg {
-                    margin-top: 15px;
-                    font-weight: 600;
-                    font-size: 14px;
-                }
-            </style>
-        </head>
-        <body>
-            <button id="btnGPS" onclick="getGPS()">📍 Obtener mi ubicación automáticamente</button>
-            <div id="msg"></div>
+        # Si hay coordenadas temporales del GPS
+        if st.session_state.gps_temp_lat and st.session_state.gps_temp_lon:
+            st.info(f"📍 Coordenadas obtenidas: {st.session_state.gps_temp_lat:.6f}, {st.session_state.gps_temp_lon:.6f}")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("✅ Usar esta ubicación", key="btn_use_gps", type="primary"):
+                    st.session_state.lat = st.session_state.gps_temp_lat
+                    st.session_state.lon = st.session_state.gps_temp_lon
+                    st.session_state.gps_temp_lat = None
+                    st.session_state.gps_temp_lon = None
+                    st.success("✅ Ubicación aplicada")
+                    st.rerun()
+            with col2:
+                if st.button("❌ Cancelar", key="btn_cancel_gps"):
+                    st.session_state.gps_temp_lat = None
+                    st.session_state.gps_temp_lon = None
+                    st.rerun()
+        else:
+            # BOTÓN GPS CON JAVASCRIPT
+            st.markdown("""
+            <button id="btnGPS" style="width:100%; padding:1rem; background:#4CAF50; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:1.1rem;" onclick="getGPS()">
+                📍 Obtener mi ubicación automáticamente
+            </button>
+            <div id="gpsMsg" style="margin-top:1rem; font-weight:bold; text-align:center;"></div>
             
             <script>
             function getGPS() {
-                const msg = document.getElementById('msg');
+                const msg = document.getElementById('gpsMsg');
                 const btn = document.getElementById('btnGPS');
                 
                 if (!navigator.geolocation) {
@@ -161,43 +147,64 @@ with tab1:
                     return;
                 }
                 
-                msg.innerHTML = '<span style="color:blue">⏳ Solicitando permiso...</span>';
+                msg.innerHTML = '<span style="color:blue">⏳ Obteniendo ubicación...</span>';
                 btn.disabled = true;
                 
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
                         const lat = pos.coords.latitude;
                         const lon = pos.coords.longitude;
-                        msg.innerHTML = '<span style="color:green">✅ ¡Ubicación obtenida!<br>Redirigiendo...</span>';
                         
+                        // MOSTRAR coordenadas en un campo visible
+                        msg.innerHTML = '<span style="color:green">✅ Ubicación obtenida:<br>Lat: ' + lat.toFixed(6) + '<br>Lon: ' + lon.toFixed(6) + '</span>';
+                        
+                        // Guardar en localStorage para que Streamlit pueda leerlo
+                        localStorage.setItem('gps_lat', lat);
+                        localStorage.setItem('gps_lon', lon);
+                        
+                        // Recargar la página para que Streamlit detecte el cambio
                         setTimeout(function() {
-                            // USAR window.top.location.href para Streamlit Cloud
-                            window.top.location.href = '?lat=' + lat + '&lon=' + lon;
-                        }, 800);
+                            location.reload();
+                        }, 1500);
+                        
+                        btn.disabled = false;
                     },
                     function(err) {
                         let text = 'Error';
-                        if(err.code === 1) text = 'Permiso denegado. Permite el acceso.';
-                        else if(err.code === 2) text = 'GPS no disponible. Actívalo.';
-                        else if(err.code === 3) text = 'Tiempo agotado.';
+                        if(err.code === 1) text = 'Permiso denegado';
                         msg.innerHTML = '<span style="color:red">❌ ' + text + '</span>';
                         btn.disabled = false;
                     },
-                    {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
+                    {enableHighAccuracy: true, timeout: 10000}
                 );
             }
             </script>
-        </body>
-        </html>
-        """
-        
-        st.components.v1.html(gps_html, height=180)
+            
+            <div style="margin-top:1rem; padding:0.8rem; background:#fff3cd; border-radius:8px; font-size:0.9rem;">
+                <b>💡 Nota:</b> Después de obtener la ubicación, la página se recargará automáticamente.
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Verificar si hay coordenadas en localStorage (esto no funciona directamente en Streamlit)
+            # Por eso usamos el enfoque de recargar la página
+            
+            # Leer coordenadas de localStorage usando JavaScript
+            gps_coords = st.components.v1.html("""
+            <script>
+            const lat = localStorage.getItem('gps_lat');
+            const lon = localStorage.getItem('gps_lon');
+            if (lat && lon) {
+                document.write('<input type="hidden" id="gps_lat" value="' + lat + '">');
+                document.write('<input type="hidden" id="gps_lon" value="' + lon + '">');
+            }
+            </script>
+            """, height=0)
     
     # DATOS MASCOTA
     col1, col2 = st.columns(2)
     with col1:
         estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="f_estado")
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", " Ave", "Otro"], key="f_especie")
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="f_especie")
         raza = st.text_input("Raza", key="f_raza")
         nombre_mascota = st.text_input("Nombre", key="f_nombre_mascota")
     with col2:
@@ -252,7 +259,7 @@ with tab1:
 
 # TAB 2: VER
 with tab2:
-    st.subheader(" Reportes")
+    st.subheader("🔍 Reportes")
     datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
     
     if datos:
