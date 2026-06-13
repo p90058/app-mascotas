@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_geolocation import streamlit_geolocation
 from supabase import create_client, Client
 import pandas as pd
 from datetime import datetime
@@ -191,6 +190,32 @@ st.markdown("""
         text-align: center;
     }
     
+    .btn-location {
+        background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+        color: white;
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 15px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(76,175,80,0.4);
+        transition: transform 0.2s;
+    }
+    
+    .btn-location:hover {
+        transform: scale(1.05);
+    }
+    
+    .permission-help {
+        background: #FFF3E0;
+        border-left: 5px solid #FF9800;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+        color: #E65100;
+    }
+    
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
@@ -205,78 +230,155 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- COMPONENTE JAVASCRIPT PARA GEOLOCALIZACIÓN ---
+geo_html = """
+<div id="geo-container" style="text-align: center; padding: 1rem;">
+    <button id="btn-geo" class="btn-location" onclick="obtenerUbicacion()">
+        📍 OBTENER MI UBICACIÓN GPS
+    </button>
+    <div id="geo-status" style="margin-top: 1rem; font-weight: 600;"></div>
+    <div id="geo-coords" style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;"></div>
+</div>
+
+<script>
+function obtenerUbicacion() {
+    const statusDiv = document.getElementById('geo-status');
+    const coordsDiv = document.getElementById('geo-coords');
+    const btn = document.getElementById('btn-geo');
+    
+    if (!navigator.geolocation) {
+        statusDiv.innerHTML = '<span style="color: #f44336;"> Tu navegador no soporta geolocalización</span>';
+        return;
+    }
+    
+    statusDiv.innerHTML = '<span style="color: #2196F3;">⏳ Obteniendo ubicación...</span>';
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            
+            statusDiv.innerHTML = '<span style="color: #4CAF50;">✅ ¡Ubicación obtenida con éxito!</span>';
+            coordsDiv.innerHTML = `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)} (Precisión: ${Math.round(accuracy)}m)`;
+            
+            // Enviar a Streamlit
+            const streamlit = window.parent.document.querySelector('iframe')?.contentWindow?.Streamlit;
+            if (streamlit) {
+                streamlit.setComponentValue({lat: lat, lon: lon, accuracy: accuracy});
+            }
+            
+            // También intentar con window.parent
+            try {
+                window.parent.postMessage({
+                    type: 'streamlit:setComponentValue',
+                    data: {lat: lat, lon: lon, accuracy: accuracy}
+                }, '*');
+            } catch(e) {}
+            
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        },
+        function(error) {
+            let mensaje = '';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    mensaje = '❌ Permiso denegado. Debes permitir el acceso a la ubicación en tu navegador.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    mensaje = ' Información de ubicación no disponible.';
+                    break;
+                case error.TIMEOUT:
+                    mensaje = '❌ La solicitud de ubicación expiró.';
+                    break;
+                default:
+                    mensaje = '❌ Error desconocido al obtener ubicación.';
+            }
+            statusDiv.innerHTML = `<span style="color: #f44336;">${mensaje}</span>`;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+</script>
+
+<div class="permission-help">
+    <b>️ ¿El navegador bloquea el acceso?</b><br>
+    <b>En Chrome (Android/PC):</b> Toca el ícono de candado 🔒 en la barra de direcciones → Permisos del sitio → Ubicación → Permitir → Recarga la página.<br>
+    <b>En Safari (iPhone):</b> Ajustes → Safari → Ubicación → Permitir para este sitio.<br>
+    <b>En Firefox:</b> Ícono de candado → Más información → Permisos → Permitir ubicación.
+</div>
+"""
+
 # Mostrar Logo
-logo_url = None
-try:
-    # Intentar obtener el logo desde GitHub raw
-    logo_url = "https://raw.githubusercontent.com/tu-usuario/app-mascotas/main/logo.png"
-except:
-    pass
-
-# Verificar si existe el logo
-if logo_url:
-    try:
-        st.markdown(f'<div class="logo-container"><img src="{logo_url}" width="130" style="border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>', unsafe_allow_html=True)
-    except:
-        st.markdown('<div class="logo-container" style="font-size: 5rem;">🐾</div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div class="logo-container" style="font-size: 5rem;">🐾</div>', unsafe_allow_html=True)
-
+st.markdown('<div class="logo-container" style="font-size: 5rem;">🐾</div>', unsafe_allow_html=True)
 st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["📸 Reportar Ahora", "🔔 Crear Alerta de Búsqueda", "🗺️ Buscar Mascotas"])
+tab1, tab2, tab3 = st.tabs([" Reportar Ahora", "🔔 Crear Alerta de Búsqueda", "🗺️ Buscar Mascotas"])
 
 # ==================== TAB 1: REPORTAR ====================
 with tab1:
     st.subheader("📝 Registrar Mascota Perdida o Encontrada")
     
-    st.markdown('<div class="info-box">📱 <b>Importante:</b> Debes permitir el acceso a la ubicación para geolocalizar el reporte. Toca el botón de abajo.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box">📱 <b>Paso 1:</b> Obtén tu ubicación GPS. <b>Paso 2:</b> Completa los datos de la mascota. <b>Paso 3:</b> Publica la alerta.</div>', unsafe_allow_html=True)
     
-    # INICIALIZAR SESSION STATE PARA UBICACIÓN
+    # INICIALIZAR SESSION STATE
     if 'latitud' not in st.session_state:
         st.session_state.latitud = None
         st.session_state.longitud = None
     
-    # BOTÓN PARA SOLICITAR UBICACIÓN
+    # CAJA DE UBICACIÓN CON JAVASCRIPT
     st.markdown('<div class="location-box">', unsafe_allow_html=True)
-    if st.button("📍 OBTENER MI UBICACIÓN AHORA", key="btn_get_location", type="primary"):
-        try:
-            location = streamlit_geolocation()
-            if location.get('latitude') and location.get('longitude'):
-                st.session_state.latitud = location['latitude']
-                st.session_state.longitud = location['longitude']
-                st.rerun()
-            else:
-                st.error("❌ No se pudo obtener la ubicación. Asegúrate de permitir el acceso en tu navegador.")
-        except Exception as e:
-            st.error(f"❌ Error al obtener ubicación: {str(e)}")
-            st.info("💡 Intenta recargar la página y permite el acceso a la ubicación cuando el navegador lo solicite.")
+    st.markdown("### 📍 Paso 1: Obtener Ubicación")
+    st.components.v1.html(geo_html, height=220)
     
-    if st.session_state.latitud and st.session_state.longitud:
-        st.success(f"✅ **Ubicación detectada:** Lat {st.session_state.latitud:.5f}, Lon {st.session_state.longitud:.5f}")
-        st.info("📍 Tu ubicación ha sido guardada para este reporte.")
-    else:
-        st.warning("⚠️ **Sin ubicación:** Toca el botón de arriba para obtener tu ubicación GPS.")
+    # FALLBACK MANUAL
+    st.markdown("---")
+    st.markdown("**¿No funciona el GPS? Ingresa las coordenadas manualmente:**")
+    col_lat, col_lon = st.columns(2)
+    with col_lat:
+        lat_manual = st.number_input("Latitud", value=st.session_state.latitud or -34.6037, format="%.6f", key="lat_manual")
+    with col_lon:
+        lon_manual = st.number_input("Longitud", value=st.session_state.longitud or -58.3816, format="%.6f", key="lon_manual")
+    
+    if st.button("💾 Usar estas coordenadas", key="btn_coords_manual"):
+        st.session_state.latitud = lat_manual
+        st.session_state.longitud = lon_manual
+        st.success(f"✅ Coordenadas guardadas: {lat_manual:.6f}, {lon_manual:.6f}")
     
     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # MOSTRAR ESTADO DE UBICACIÓN
+    if st.session_state.latitud and st.session_state.longitud:
+        st.success(f"✅ **Ubicación lista:** Lat {st.session_state.latitud:.5f}, Lon {st.session_state.longitud:.5f}")
+    else:
+        st.warning("⚠️ **Sin ubicación:** Usa el botón de arriba o ingresa coordenadas manualmente.")
 
+    st.markdown("---")
+    st.markdown("### 📋 Paso 2: Datos de la Mascota")
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("### 📋 Información Básica")
         estado = st.selectbox("Estado del reporte", ["Perdida 🔴", "Encontrada 🟢"], key="estado_reporte")
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="especie_reporte")
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", " Conejo", "🐦 Ave", "Otro"], key="especie_reporte")
         raza = st.text_input("Raza", placeholder="Ej: Labrador, Mestizo, Siamés, etc.", key="raza_reporte")
         nombre = st.text_input("Nombre de la mascota", placeholder="Ej: Max, Luna, etc.", key="nombre_reporte")
     
     with col2:
-        st.markdown("### 🎨 Características Físicas")
         color = st.text_input("Color principal", placeholder="Ej: Marrón, Negro, Blanco, Atigrado", key="color_reporte")
         tamano = st.selectbox("Tamaño", ["Pequeño (hasta 10kg)", "Mediano (10-25kg)", "Grande (más de 25kg)", "No especificado"], key="tamano_reporte")
         sexo = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"], key="sexo_reporte")
         contacto = st.text_input("📞 Teléfono de contacto", placeholder="Ej: +54 9 11 1234-5678", key="contacto_reporte")
 
-    st.markdown("### 📷 Foto y Descripción")
+    st.markdown("### 📷 Paso 3: Foto y Descripción")
     col_foto, col_desc = st.columns([1, 2])
     
     with col_foto:
@@ -284,11 +386,11 @@ with tab1:
     
     with col_desc:
         descripcion = st.text_area("Señas particulares", placeholder="Collar, cicatrices, comportamiento, última vez visto, etc.", height=120, key="descripcion_reporte")
-        ubicacion_detalle = st.text_input("Ubicación detallada", placeholder="Ej: Calle Falsa 123, Parque Central, cerca de...", key="ubicacion_reporte")
+        ubicacion_detalle = st.text_input("Ubicación detallada (referencia)", placeholder="Ej: Calle Falsa 123, Parque Central, cerca de...", key="ubicacion_reporte")
 
     if st.button("🚨 Publicar Alerta", type="primary", key="btn_publicar"):
         if not st.session_state.latitud or not st.session_state.longitud:
-            st.error("❌ **Primero debes obtener tu ubicación.** Toca el botón '📍 OBTENER MI UBICACIÓN AHORA' al inicio de esta página.")
+            st.error("❌ **Primero debes obtener tu ubicación.** Usa el botón GPS o ingresa coordenadas manualmente.")
         elif not foto or not nombre:
             st.error("❌ Por favor, sube una foto y escribe el nombre.")
         else:
@@ -324,9 +426,8 @@ with tab1:
                     
                     supabase.table("reportes").insert(data).execute()
                     
-                    # BUSCAR COINCIDENCIAS AUTOMÁTICAS
+                    # BUSCAR COINCIDENCIAS
                     estado_opuesto = "Encontrada" if "Perdida" in estado else "Perdida"
-                    
                     response_coincidencias = supabase.table("reportes").select("*").eq("estado", estado_opuesto).execute()
                     coincidencias = response_coincidencias.data
                     
@@ -356,7 +457,7 @@ with tab1:
                         for c, score in sorted(coincidencias_filtradas, key=lambda x: x[1], reverse=True)[:5]:
                             st.markdown(f"""
                             <div class="coincidencia-card">
-                                <span class="badge-coincidencia">🎯 COINCIDENCIA ({score} puntos)</span>
+                                <span class="badge-coincidencia"> COINCIDENCIA ({score} puntos)</span>
                                 <h4>{c['nombre']}</h4>
                                 <p><b>Especie:</b> {c.get('especie', 'N/A')}</p>
                                 <p><b>Raza:</b> {c.get('raza', 'N/A')}</p>
@@ -367,7 +468,6 @@ with tab1:
                             </div>
                             """, unsafe_allow_html=True)
                     
-                    # LIMPIAR UBICACIÓN DESPUÉS DE PUBLICAR
                     st.session_state.latitud = None
                     st.session_state.longitud = None
                     st.balloons()
@@ -376,28 +476,26 @@ with tab1:
 
 # ==================== TAB 2: CREAR ALERTA ====================
 with tab2:
-    st.subheader("🔔 Crear Alerta de Búsqueda")
+    st.subheader(" Crear Alerta de Búsqueda")
     
     st.markdown('<div class="info-box">ℹ️ <b>¿Cómo funciona?</b> Crea una alerta con las características de tu mascota. Cuando alguien publique un reporte con características similares, te mostraremos las coincidencias automáticamente.</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("### 📋 ¿Qué estás buscando?")
-        tipo_alerta = st.selectbox("Tipo de alerta", ["Busco mascota PERDIDA 🔴", "Reporté mascota ENCONTRADA 🟢"], key="tipo_alerta_sel")
-        especie_alerta = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="especie_alerta")
+        tipo_alerta = st.selectbox("Tipo de alerta", ["Busco mascota PERDIDA ", "Reporté mascota ENCONTRADA "], key="tipo_alerta_sel")
+        especie_alerta = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", " Ave", "Otro"], key="especie_alerta")
         raza_alerta = st.text_input("Raza", placeholder="Ej: Labrador, Mestizo, etc.", key="raza_alerta")
         nombre_alerta = st.text_input("Nombre de la mascota", placeholder="Ej: Max, Luna, etc.", key="nombre_alerta")
     
     with col2:
-        st.markdown("### 🎨 Características")
         color_alerta = st.text_input("Color principal", placeholder="Ej: Marrón, Negro, Blanco", key="color_alerta")
         tamano_alerta = st.selectbox("Tamaño", ["Pequeño (hasta 10kg)", "Mediano (10-25kg)", "Grande (más de 25kg)", "No especificado"], key="tamano_alerta")
         sexo_alerta = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"], key="sexo_alerta")
         contacto_alerta = st.text_input("📞 Teléfono de contacto", placeholder="Ej: +54 9 11 1234-5678", key="contacto_alerta")
     
     ubicacion_alerta = st.text_input("📍 Última ubicación conocida", placeholder="Ej: Calle Falsa 123, Parque Central", key="ubicacion_alerta")
-    email_alerta = st.text_input("📧 Email (opcional, para notificaciones futuras)", placeholder="tu@email.com", key="email_alerta")
+    email_alerta = st.text_input(" Email (opcional)", placeholder="tu@email.com", key="email_alerta")
     descripcion_alerta = st.text_area("Señas particulares", placeholder="Collar, cicatrices, comportamiento, etc.", height=100, key="descripcion_alerta")
 
     if st.button("🔔 Crear Alerta de Búsqueda", type="primary", key="btn_crear_alerta"):
@@ -421,9 +519,7 @@ with tab2:
                 
                 supabase.table("alertas_busqueda").insert(data_alerta).execute()
                 
-                # BUSCAR COINCIDENCIAS INMEDIATAS
                 estado_buscar = "Encontrada" if "PERDIDA" in tipo_alerta else "Perdida"
-                
                 response_reportes = supabase.table("reportes").select("*").eq("estado", estado_buscar).execute()
                 reportes = response_reportes.data
                 
@@ -447,9 +543,7 @@ with tab2:
                 st.success("✅ ¡Alerta creada con éxito!")
                 
                 if coincidencias_alerta:
-                    st.warning(f"🎯 ¡Se encontraron {len(coincidencias_alerta)} coincidencias con reportes existentes!")
-                    st.markdown("### 🎯 Coincidencias encontradas:")
-                    
+                    st.warning(f"🎯 ¡Se encontraron {len(coincidencias_alerta)} coincidencias!")
                     for r, score in sorted(coincidencias_alerta, key=lambda x: x[1], reverse=True)[:5]:
                         st.markdown(f"""
                         <div class="coincidencia-card">
@@ -464,15 +558,14 @@ with tab2:
                         </div>
                         """, unsafe_allow_html=True)
                 else:
-                    st.info("ℹ️ No hay coincidencias en este momento. Te notificaremos cuando aparezca un reporte similar.")
+                    st.info("ℹ️ No hay coincidencias en este momento.")
                 
                 st.balloons()
             except Exception as e:
                 st.error(f"❌ Error al crear alerta: {str(e)}")
     
-    # MOSTRAR ALERTAS ACTIVAS DEL USUARIO (CON MANEJO DE ERRORES)
     st.markdown("---")
-    st.subheader("🔔 Alertas de Búsqueda Activas")
+    st.subheader(" Alertas de Búsqueda Activas")
     
     try:
         response_alertas = supabase.table("alertas_busqueda").select("*").eq("activa", True).order("fecha_creacion", desc=True).execute()
@@ -519,12 +612,12 @@ with tab3:
             st.markdown(f'<div class="stats-box"><h3 style="color:#667eea; margin:0;">{len(df)}</h3><p style="margin:0; color:#666;">Total Reportes</p></div>', unsafe_allow_html=True)
         
         st.markdown('<div class="filter-container">', unsafe_allow_html=True)
-        st.markdown("### 🎯 Filtros de Búsqueda")
+        st.markdown("###  Filtros de Búsqueda")
         
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
         
         with col_f1:
-            filtro_estado = st.selectbox("Estado", ["Todos", "Perdida 🔴", "Encontrada 🟢"], key="filtro_estado")
+            filtro_estado = st.selectbox("Estado", ["Todos", "Perdida ", "Encontrada 🟢"], key="filtro_estado")
         with col_f2:
             filtro_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="filtro_especie")
         with col_f3:
@@ -567,7 +660,7 @@ with tab3:
                         st.image(row["foto_url"], use_container_width=True)
                     with c2:
                         st.markdown('<span class="badge-perdida">🔴 PERDIDA</span>', unsafe_allow_html=True)
-                        st.markdown(f"### 🐾 {row['nombre']}")
+                        st.markdown(f"###  {row['nombre']}")
                         st.markdown(f"**Especie:** {row.get('especie', 'No especificado')}")
                         st.markdown(f"**Raza:** {row.get('raza', 'No especificado')}")
                         st.markdown(f"**Color:** {row.get('color', 'No especificado')}")
@@ -606,10 +699,10 @@ with tab3:
                         st.markdown(f"**📅 Fecha:** {row['fecha']}")
                         if row.get('contacto'):
                             st.markdown(f"**📞 Contacto:** {row['contacto']}")
-                        st.markdown(f"[📍 Ver en Google Maps](https://www.google.com/maps?q={row['latitud']},{row['longitud']})")
+                        st.markdown(f"[ Ver en Google Maps](https://www.google.com/maps?q={row['latitud']},{row['longitud']})")
                     st.markdown('</div>', unsafe_allow_html=True)
         
         if df_filtrado.empty:
-            st.info("ℹ️ No se encontraron mascotas con esos filtros. Intenta con otros criterios.")
+            st.info("ℹ️ No se encontraron mascotas con esos filtros.")
     else:
         st.info("🐾 No hay reportes activos en este momento. ¡Sé el primero en reportar!")
