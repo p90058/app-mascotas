@@ -18,31 +18,31 @@ tab1, tab2 = st.tabs(["?? Reportar Ahora", "??? Mapa de Avistamientos"])
 
 with tab1:
     st.subheader("Registrar Mascota Perdida o Encontrada")
-    st.info("?? **Nota:** Permite el acceso a la ubicaciÛn cuando el navegador lo solicite.")
+    st.info("?? **Nota:** Permite el acceso a la ubicaciÈèÆ cuando el navegador lo solicite.")
     
-    # 1. SENSOR GPS AUTOM¡TICO
+    # 1. SENSOR GPS AUTOMÁ≥ûICO
     location = streamlit_geolocation()
     lat = location.get('latitude', None)
     lon = location.get('longitude', None)
     
     if lat and lon:
-        st.success(f"? UbicaciÛn detectada: Lat {lat:.5f}, Lon {lon:.5f}")
+        st.success(f"? UbicaciÈèÆ detectada: Lat {lat:.5f}, Lon {lon:.5f}")
     else:
-        st.warning("?? Esperando permiso de ubicaciÛn... (Toca 'Allow' en tu celular)")
+        st.warning("?? Esperando permiso de ubicaciÈèÆ... (Toca 'Allow' en tu celular)")
 
     col1, col2 = st.columns(2)
     with col1:
         estado = st.selectbox("Estado", ["Perdida ??", "Encontrada ??"])
         nombre = st.text_input("Nombre de la mascota")
     with col2:
-        contacto = st.text_input("TelÈfono de contacto")
+        contacto = st.text_input("TelÂ∂®ono de contacto")
         foto = st.file_uploader("?? Subir Foto", type=["jpg", "png", "jpeg"])
 
-    descripcion = st.text_area("DescripciÛn (Raza, color, seÒas, collar)")
+    descripcion = st.text_area("DescripciÈèÆ (Raza, color, seÈéôs, collar)")
 
     if st.button("?? Publicar Alerta", type="primary"):
         if not lat or not lon:
-            st.error("? No se pudo obtener la ubicaciÛn. Aseg˙rate de dar permiso al navegador.")
+            st.error("? No se pudo obtener la ubicaciÈèÆ. AsegÓÄ≤ate de dar permiso al navegador.")
         elif not foto or not nombre:
             st.error("? Por favor, sube una foto y escribe el nombre.")
         else:
@@ -58,7 +58,7 @@ with tab1:
                         file_options={"content-type": foto.type}
                     )
                     
-                    # Obtener URL p˙blica de la foto
+                    # Obtener URL pÓÄ¢lica de la foto
                     foto_url = supabase.storage.from_("fotos-mascotas").get_public_url(file_name)
                     
                     # B. Guardar datos en la base de datos
@@ -73,7 +73,7 @@ with tab1:
                     }
                     
                     supabase.table("reportes").insert(data).execute()
-                    st.success("? °Alerta publicada con Èxito!")
+                    st.success("? Ôºålerta publicada con ÊÜñito!")
                     st.balloons()
                 except Exception as e:
                     st.error(f"? Error al guardar: {str(e)}")
@@ -87,7 +87,7 @@ with tab2:
     
     if datos:
         df = pd.DataFrame(datos)
-        st.map(df[["latitud", "longitud"]]) # Mapa r·pido de Streamlit
+        st.map(df[["latitud", "longitud"]]) # Mapa rÂ´öido de Streamlit
         
         st.markdown("### ?? Lista de Reportes")
         for _, row in df.iterrows():
@@ -96,8 +96,9 @@ with tab2:
                 with c1:
                     st.image(row["foto_url"], use_container_width=True)
                 with c2:
+                    
                     st.markdown(f"### {row['estado']} - **{row['nombre']}**")
-                    st.markdown(f"**DescripciÛn:** {row['descripcion']}")
+                    st.markdown(f"**DescripciÈèÆ:** {row['descripcion']}")
                     st.markdown(f"**Fecha:** {row['fecha']}")
                     st.markdown(f"**Contacto:** {contacto if 'contacto' in row else 'No proporcionado'}")
                     st.markdown(f"[?? Ver en Google Maps](https://www.google.com/maps?q={row['latitud']},{row['longitud']})")
