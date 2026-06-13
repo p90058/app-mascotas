@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS CON COLORES CLAROS Y AGRADABLES ---
+# --- ESTILOS CSS ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
@@ -40,7 +40,9 @@ st.markdown("""
     .logo-container {
         display: flex;
         justify-content: center;
+        align-items: center;
         margin-bottom: 1rem;
+        min-height: 140px;
     }
     
     .stButton>button {
@@ -180,10 +182,13 @@ st.markdown("""
         font-size: 0.9rem;
     }
     
-    .main-container {
-        background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
-        padding: 2rem;
-        border-radius: 20px;
+    .location-box {
+        background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+        border: 3px solid #81C784;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        text-align: center;
     }
     
     #MainMenu {visibility: hidden;}
@@ -200,11 +205,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Mostrar Logo y Título
+# Mostrar Logo
+logo_url = None
 try:
-    st.markdown('<div class="logo-container"><img src="logo.png" width="130" style="border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>', unsafe_allow_html=True)
+    # Intentar obtener el logo desde GitHub raw
+    logo_url = "https://raw.githubusercontent.com/tu-usuario/app-mascotas/main/logo.png"
 except:
-    st.markdown('<div class="logo-container" style="font-size: 4rem;">🐾</div>', unsafe_allow_html=True)
+    pass
+
+# Verificar si existe el logo
+if logo_url:
+    try:
+        st.markdown(f'<div class="logo-container"><img src="{logo_url}" width="130" style="border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>', unsafe_allow_html=True)
+    except:
+        st.markdown('<div class="logo-container" style="font-size: 5rem;">🐾</div>', unsafe_allow_html=True)
+else:
+    st.markdown('<div class="logo-container" style="font-size: 5rem;">🐾</div>', unsafe_allow_html=True)
 
 st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
@@ -214,16 +230,35 @@ tab1, tab2, tab3 = st.tabs(["📸 Reportar Ahora", "🔔 Crear Alerta de Búsque
 with tab1:
     st.subheader("📝 Registrar Mascota Perdida o Encontrada")
     
-    st.markdown('<div class="info-box">📱 <b>Importante:</b> Permite el acceso a la ubicación cuando el navegador lo solicite para geolocalizar automáticamente el reporte.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box">📱 <b>Importante:</b> Debes permitir el acceso a la ubicación para geolocalizar el reporte. Toca el botón de abajo.</div>', unsafe_allow_html=True)
     
-    location = streamlit_geolocation()
-    lat = location.get('latitude', None)
-    lon = location.get('longitude', None)
+    # INICIALIZAR SESSION STATE PARA UBICACIÓN
+    if 'latitud' not in st.session_state:
+        st.session_state.latitud = None
+        st.session_state.longitud = None
     
-    if lat and lon:
-        st.success(f"✅ **Ubicación detectada:** Lat {lat:.5f}, Lon {lon:.5f}")
+    # BOTÓN PARA SOLICITAR UBICACIÓN
+    st.markdown('<div class="location-box">', unsafe_allow_html=True)
+    if st.button("📍 OBTENER MI UBICACIÓN AHORA", key="btn_get_location", type="primary"):
+        try:
+            location = streamlit_geolocation()
+            if location.get('latitude') and location.get('longitude'):
+                st.session_state.latitud = location['latitude']
+                st.session_state.longitud = location['longitude']
+                st.rerun()
+            else:
+                st.error("❌ No se pudo obtener la ubicación. Asegúrate de permitir el acceso en tu navegador.")
+        except Exception as e:
+            st.error(f"❌ Error al obtener ubicación: {str(e)}")
+            st.info("💡 Intenta recargar la página y permite el acceso a la ubicación cuando el navegador lo solicite.")
+    
+    if st.session_state.latitud and st.session_state.longitud:
+        st.success(f"✅ **Ubicación detectada:** Lat {st.session_state.latitud:.5f}, Lon {st.session_state.longitud:.5f}")
+        st.info("📍 Tu ubicación ha sido guardada para este reporte.")
     else:
-        st.warning("⚠️ Esperando permiso de ubicación... (Toca 'Permitir' en tu celular)")
+        st.warning("⚠️ **Sin ubicación:** Toca el botón de arriba para obtener tu ubicación GPS.")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     
@@ -252,8 +287,8 @@ with tab1:
         ubicacion_detalle = st.text_input("Ubicación detallada", placeholder="Ej: Calle Falsa 123, Parque Central, cerca de...", key="ubicacion_reporte")
 
     if st.button("🚨 Publicar Alerta", type="primary", key="btn_publicar"):
-        if not lat or not lon:
-            st.error("❌ No se pudo obtener la ubicación. Asegúrate de dar permiso al navegador.")
+        if not st.session_state.latitud or not st.session_state.longitud:
+            st.error("❌ **Primero debes obtener tu ubicación.** Toca el botón '📍 OBTENER MI UBICACIÓN AHORA' al inicio de esta página.")
         elif not foto or not nombre:
             st.error("❌ Por favor, sube una foto y escribe el nombre.")
         else:
@@ -280,8 +315,8 @@ with tab1:
                         "sexo": sexo,
                         "descripcion": descripcion,
                         "ubicacion_detalle": ubicacion_detalle,
-                        "latitud": float(lat),
-                        "longitud": float(lon),
+                        "latitud": float(st.session_state.latitud),
+                        "longitud": float(st.session_state.longitud),
                         "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
                         "foto_url": foto_url,
                         "contacto": contacto
@@ -332,6 +367,9 @@ with tab1:
                             </div>
                             """, unsafe_allow_html=True)
                     
+                    # LIMPIAR UBICACIÓN DESPUÉS DE PUBLICAR
+                    st.session_state.latitud = None
+                    st.session_state.longitud = None
                     st.balloons()
                 except Exception as e:
                     st.error(f"❌ Error al guardar: {str(e)}")
