@@ -18,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS ---
+# --- ESTILOS CSS CON COLORES CLAROS Y AGRADABLES ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
@@ -30,11 +30,11 @@ st.markdown("""
     .main-header {
         text-align: center;
         margin-bottom: 2rem;
-        padding: 1.5rem;
-        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+        padding: 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 20px;
         color: white;
-        box-shadow: 0 8px 25px rgba(255,107,107,0.3);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
     }
     
     .logo-container {
@@ -49,7 +49,7 @@ st.markdown("""
         font-weight: 700;
         padding: 0.85rem;
         border-radius: 12px;
-        background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         border: none;
     }
@@ -60,19 +60,21 @@ st.markdown("""
         padding: 1.5rem;
         margin-bottom: 1.5rem;
         box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        border: 2px solid #e0e0e0;
+        border: 2px solid #e8e8e8;
     }
     
     .reporte-card-perdida {
-        border-left: 6px solid #FF4444;
+        border-left: 6px solid #FF8A80;
+        background: linear-gradient(135deg, #FFF5F5 0%, #FFE5E5 100%);
     }
     
     .reporte-card-encontrada {
-        border-left: 6px solid #4CAF50;
+        border-left: 6px solid #81C784;
+        background: linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%);
     }
     
     .badge-perdida {
-        background: linear-gradient(135deg, #FF4444 0%, #FF6B6B 100%);
+        background: linear-gradient(135deg, #FF8A80 0%, #FF5252 100%);
         color: white;
         padding: 0.4rem 1rem;
         border-radius: 25px;
@@ -83,7 +85,7 @@ st.markdown("""
     }
     
     .badge-encontrada {
-        background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+        background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
         color: white;
         padding: 0.4rem 1rem;
         border-radius: 25px;
@@ -102,44 +104,45 @@ st.markdown("""
     }
     
     .perdidos-title {
-        color: #FF4444;
-        border-color: #FF4444;
+        color: #FF5252;
+        border-color: #FF8A80;
     }
     
     .encontrados-title {
-        color: #4CAF50;
-        border-color: #4CAF50;
+        color: #43A047;
+        border-color: #81C784;
     }
     
     .info-box {
         background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-        border-left: 5px solid #2196F3;
+        border-left: 5px solid #64B5F6;
         padding: 1.25rem;
         border-radius: 12px;
         margin-bottom: 1.5rem;
-        color: #1565C0;
+        color: #1976D2;
         font-weight: 600;
     }
     
     .filter-container {
-        background: #f8f9fa;
+        background: linear-gradient(135deg, #F5F5F5 0%, #EEEEEE 100%);
         padding: 1.5rem;
         border-radius: 15px;
         margin-bottom: 2rem;
-        border: 2px solid #e0e0e0;
+        border: 2px solid #E0E0E0;
     }
     
     .stats-box {
         background: white;
-        padding: 1rem;
-        border-radius: 12px;
+        padding: 1.25rem;
+        border-radius: 15px;
         text-align: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border: 2px solid #E8E8E8;
     }
     
     .alerta-card {
         background: linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%);
-        border-left: 6px solid #FFC107;
+        border-left: 6px solid #FFD54F;
         padding: 1.5rem;
         border-radius: 15px;
         margin-bottom: 1rem;
@@ -147,8 +150,8 @@ st.markdown("""
     }
     
     .coincidencia-card {
-        background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-        border: 3px solid #4CAF50;
+        background: linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%);
+        border: 3px solid #81C784;
         padding: 1.5rem;
         border-radius: 15px;
         margin-bottom: 1rem;
@@ -156,7 +159,7 @@ st.markdown("""
     }
     
     .badge-alerta {
-        background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%);
+        background: linear-gradient(135deg, #FFD54F 0%, #FFCA28 100%);
         color: #333;
         padding: 0.4rem 1rem;
         border-radius: 25px;
@@ -167,7 +170,7 @@ st.markdown("""
     }
     
     .badge-coincidencia {
-        background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+        background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
         color: white;
         padding: 0.4rem 1rem;
         border-radius: 25px;
@@ -177,8 +180,23 @@ st.markdown("""
         font-size: 0.9rem;
     }
     
+    .main-container {
+        background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+        padding: 2rem;
+        border-radius: 20px;
+    }
+    
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    
+    .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox select {
+        border-radius: 10px;
+        border: 2px solid #E0E0E0;
+    }
+    
+    .stTextInput > div > div > input:focus, .stTextArea textarea:focus {
+        border-color: #667eea;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -414,29 +432,32 @@ with tab2:
             except Exception as e:
                 st.error(f"❌ Error al crear alerta: {str(e)}")
     
-    # MOSTRAR ALERTAS ACTIVAS DEL USUARIO
+    # MOSTRAR ALERTAS ACTIVAS DEL USUARIO (CON MANEJO DE ERRORES)
     st.markdown("---")
     st.subheader("🔔 Alertas de Búsqueda Activas")
     
-    response_alertas = supabase.table("alertas_busqueda").select("*").eq("activa", True).order("fecha_creacion", desc=True).execute()
-    alertas = response_alertas.data
-    
-    if alertas:
-        for alerta in alertas[:10]:
-            st.markdown(f"""
-            <div class="alerta-card">
-                <span class="badge-alerta">🔔 ALERTA ACTIVA</span>
-                <h4>{alerta.get('nombre', 'Sin nombre')}</h4>
-                <p><b>Tipo:</b> {alerta['tipo_alerta']}</p>
-                <p><b>Especie:</b> {alerta.get('especie', 'N/A')}</p>
-                <p><b>Raza:</b> {alerta.get('raza', 'N/A')}</p>
-                <p><b>Color:</b> {alerta.get('color', 'N/A')}</p>
-                <p><b>Fecha creada:</b> {alerta['fecha_creacion']}</p>
-                <p><b>Contacto:</b> {alerta.get('contacto', 'N/A')}</p>
-            </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.info("ℹ️ No hay alertas de búsqueda activas.")
+    try:
+        response_alertas = supabase.table("alertas_busqueda").select("*").eq("activa", True).order("fecha_creacion", desc=True).execute()
+        alertas = response_alertas.data
+        
+        if alertas:
+            for alerta in alertas[:10]:
+                st.markdown(f"""
+                <div class="alerta-card">
+                    <span class="badge-alerta">🔔 ALERTA ACTIVA</span>
+                    <h4>{alerta.get('nombre', 'Sin nombre')}</h4>
+                    <p><b>Tipo:</b> {alerta['tipo_alerta']}</p>
+                    <p><b>Especie:</b> {alerta.get('especie', 'N/A')}</p>
+                    <p><b>Raza:</b> {alerta.get('raza', 'N/A')}</p>
+                    <p><b>Color:</b> {alerta.get('color', 'N/A')}</p>
+                    <p><b>Fecha creada:</b> {alerta['fecha_creacion']}</p>
+                    <p><b>Contacto:</b> {alerta.get('contacto', 'N/A')}</p>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.info("ℹ️ No hay alertas de búsqueda activas.")
+    except Exception as e:
+        st.info("ℹ️ Las alertas de búsqueda se activarán cuando crees tu primera alerta.")
 
 # ==================== TAB 3: BUSCAR MASCOTAS ====================
 with tab3:
@@ -453,11 +474,11 @@ with tab3:
         
         col_s1, col_s2, col_s3 = st.columns(3)
         with col_s1:
-            st.markdown(f'<div class="stats-box"><h3 style="color:#FF4444; margin:0;">{total_perdidos}</h3><p style="margin:0; color:#666;">Perdidos</p></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="stats-box"><h3 style="color:#FF5252; margin:0;">{total_perdidos}</h3><p style="margin:0; color:#666;">Perdidos</p></div>', unsafe_allow_html=True)
         with col_s2:
-            st.markdown(f'<div class="stats-box"><h3 style="color:#4CAF50; margin:0;">{total_encontrados}</h3><p style="margin:0; color:#666;">Encontrados</p></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="stats-box"><h3 style="color:#43A047; margin:0;">{total_encontrados}</h3><p style="margin:0; color:#666;">Encontrados</p></div>', unsafe_allow_html=True)
         with col_s3:
-            st.markdown(f'<div class="stats-box"><h3 style="color:#FF6B6B; margin:0;">{len(df)}</h3><p style="margin:0; color:#666;">Total Reportes</p></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="stats-box"><h3 style="color:#667eea; margin:0;">{len(df)}</h3><p style="margin:0; color:#666;">Total Reportes</p></div>', unsafe_allow_html=True)
         
         st.markdown('<div class="filter-container">', unsafe_allow_html=True)
         st.markdown("### 🎯 Filtros de Búsqueda")
@@ -469,9 +490,11 @@ with tab3:
         with col_f2:
             filtro_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="filtro_especie")
         with col_f3:
-            filtro_raza = st.selectbox("Raza", ["Todas"] + sorted(df['raza'].dropna().unique().tolist()), key="filtro_raza")
+            razas_unicas = sorted(df['raza'].dropna().unique().tolist()) if 'raza' in df.columns else []
+            filtro_raza = st.selectbox("Raza", ["Todas"] + razas_unicas, key="filtro_raza")
         with col_f4:
-            filtro_color = st.selectbox("Color", ["Todos"] + sorted(df['color'].dropna().unique().tolist()), key="filtro_color")
+            colores_unicos = sorted(df['color'].dropna().unique().tolist()) if 'color' in df.columns else []
+            filtro_color = st.selectbox("Color", ["Todos"] + colores_unicos, key="filtro_color")
         
         st.markdown('</div>', unsafe_allow_html=True)
         
