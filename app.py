@@ -11,14 +11,11 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.set_page_config(page_title="🐾 Alerta Mascotas", layout="wide", page_icon="🐶")
+st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
 
-# CSS PROFESIONAL
+# CSS MINIMALISTA
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-    * { font-family: 'Inter', sans-serif; }
-    
     .main-header {
         text-align: center;
         padding: 2rem;
@@ -26,82 +23,53 @@ st.markdown("""
         border-radius: 20px;
         color: white;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
     }
-    
-    .gps-button {
-        width: 100%;
+    .gps-box {
+        background: #e8f5e9;
+        border: 2px solid #81c784;
         padding: 1.5rem;
-        font-size: 1.2rem;
-        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: 700;
-        box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
-        transition: all 0.3s;
-    }
-    
-    .gps-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.6);
-    }
-    
-    .success-box {
-        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 12px;
+        border-radius: 10px;
         margin: 1rem 0;
-        font-weight: 600;
+    }
+    .success {
+        background: #4CAF50;
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
         text-align: center;
-        box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+        font-weight: bold;
     }
-    
-    .location-container {
-        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-        border: 3px solid #81c784;
-        padding: 2rem;
-        border-radius: 15px;
-        margin: 1.5rem 0;
-    }
-    
     .card {
         background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border-left: 6px solid #667eea;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    
     #MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
-# INICIALIZAR SESSION STATE
+# SESSION STATE
 if 'is_admin' not in st.session_state:
     st.session_state.is_admin = False
 if 'show_admin' not in st.session_state:
     st.session_state.show_admin = False
-if 'user_lat' not in st.session_state:
-    st.session_state.user_lat = None
-if 'user_lon' not in st.session_state:
-    st.session_state.user_lon = None
+if 'lat' not in st.session_state:
+    st.session_state.lat = None
+if 'lon' not in st.session_state:
+    st.session_state.lon = None
 
-# CAPTURAR GPS DE URL
+# CAPTURAR GPS
 if "lat" in st.query_params and "lon" in st.query_params:
-    try:
-        st.session_state.user_lat = float(st.query_params["lat"])
-        st.session_state.user_lon = float(st.query_params["lon"])
-        st.query_params.clear()
-    except:
-        pass
+    st.session_state.lat = float(st.query_params["lat"])
+    st.session_state.lon = float(st.query_params["lon"])
+    st.query_params.clear()
 
 # LOGIN ADMIN
 if st.session_state.show_admin and not st.session_state.is_admin:
-    st.markdown('<h1 class="main-header">🔐 Acceso Administrador</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🔐 Admin</h1>', unsafe_allow_html=True)
     codigo = st.text_input("Código", key="admin_codigo")
     password = st.text_input("Contraseña", type="password", key="admin_password")
     
@@ -109,8 +77,6 @@ if st.session_state.show_admin and not st.session_state.is_admin:
         if codigo == "ADMIN2024" and password == "admin123":
             st.session_state.is_admin = True
             st.session_state.show_admin = False
-            st.success("✅ Bienvenido!")
-            time.sleep(1)
             st.rerun()
         else:
             st.error("❌ Incorrecto")
@@ -120,28 +86,26 @@ if st.session_state.show_admin and not st.session_state.is_admin:
         st.rerun()
     st.stop()
 
-# APP PRINCIPAL
-st.markdown('<div style="font-size: 5rem; text-align: center;">🐾</div>', unsafe_allow_html=True)
-st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
+# APP
+st.markdown('<div style="font-size: 4rem; text-align: center;">🐾</div>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
 with st.sidebar:
     if st.session_state.is_admin:
-        st.markdown("### 👑 Admin")
         if st.button("🚪 Salir", key="btn_logout"):
             st.session_state.is_admin = False
             st.rerun()
 
 if st.session_state.is_admin:
-    tab1, tab2, tab3 = st.tabs(["📸 Reportar", "🗺️ Ver", "⚙️ Admin"])
+    tab1, tab2, tab3 = st.tabs(["Reportar", "Ver", "Admin"])
 else:
-    tab1, tab2 = st.tabs(["📸 Reportar", "🗺️ Ver"])
+    tab1, tab2 = st.tabs(["Reportar", "Ver"])
 
 # TAB 1: REPORTAR
 with tab1:
-    st.subheader("📝 Registrar Mascota")
+    st.subheader("Registrar Mascota")
     
     # DATOS USUARIO
-    st.markdown("### 👤 Tus Datos")
     col1, col2, col3 = st.columns(3)
     with col1:
         nombre = st.text_input("Nombre", key="f_nombre")
@@ -152,30 +116,53 @@ with tab1:
     
     tipo = st.selectbox("Tipo", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="f_tipo")
     
-    # GPS - IMPLEMENTACIÓN FUNCIONAL
-    st.markdown('<div class="location-container">', unsafe_allow_html=True)
-    st.markdown("### 📍 Ubicación GPS")
+    # GPS - IMPLEMENTACIÓN SIMPLE
+    st.markdown('<div class="gps-box">', unsafe_allow_html=True)
+    st.markdown("### Ubicación GPS")
     
-    if st.session_state.user_lat and st.session_state.user_lon:
+    if st.session_state.lat and st.session_state.lon:
         st.markdown(f"""
-        <div class="success-box">
-            ✅ UBICACIÓN CAPTURADA<br><br>
-            Latitud: {st.session_state.user_lat:.6f}<br>
-            Longitud: {st.session_state.user_lon:.6f}
+        <div class="success">
+            ✅ Ubicación capturada<br>
+            Lat: {st.session_state.lat:.6f} | Lon: {st.session_state.lon:.6f}
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button("🔄 Nueva Ubicación", key="btn_reset_gps"):
-            st.session_state.user_lat = None
-            st.session_state.user_lon = None
+        if st.button("🔄 Nueva ubicación", key="btn_reset"):
+            st.session_state.lat = None
+            st.session_state.lon = None
             st.rerun()
     else:
-        # GPS CON JAVASCRIPT FUNCIONAL
+        # FORMULARIO MANUAL PARA GPS
+        with st.form(key="gps_form"):
+            st.markdown("**Ingresa las coordenadas manualmente:**")
+            st.markdown("*Abre Google Maps, presiona tu ubicación y copia las coordenadas*")
+            
+            col_lat, col_lon = st.columns(2)
+            with col_lat:
+                lat_input = st.number_input("Latitud", value=0.0, format="%.6f", key="lat_in")
+            with col_lon:
+                lon_input = st.number_input("Longitud", value=0.0, format="%.6f", key="lon_in")
+            
+            submit = st.form_submit_button("💾 Guardar ubicación", use_container_width=True)
+            
+            if submit and lat_input != 0.0 and lon_input != 0.0:
+                st.session_state.lat = lat_input
+                st.session_state.lon = lon_input
+                st.success("✅ Ubicación guardada")
+                st.rerun()
+            elif submit:
+                st.error("❌ Ingresa coordenadas válidas")
+        
+        st.markdown("---")
+        st.markdown("**O usa el botón automático:**")
+        
+        # BOTÓN GPS AUTOMÁTICO
         st.markdown("""
-        <button class="gps-button" id="btnGPS" onclick="getGPS()">
-            📍 Obtener mi ubicación automáticamente
+        <button id="btnGPS" style="width:100%; padding:1rem; background:#4CAF50; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:1.1rem;" onclick="getGPS()">
+            📍 Obtener ubicación automáticamente
         </button>
-        <div id="gpsMsg" style="margin-top:1rem; font-weight:600; text-align:center;"></div>
+        <div id="gpsMsg" style="margin-top:1rem; font-weight:bold; text-align:center;"></div>
         
         <script>
         function getGPS() {
@@ -183,50 +170,35 @@ with tab1:
             const btn = document.getElementById('btnGPS');
             
             if (!navigator.geolocation) {
-                msg.innerHTML = '<span style="color:#d32f2f">❌ Tu navegador no soporta GPS</span>';
+                msg.innerHTML = '<span style="color:red">❌ No soporta GPS</span>';
                 return;
             }
             
-            msg.innerHTML = '<span style="color:#1976d2">⏳ Obteniendo ubicación...</span>';
+            msg.innerHTML = '<span style="color:blue">⏳ Obteniendo...</span>';
             btn.disabled = true;
-            btn.style.opacity = '0.6';
             
             navigator.geolocation.getCurrentPosition(
                 function(pos) {
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    msg.innerHTML = '<span style="color:#388e3c; font-size:1.2rem">✅ ¡Ubicación obtenida!<br>Redirigiendo...</span>';
-                    
-                    setTimeout(function() {
-                        const url = window.location.href.split('?')[0];
-                        window.location.href = url + '?lat=' + lat + '&lon=' + lon;
-                    }, 800);
+                    msg.innerHTML = '<span style="color:green">✅ ¡Listo!</span>';
+                    setTimeout(() => {
+                        window.location.href = '?lat=' + lat + '&lon=' + lon;
+                    }, 500);
                 },
                 function(err) {
-                    let text = 'Error';
-                    if(err.code === 1) text = 'Permiso denegado. Permite el acceso.';
-                    msg.innerHTML = '<span style="color:#d32f2f">❌ ' + text + '</span>';
+                    msg.innerHTML = '<span style="color:red">❌ Error</span>';
                     btn.disabled = false;
-                    btn.style.opacity = '1';
                 },
-                {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
+                {enableHighAccuracy: true, timeout: 10000}
             );
         }
         </script>
-        
-        <div style="margin-top:1.5rem; padding:1rem; background:white; border-radius:10px; border-left:4px solid #2196f3;">
-            <b>💡 Instrucciones:</b><br>
-            1. Presiona el botón verde de arriba<br>
-            2. Cuando el navegador pregunte, haz clic en <b>"Permitir"</b><br>
-            3. Espera 2-5 segundos<br>
-            4. La página se recargará automáticamente con tu ubicación
-        </div>
         """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
     
     # DATOS MASCOTA
-    st.markdown("### 🐾 Datos de la Mascota")
     col1, col2 = st.columns(2)
     with col1:
         estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="f_estado")
@@ -239,15 +211,14 @@ with tab1:
         sexo = st.selectbox("Sexo", ["Macho", "Hembra"], key="f_sexo")
         contacto = st.text_input("Teléfono contacto", value=telefono if telefono else "", key="f_contacto")
     
-    foto = st.file_uploader("📷 Foto", type=["jpg", "png", "jpeg"], key="f_foto")
+    foto = st.file_uploader("Foto", type=["jpg", "png", "jpeg"], key="f_foto")
     descripcion = st.text_area("Descripción", key="f_desc")
     
-    # PUBLICAR
-    if st.button("🚨 PUBLICAR ALERTA", type="primary", use_container_width=True, key="btn_pub"):
+    if st.button("🚨 PUBLICAR", type="primary", use_container_width=True, key="btn_pub"):
         if not nombre or not email or not telefono:
             st.error("❌ Completa Nombre, Email y Teléfono")
-        elif not st.session_state.user_lat:
-            st.error("❌ Primero obtén la ubicación GPS (botón verde)")
+        elif not st.session_state.lat:
+            st.error("❌ Primero guarda la ubicación GPS")
         elif not foto:
             st.error("❌ Sube una foto")
         elif not nombre_mascota:
@@ -270,16 +241,16 @@ with tab1:
                         "estado": estado, "especie": especie, "raza": raza,
                         "nombre": nombre_mascota, "color": color, "tamano": tamano,
                         "sexo": sexo, "descripcion": descripcion,
-                        "latitud": st.session_state.user_lat,
-                        "longitud": st.session_state.user_lon,
+                        "latitud": st.session_state.lat,
+                        "longitud": st.session_state.lon,
                         "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
                         "foto_url": foto_url, "contacto": contacto, "usuario_email": email
                     }).execute()
                     
-                    st.success("✅ ¡Publicado con éxito!")
+                    st.success("✅ ¡Publicado!")
                     st.balloons()
-                    st.session_state.user_lat = None
-                    st.session_state.user_lon = None
+                    st.session_state.lat = None
+                    st.session_state.lon = None
                     time.sleep(2)
                     st.rerun()
                 except Exception as e:
@@ -287,7 +258,7 @@ with tab1:
 
 # TAB 2: VER
 with tab2:
-    st.subheader("🔍 Reportes")
+    st.subheader("Reportes")
     datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
     
     if datos:
@@ -325,8 +296,8 @@ with tab2:
 # TAB 3: ADMIN
 if st.session_state.is_admin:
     with tab3:
-        st.subheader("⚙️ Admin")
-        at1, at2 = st.tabs(["🗑️ Reportes", "👥 Usuarios"])
+        st.subheader("Admin")
+        at1, at2 = st.tabs(["Reportes", "Usuarios"])
         
         with at1:
             reports = supabase.table("reportes").select("*").order("fecha", desc=True).execute().data
@@ -335,7 +306,7 @@ if st.session_state.is_admin:
                     c1, c2 = st.columns([4, 1])
                     with c1:
                         st.markdown(f"**{row['nombre']}** - {row['estado']}")
-                    with col2:
+                    with c2:
                         if st.button("🗑️", key=f"d{row['id']}"):
                             supabase.table("reportes").delete().eq("id", row['id']).execute()
                             st.rerun()
