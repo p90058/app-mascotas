@@ -42,7 +42,7 @@ if 'show_admin' not in st.session_state:
 
 # LOGIN ADMIN
 if st.session_state.show_admin and not st.session_state.is_admin:
-    st.markdown('<div class="header"><h1>🔐 Admin</h1></div>', unsafe_allow_html=True)
+    st.markdown('<div class="header"><h1> Admin</h1></div>', unsafe_allow_html=True)
     codigo = st.text_input("Código")
     password = st.text_input("Contraseña", type="password")
     
@@ -60,7 +60,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
     st.stop()
 
 # APP PRINCIPAL
-st.markdown('<div class="header"><h1 style="margin:0;"> Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
+st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
 with st.sidebar:
     if st.session_state.is_admin:
@@ -73,13 +73,12 @@ if st.session_state.is_admin:
 else:
     tab1, tab2 = st.tabs(["Reportar", "Ver"])
 
-# ══════════════════════════════════════════════════════════════
-# TAB 1: REPORTAR - FORMULARIO HTML COMPLETO CON GPS + SUBIDA DE FOTOS
+# ═════════════════════════════════════════════════════════════
+# TAB 1: REPORTAR
 # ═══════════════════════════════════════════════════════════════
 with tab1:
-    st.subheader(" Registrar Mascota")
+    st.subheader("📝 Registrar Mascota")
     
-    # FORMULARIO HTML COMPLETO CON GPS Y SUBIDA DE FOTOS
     form_html = """
     <!DOCTYPE html>
     <html>
@@ -163,14 +162,8 @@ with tab1:
                 margin-top: 10px;
                 display: none;
             }
-            .file-upload {
-                position: relative;
-                display: inline-block;
-                width: 100%;
-            }
-            .file-upload input[type="file"] {
-                display: none;
-            }
+            .file-upload { position: relative; display: inline-block; width: 100%; }
+            .file-upload input[type="file"] { display: none; }
             .file-upload-label {
                 display: block;
                 padding: 12px;
@@ -190,10 +183,7 @@ with tab1:
                 border-color: #28a745;
                 color: #155724;
             }
-            #preview-container {
-                margin-top: 10px;
-                display: none;
-            }
+            #preview-container { margin-top: 10px; display: none; }
             #preview-container img {
                 max-width: 100%;
                 max-height: 200px;
@@ -234,7 +224,7 @@ with tab1:
             <div class="gps-box">
                 <div class="section-title" style="border:none; margin:0 0 10px 0;">📍 Ubicación GPS</div>
                 <button type="button" class="btn-gps" id="btnGPS" onclick="getGPS()">
-                    📍 Obtener mi ubicación automáticamente
+                     Obtener mi ubicación automáticamente
                 </button>
                 <div id="gpsStatus" class="status"></div>
                 <div id="coords-display">
@@ -261,7 +251,7 @@ with tab1:
                         <option>🐕 Perro</option>
                         <option>🐈 Gato</option>
                         <option>🐰 Conejo</option>
-                        <option>🐦 Ave</option>
+                        <option> Ave</option>
                         <option>Otro</option>
                     </select>
                 </div>
@@ -300,13 +290,10 @@ with tab1:
                 </div>
             </div>
             
-            <div class="form-group">
-                <label>Teléfono de contacto</label>
-                <input type="tel" id="contacto">
-            </div>
+            <!-- ELIMINADO: Campo Teléfono de contacto (ya está arriba) -->
             
             <div class="form-group">
-                <label> Foto de la mascota *</label>
+                <label>📷 Foto de la mascota *</label>
                 <div class="file-upload">
                     <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
                     <label for="foto" class="file-upload-label" id="fileLabel">
@@ -319,7 +306,7 @@ with tab1:
             </div>
             
             <div class="form-group">
-                <label>Descripción</label>
+                <label>📝 Descripción</label>
                 <textarea id="descripcion" rows="3" placeholder="Señas particulares..."></textarea>
             </div>
             
@@ -331,11 +318,9 @@ with tab1:
         </form>
         
         <script>
-            // Configuración de Supabase
             const SUPABASE_URL = 'https://iaxtfsqipwbvexkfcprv.supabase.co';
             const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlheHRmc3FpcHdidmV4a2ZjcHJ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTI5NjkxNSwiZXhwIjoyMDk2ODcyOTE1fQ.7ineE_CVWjbMMWzURUZl87q5z8tE8V7K1xoh4pfwiDI';
             
-            // Manejar selección de archivo
             function handleFileSelect(event) {
                 const file = event.target.files[0];
                 const label = document.getElementById('fileLabel');
@@ -346,7 +331,6 @@ with tab1:
                     label.textContent = '✅ ' + file.name;
                     label.classList.add('has-file');
                     
-                    // Mostrar vista previa
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         preview.src = e.target.result;
@@ -356,7 +340,6 @@ with tab1:
                 }
             }
             
-            // GPS
             function getGPS() {
                 const btn = document.getElementById('btnGPS');
                 const status = document.getElementById('gpsStatus');
@@ -389,7 +372,7 @@ with tab1:
                     },
                     function(err) {
                         let msg = 'Error al obtener ubicación';
-                        if (err.code === 1) msg = '❌ Permiso denegado. Permite el acceso a la ubicación en tu navegador.';
+                        if (err.code === 1) msg = '❌ Permiso denegado. Permite el acceso a la ubicación.';
                         else if (err.code === 2) msg = '❌ Ubicación no disponible. Activa el GPS.';
                         else if (err.code === 3) msg = '❌ Tiempo agotado. Intenta nuevamente.';
                         
@@ -401,7 +384,6 @@ with tab1:
                 );
             }
             
-            // Enviar formulario a Supabase
             document.getElementById('mascotaForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -439,8 +421,10 @@ with tab1:
                 const color = document.getElementById('color').value;
                 const tamano = document.getElementById('tamano').value;
                 const sexo = document.getElementById('sexo').value;
-                const contacto = document.getElementById('contacto').value || telefono;
                 const descripcion = document.getElementById('descripcion').value;
+                
+                // El contacto ahora es el mismo teléfono cargado arriba
+                const contacto = telefono;
                 
                 const now = new Date();
                 const fecha = now.toISOString().slice(0, 19).replace('T', ' ');
@@ -486,10 +470,9 @@ with tab1:
                         throw new Error('Error al subir la foto');
                     }
                     
-                    // Obtener URL pública de la foto
                     const fotoUrl = SUPABASE_URL + '/storage/v1/object/public/' + filePath;
                     
-                    // 3. Guardar reporte (SIN usuario_email)
+                    // 3. Guardar reporte
                     const reporteData = {
                         estado: estado,
                         especie: especie,
@@ -520,7 +503,6 @@ with tab1:
                         status.className = 'status success';
                         status.textContent = '✅ ¡Alerta publicada con éxito!';
                         
-                        // Limpiar formulario
                         document.getElementById('mascotaForm').reset();
                         document.getElementById('lat').value = '';
                         document.getElementById('lon').value = '';
@@ -529,7 +511,6 @@ with tab1:
                         document.getElementById('fileLabel').textContent = '📁 Haz clic para seleccionar una foto (JPG, PNG)';
                         document.getElementById('fileLabel').classList.remove('has-file');
                         
-                        // Notificar a Streamlit
                         if (window.parent) {
                             window.parent.postMessage({ type: 'published' }, '*');
                         }
@@ -554,7 +535,7 @@ with tab1:
 
 # ══════════════════════════════════════════════════════════════
 # TAB 2: VER
-# ═══════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
 with tab2:
     st.subheader("🔍 Reportes")
     datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
@@ -585,13 +566,13 @@ with tab2:
                         <div class="card">
                             <b>{row['nombre']}</b> - {row['estado']}<br>
                             {row.get('especie', 'N/A')} | {row.get('raza', 'N/A')}<br>
-                            📅 {row['fecha']} |  {row.get('contacto', 'N/A')}
+                            📅 {row['fecha']} | 📞 {row.get('contacto', 'N/A')}
                         </div>
                         """, unsafe_allow_html=True)
     else:
-        st.info("🐾 Sin reportes")
+        st.info(" Sin reportes")
 
-# ═════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
 # TAB 3: ADMIN
 # ═══════════════════════════════════════════════════════════════
 if st.session_state.is_admin:
@@ -632,4 +613,4 @@ if not st.session_state.is_admin:
     if st.button("🔐 Acceso Admin", key="bfa"):
         st.session_state.show_admin = True
         st.rerun()
-st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta </div>", unsafe_allow_html=True)
