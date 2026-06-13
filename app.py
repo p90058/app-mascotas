@@ -16,7 +16,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
 
-# CSS - Botones grandes funcionales, pequeños ocultos
+# CSS - Solo botones grandes visibles
 st.markdown("""
 <style>
     .header {
@@ -30,7 +30,7 @@ st.markdown("""
     }
     .header h1 { font-size: 1.8rem; margin: 0; }
     
-    /* BOTONES GRANDES */
+    /* BOTONES GRANDES - UNICOS VISIBLES */
     .nav-btn-container {
         display: flex;
         gap: 20px;
@@ -79,20 +79,6 @@ st.markdown("""
         opacity: 0.95;
         text-align: center;
         line-height: 1.4;
-    }
-    
-    /* OCULTAR BOTONES PEQUEÑOS DE STREAMLIT */
-    .hidden-nav-buttons {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-        pointer-events: none;
     }
     
     #MainMenu, footer { visibility: hidden; }
@@ -156,27 +142,16 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
-# BOTONES OCULTOS DE STREAMLIT (funcionan pero no se ven)
+# SOLO BOTONES GRANDES HTML - SIN BOTONES PEQUEÑOS
 # ═════════════════════════════════════════════════════════════
-st.markdown('<div class="hidden-nav-buttons">', unsafe_allow_html=True)
-col_nav1, col_nav2 = st.columns(2)
-with col_nav1:
-    btn_reportar = st.button("📸 Reportar Mascota", key="btn_nav_reportar", use_container_width=True, type="primary")
-with col_nav2:
-    btn_ver = st.button("🔍 Ver Alertas", key="btn_nav_ver", use_container_width=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# ════════════════════════════════════════════════════════════
-# BOTONES GRANDES VISIBLES QUE ACTIVAN LOS OCULTOS
-# ════════════════════════════════════════════════════════════
 st.markdown("""
 <div class="nav-btn-container">
-    <button class="nav-btn nav-btn-reportar" onclick="clickHiddenButton('btn_nav_reportar')">
+    <button class="nav-btn nav-btn-reportar" onclick="cambiarVista('reportar')">
         <span class="nav-btn-icon">📸</span>
         <span class="nav-btn-title">Reportar Mascota</span>
         <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
     </button>
-    <button class="nav-btn nav-btn-ver" onclick="clickHiddenButton('btn_nav_ver')">
+    <button class="nav-btn nav-btn-ver" onclick="cambiarVista('ver')">
         <span class="nav-btn-icon">🔍</span>
         <span class="nav-btn-title">Ver Alertas</span>
         <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
@@ -184,54 +159,37 @@ st.markdown("""
 </div>
 
 <script>
-function clickHiddenButton(key) {
-    // Buscar todos los botones en la página
-    var buttons = document.querySelectorAll('button');
-    for (var i = 0; i < buttons.length; i++) {
-        var btn = buttons[i];
-        // Los botones de Streamlit tienen data-testid con el key
-        if (btn.getAttribute('data-testid') && btn.getAttribute('data-testid').includes(key)) {
-            btn.click();
-            return;
-        }
-        // Fallback: buscar por clase específica de Streamlit
-        if (btn.className && btn.className.includes('stButton') === false) {
-            // Buscar en el contenedor padre
-            var parent = btn.closest('[data-testid="stHorizontalBlock"]');
-            if (parent) {
-                var innerButtons = parent.querySelectorAll('button');
-                for (var j = 0; j < innerButtons.length; j++) {
-                    if (innerButtons[j].textContent.includes(key.replace('btn_nav_', ''))) {
-                        innerButtons[j].click();
-                        return;
-                    }
-                }
-            }
-        }
-    }
+function cambiarVista(vista) {
+    // Crear un formulario temporal y enviarlo a Streamlit
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.style.display = 'none';
     
-    // Método alternativo: buscar por texto del botón
-    for (var i = 0; i < buttons.length; i++) {
-        var text = buttons[i].textContent || buttons[i].innerText;
-        if (key === 'btn_nav_reportar' && text.includes('Reportar Mascota')) {
-            buttons[i].click();
-            return;
-        }
-        if (key === 'btn_nav_ver' && text.includes('Ver Alertas')) {
-            buttons[i].click();
-            return;
-        }
-    }
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'vista_cambio';
+    input.value = vista;
+    
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 }
 </script>
 """, unsafe_allow_html=True)
+
+# Manejar el cambio de vista desde JavaScript
+if 'vista_cambio' in st.query_params:
+    st.session_state.vista_actual = st.query_params['vista_cambio']
+    st.query_params.clear()
+    st.rerun()
 
 st.markdown("---")
 
 with st.sidebar:
     if st.session_state.is_admin:
-        st.markdown("###  Administrador")
-        if st.button(" Salir"):
+        st.markdown("### 👑 Administrador")
+        if st.button("🚪 Salir"):
             st.session_state.is_admin = False
             st.rerun()
     else:
@@ -415,7 +373,7 @@ if st.session_state.vista_actual == 'reportar':
                 <input type="hidden" id="lon" value="">
             </div>
             
-            <div class="section-title"> Datos de la Mascota</div>
+            <div class="section-title">🐾 Datos de la Mascota</div>
             <div class="row">
                 <div class="form-group">
                     <label>Estado *</label>
@@ -427,7 +385,7 @@ if st.session_state.vista_actual == 'reportar':
                 <div class="form-group">
                     <label>Especie *</label>
                     <select id="especie" required>
-                        <option> Perro</option>
+                        <option>🐕 Perro</option>
                         <option>🐈 Gato</option>
                         <option>🐰 Conejo</option>
                         <option>🐦 Ave</option>
@@ -633,7 +591,7 @@ if st.session_state.vista_actual == 'reportar':
                     } else {
                         const error = await response.json();
                         status.className = 'status error';
-                        status.textContent = ' Error: ' + (error.message || 'Desconocido');
+                        status.textContent = '❌ Error: ' + (error.message || 'Desconocido');
                     }
                 } catch (error) {
                     status.className = 'status error';
@@ -648,9 +606,9 @@ if st.session_state.vista_actual == 'reportar':
     
     st.components.v1.html(form_html, height=1800)
 
-# ═════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 # VISTA: VER REPORTES
-# ═════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 elif st.session_state.vista_actual == 'ver':
     st.subheader("🔍 Reportes de Mascotas")
     datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
@@ -665,7 +623,7 @@ elif st.session_state.vista_actual == 'ver':
             f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         with col3:
             razas_unicas = sorted([r for r in df['raza'].dropna().unique().tolist() if r and str(r).strip()]) if 'raza' in df.columns else []
-            f_raza = st.selectbox(" Raza", ["Todas"] + razas_unicas, key="fr")
+            f_raza = st.selectbox("🐕 Raza", ["Todas"] + razas_unicas, key="fr")
         
         col4, col5 = st.columns(2)
         with col4:
@@ -791,7 +749,7 @@ elif st.session_state.vista_actual == 'ver':
             
             st.markdown("---")
             
-            for est, emoji, clase in [("Perdida", "", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
+            for est, emoji, clase in [("Perdida", "🔴", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
@@ -826,9 +784,9 @@ elif st.session_state.vista_actual == 'ver':
     else:
         st.info("🐾 Sin reportes")
 
-# ═════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 # VISTA: ADMIN
-# ═════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 if st.session_state.is_admin and st.session_state.vista_actual != 'admin':
     if st.button("⚙️ Panel de Administración", use_container_width=True):
         st.session_state.vista_actual = 'admin'
