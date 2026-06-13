@@ -1,390 +1,256 @@
 import streamlit as st
-from supabase import create_client, Client
+from supabase import create_client
 import pandas as pd
 from datetime import datetime
 import uuid
 
-# --- TUS DATOS DE SUPABASE ---
+# CONFIGURACIÓN
 SUPABASE_URL = "https://iaxtfsqipwbvexkfcprv.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlheHRmc3FpcHdidmV4a2ZjcHJ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTI5NjkxNSwiZXhwIjoyMDk2ODcyOTE1fQ.7ineE_CVWjbMMWzURUZl87q5z8tE8V7K1xoh4pfwiDI"
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.set_page_config(
-    page_title="🐾 Alerta Mascotas", 
-    layout="wide", 
-    page_icon="🐶",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title=" Alerta Mascotas", layout="wide", page_icon="🐶")
 
-# --- ESTILOS CSS ---
+# ESTILOS
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
-    * { font-family: 'Nunito', sans-serif; }
-    
-    .main-header {
-        text-align: center; margin-bottom: 2rem; padding: 2rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px; color: white; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-    }
-    
-    .stButton>button {
-        width: 100%; font-size: 1.1rem; font-weight: 700; padding: 0.85rem;
-        border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; border: none;
-    }
-    
-    .btn-gps {
-        width: 100%; padding: 1rem; font-size: 1.2rem; font-weight: 700;
-        background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
-        color: white; border: none; border-radius: 12px; cursor: pointer;
-        box-shadow: 0 4px 15px rgba(76,175,80,0.4);
-    }
-    
-    .reporte-card {
-        background: white; border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 2px solid #e8e8e8;
-    }
-    .reporte-card-perdida { border-left: 6px solid #FF8A80; background: linear-gradient(135deg, #FFF5F5 0%, #FFE5E5 100%); }
-    .reporte-card-encontrada { border-left: 6px solid #81C784; background: linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%); }
-    
-    .badge-perdida { background: linear-gradient(135deg, #FF8A80 0%, #FF5252 100%); color: white; padding: 0.4rem 1rem; border-radius: 25px; font-weight: 800; display: inline-block; margin-bottom: 0.75rem; }
-    .badge-encontrada { background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%); color: white; padding: 0.4rem 1rem; border-radius: 25px; font-weight: 800; display: inline-block; margin-bottom: 0.75rem; }
-    
-    .section-title { font-size: 1.8rem; font-weight: 800; margin: 2.5rem 0 1.5rem 0; padding-bottom: 0.75rem; border-bottom: 4px solid; }
-    .perdidos-title { color: #FF5252; border-color: #FF8A80; }
-    .encontrados-title { color: #43A047; border-color: #81C784; }
-    
-    .info-box { background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-left: 5px solid #64B5F6; padding: 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; color: #1976D2; font-weight: 600; }
-    .location-box { background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); border: 3px solid #81C784; padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; text-align: center; }
-    
-    #MainMenu {visibility: hidden;} footer {visibility: hidden;}
+    .main-header { text-align: center; padding: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; color: white; margin-bottom: 2rem; }
+    .btn-gps { width: 100%; padding: 1rem; font-size: 1.2rem; background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
+    .reporte-card { background: white; border-radius: 15px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-left: 6px solid #667eea; }
+    .location-box { background: #E8F5E9; border: 3px solid #81C784; padding: 1.5rem; border-radius: 15px; margin: 1rem 0; text-align: center; }
+    #MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- INICIALIZAR SESSION_STATE ---
+# INICIALIZAR SESIÓN
 if 'is_admin' not in st.session_state:
     st.session_state.is_admin = False
-if 'latitud' not in st.session_state:
-    st.session_state.latitud = None
-if 'longitud' not in st.session_state:
-    st.session_state.longitud = None
-if 'show_admin_login' not in st.session_state:
-    st.session_state.show_admin_login = False
+if 'show_admin' not in st.session_state:
+    st.session_state.show_admin = False
+if 'lat' not in st.session_state:
+    st.session_state.lat = None
+if 'lon' not in st.session_state:
+    st.session_state.lon = None
 
-# --- ASEGURAR ADMIN ---
-try:
-    response = supabase.table("administradores").select("*").eq("codigo", "ADMIN2024").execute()
-    if not response.data:
-        supabase.table("administradores").insert({
-            "codigo": "ADMIN2024", "contrasena": "admin123", 
-            "nombre": "Administrador", "email": "admin@mascotas.com"
-        }).execute()
-except:
-    pass
+# CAPTURAR GPS DE URL
+if "lat" in st.query_params and "lon" in st.query_params:
+    st.session_state.lat = float(st.query_params["lat"])
+    st.session_state.lon = float(st.query_params["lon"])
+    st.query_params.clear()
+    st.rerun()
 
-# --- CAPTURAR GPS DE URL ---
-query_params = st.query_params
-if "lat" in query_params and "lon" in query_params:
-    try:
-        st.session_state.latitud = float(query_params["lat"])
-        st.session_state.longitud = float(query_params["lon"])
-        st.query_params.clear()
-        st.rerun()
-    except:
-        pass
-
-# --- LOGIN ADMIN ---
-if st.session_state.show_admin_login and not st.session_state.is_admin:
-    st.markdown('<div style="font-size: 5rem; text-align: center;">🐾</div>', unsafe_allow_html=True)
-    st.markdown('<h1 class="main-header">🔐 Acceso de Administrador</h1>', unsafe_allow_html=True)
+# LOGIN ADMIN
+if st.session_state.show_admin and not st.session_state.is_admin:
+    st.markdown('<h1 class="main-header">🔐 Acceso Administrador</h1>', unsafe_allow_html=True)
+    codigo = st.text_input("Código")
+    password = st.text_input("Contraseña", type="password")
     
-    codigo = st.text_input("Código", key="admin_codigo_input")
-    contrasena = st.text_input("Contraseña", type="password", key="admin_pass_input")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Ingresar", key="btn_login_admin"):
-            try:
-                response = supabase.table("administradores").select("*").eq("codigo", codigo).eq("contrasena", contrasena).execute()
-                if response.data:
-                    st.session_state.is_admin = True
-                    st.session_state.show_admin_login = False
-                    st.success("✅ Bienvenido Administrador!")
-                    st.rerun()
-                else:
-                    st.error("❌ Código o contraseña incorrectos")
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-    with col2:
-        if st.button("⬅️ Volver", key="btn_volver"):
-            st.session_state.show_admin_login = False
+    if st.button("Ingresar"):
+        if codigo == "ADMIN2024" and password == "admin123":
+            st.session_state.is_admin = True
+            st.session_state.show_admin = False
+            st.success("✅ Bienvenido!")
             st.rerun()
+        else:
+            st.error("❌ Credenciales incorrectas")
+    
+    if st.button("⬅️ Volver"):
+        st.session_state.show_admin = False
+        st.rerun()
     st.stop()
 
-# --- APP PRINCIPAL ---
+# APP PRINCIPAL
 st.markdown('<div style="font-size: 5rem; text-align: center;">🐾</div>', unsafe_allow_html=True)
 st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
-# Sidebar
+# SIDEBAR
 with st.sidebar:
     if st.session_state.is_admin:
         st.markdown("### 👑 Administrador")
-        if st.button("🚪 Cerrar Sesión", key="btn_logout_admin"):
+        if st.button("🚪 Cerrar Sesión"):
             st.session_state.is_admin = False
             st.rerun()
-    else:
-        st.markdown("### 👤 Visitante")
 
-# Tabs
+# TABS
 if st.session_state.is_admin:
-    tab1, tab2, tab3 = st.tabs(["📸 Reportar Mascota", "🗺️ Ver Reportes", "⚙️ Administrar"])
+    tab1, tab2, tab3 = st.tabs(["📸 Reportar", "🗺️ Ver Reportes", "⚙️ Admin"])
 else:
-    tab1, tab2 = st.tabs(["📸 Reportar Mascota", "🗺️ Ver Reportes"])
+    tab1, tab2 = st.tabs(["📸 Reportar", "🗺️ Ver Reportes"])
 
 # ==================== TAB 1: REPORTAR ====================
 with tab1:
-    st.subheader("📝 Registrar Mascota Perdida o Encontrada")
+    st.subheader(" Registrar Mascota")
     
-    st.markdown('<div class="info-box">📝 <b>Paso 1:</b> Completa tus datos y los de la mascota. <b>Paso 2:</b> Presiona el botón verde para obtener tu ubicación GPS.</div>', unsafe_allow_html=True)
-    
-    # --- DATOS USUARIO ---
+    # DATOS USUARIO
     st.markdown("### 👤 Tus Datos")
-    col_u1, col_u2, col_u3 = st.columns(3)
-    with col_u1:
-        nombre_usuario = st.text_input("Tu Nombre", key="inp_nombre")
-    with col_u2:
-        email_usuario = st.text_input("📧 Email", key="inp_email")
-    with col_u3:
-        telefono_usuario = st.text_input("📞 Teléfono", key="inp_telefono")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        nombre = st.text_input("Nombre", key="f_nombre")
+    with col2:
+        email = st.text_input("Email", key="f_email")
+    with col3:
+        telefono = st.text_input("Teléfono", key="f_telefono")
     
-    tipo_mascota_usuario = st.selectbox("🐾 Tipo de mascota", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="inp_tipo_mascota")
+    tipo_mascota = st.selectbox("Tipo de mascota", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="f_tipo")
     
-    # --- GPS ---
+    # GPS
     st.markdown('<div class="location-box">', unsafe_allow_html=True)
-    st.markdown("### 📍 Ubicación de la Mascota")
-    
+    st.markdown("### 📍 Ubicación")
     st.markdown("""
-    <button id="btn-gps" class="btn-gps" onclick="getGPS()">📍 Enviar ubicación de la mascota</button>
-    <script>
-    function getGPS() {
-        const btn = document.getElementById('btn-gps');
-        btn.innerText = "⏳ Obteniendo ubicación...";
-        btn.disabled = true;
-        
-        if (!navigator.geolocation) {
-            alert("Tu navegador no soporta GPS");
-            btn.innerText = "📍 Reintentar ubicación";
-            btn.disabled = false;
-            return;
-        }
-        
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                window.location.href = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
-            },
-            (err) => {
-                alert("Error: " + err.message);
-                btn.innerText = "📍 Reintentar ubicación";
-                btn.disabled = false;
-            },
-            {enableHighAccuracy: true, timeout: 10000}
-        );
-    }
-    </script>
+    <button class="btn-gps" onclick="navigator.geolocation.getCurrentPosition(p=>window.location.href='?lat='+p.coords.latitude+'&lon='+p.coords.longitude,e=>alert('Error: '+e.message))">📍 Enviar ubicación de la mascota</button>
     """, unsafe_allow_html=True)
     
-    if st.session_state.latitud and st.session_state.longitud:
-        st.success(f"✅ **Ubicación lista:** Lat {st.session_state.latitud:.5f}, Lon {st.session_state.longitud:.5f}")
+    if st.session_state.lat and st.session_state.lon:
+        st.success(f"✅ Ubicación: {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
     else:
-        st.info("ℹ️ Presiona el botón verde de arriba para activar el GPS.")
-    
+        st.info("ℹ️ Presiona el botón verde para obtener GPS")
     st.markdown('</div>', unsafe_allow_html=True)
-
-    # --- DATOS MASCOTA ---
-    st.markdown("---")
-    st.markdown("### 🐾 Datos de la Mascota")
     
+    # DATOS MASCOTA
+    st.markdown("### 🐾 Datos de la Mascota")
     col1, col2 = st.columns(2)
     with col1:
-        estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="inp_estado")
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="inp_especie")
-        raza = st.text_input("Raza", placeholder="Ej: Labrador", key="inp_raza")
-        nombre_mascota = st.text_input("Nombre de la mascota", placeholder="Ej: Max", key="inp_nombre_mascota")
-    
+        estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="f_estado")
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="f_especie")
+        raza = st.text_input("Raza", key="f_raza")
+        nombre_mascota = st.text_input("Nombre", key="f_nombre_mascota")
     with col2:
-        color = st.text_input("Color", placeholder="Ej: Marrón", key="inp_color")
-        tamano = st.selectbox("Tamaño", ["Pequeño", "Mediano", "Grande", "No especificado"], key="inp_tamano")
-        sexo = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"], key="inp_sexo")
-        contacto = st.text_input("📞 Teléfono de contacto", key="inp_contacto", value=telefono_usuario)
-
-    foto = st.file_uploader("📷 Subir Foto", type=["jpg", "png", "jpeg"], key="inp_foto")
-    descripcion = st.text_area("Señas particulares", height=100, key="inp_descripcion")
-
-    # --- PUBLICAR ---
-    if st.button("🚨 PUBLICAR ALERTA", type="primary", key="btn_publicar", use_container_width=True):
-        if not nombre_usuario.strip() or not email_usuario.strip() or not telefono_usuario.strip():
-            st.error("❌ Por favor, completa tus datos (Nombre, Email, Teléfono).")
-        elif not st.session_state.latitud or not st.session_state.longitud:
-            st.error("❌ Primero obtén la ubicación con el botón verde de arriba.")
-        elif not foto or not nombre_mascota.strip():
-            st.error("❌ Sube una foto y escribe el nombre de la mascota.")
+        color = st.text_input("Color", key="f_color")
+        tamano = st.selectbox("Tamaño", ["Pequeño", "Mediano", "Grande"], key="f_tamano")
+        sexo = st.selectbox("Sexo", ["Macho", "Hembra"], key="f_sexo")
+        contacto = st.text_input("Teléfono contacto", value=telefono, key="f_contacto")
+    
+    foto = st.file_uploader(" Foto", type=["jpg", "png", "jpeg"], key="f_foto")
+    descripcion = st.text_area("Descripción", key="f_descripcion")
+    
+    # PUBLICAR
+    if st.button("🚨 PUBLICAR", type="primary", use_container_width=True):
+        if not nombre or not email or not telefono:
+            st.error("❌ Completa Nombre, Email y Teléfono")
+        elif not st.session_state.lat or not st.session_state.lon:
+            st.error("❌ Obtén la ubicación GPS primero")
+        elif not foto or not nombre_mascota:
+            st.error(" Sube foto y nombre de mascota")
         else:
-            with st.spinner("🔄 Guardando..."):
+            with st.spinner("Guardando..."):
                 try:
-                    # Guardar Usuario
+                    # Guardar usuario
                     supabase.table("usuarios").upsert({
-                        "email": email_usuario,
-                        "nombre": nombre_usuario,
-                        "telefono": telefono_usuario,
-                        "tipo_mascota": tipo_mascota_usuario,
-                        "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "email": email, "nombre": nombre, "telefono": telefono,
+                        "tipo_mascota": tipo_mascota, "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"),
                         "activo": True
                     }, on_conflict="email").execute()
                     
-                    # Subir Foto
-                    file_extension = foto.name.split('.')[-1]
-                    file_name = f"{uuid.uuid4()}.{file_extension}"
-                    supabase.storage.from_("fotos-mascotas").upload(
-                        file_name, foto.getvalue(), file_options={"content-type": foto.type}
-                    )
-                    foto_url = supabase.storage.from_("fotos-mascotas").get_public_url(file_name)
+                    # Subir foto
+                    ext = foto.name.split('.')[-1]
+                    fname = f"{uuid.uuid4()}.{ext}"
+                    supabase.storage.from_("fotos-mascotas").upload(fname, foto.getvalue(), file_options={"content-type": foto.type})
+                    foto_url = supabase.storage.from_("fotos-mascotas").get_public_url(fname)
                     
-                    # Guardar Reporte
-                    data = {
-                        "estado": estado,
-                        "especie": especie,
-                        "raza": raza,
-                        "nombre": nombre_mascota,
-                        "color": color,
-                        "tamano": tamano,
-                        "sexo": sexo,
-                        "descripcion": descripcion,
-                        "latitud": float(st.session_state.latitud),
-                        "longitud": float(st.session_state.longitud),
+                    # Guardar reporte
+                    supabase.table("reportes").insert({
+                        "estado": estado, "especie": especie, "raza": raza,
+                        "nombre": nombre_mascota, "color": color, "tamano": tamano,
+                        "sexo": sexo, "descripcion": descripcion,
+                        "latitud": st.session_state.lat, "longitud": st.session_state.lon,
                         "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "foto_url": foto_url,
-                        "contacto": contacto,
-                        "usuario_email": email_usuario
-                    }
+                        "foto_url": foto_url, "contacto": contacto, "usuario_email": email
+                    }).execute()
                     
-                    supabase.table("reportes").insert(data).execute()
-                    
-                    st.success("✅ ¡Alerta publicada con éxito!")
+                    st.success("✅ ¡Publicado con éxito!")
                     st.balloons()
-                    
-                    # Limpiar
-                    st.session_state.latitud = None
-                    st.session_state.longitud = None
+                    st.session_state.lat = None
+                    st.session_state.lon = None
                     st.rerun()
-                    
                 except Exception as e:
-                    st.error(f"❌ Error: {str(e)}")
+                    st.error(f"❌ Error: {e}")
 
 # ==================== TAB 2: VER REPORTES ====================
 with tab2:
     st.subheader("🔍 Mascotas Reportadas")
     
-    response = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute()
-    datos = response.data
+    datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
     
     if datos:
         df = pd.DataFrame(datos)
         
-        col_f1, col_f2 = st.columns(2)
-        with col_f1:
+        col1, col2 = st.columns(2)
+        with col1:
             filtro_estado = st.selectbox("Estado", ["Todos", "Perdida", "Encontrada"], key="filtro_estado")
-        with col_f2:
-            filtro_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="filtro_especie")
+        with col2:
+            filtro_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", " Conejo", "🐦 Ave", "Otro"], key="filtro_especie")
         
-        df_filtrado = df.copy()
+        df_f = df.copy()
         if filtro_estado != "Todos":
-            df_filtrado = df_filtrado[df_filtrado['estado'].str.contains(filtro_estado, na=False)]
+            df_f = df_f[df_f['estado'].str.contains(filtro_estado, na=False)]
         if filtro_especie != "Todas":
-            df_filtrado = df_filtrado[df_filtrado['especie'] == filtro_especie]
+            df_f = df_f[df_f['especie'] == filtro_especie]
         
-        if not df_filtrado.empty:
-            map_df = df_filtrado.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})
-            st.map(map_df[["latitude", "longitude"]])
+        if not df_f.empty:
+            st.map(df_f.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})[["latitude", "longitude"]])
         
-        perdidos = df_filtrado[df_filtrado['estado'].str.contains('Perdida', na=False)]
-        encontrados = df_filtrado[df_filtrado['estado'].str.contains('Encontrada', na=False)]
-        
-        if not perdidos.empty:
-            st.markdown(f'<h2 class="section-title perdidos-title">🔴 Perdidas ({len(perdidos)})</h2>', unsafe_allow_html=True)
-            for _, row in perdidos.iterrows():
-                st.markdown('<div class="reporte-card reporte-card-perdida">', unsafe_allow_html=True)
-                c1, c2 = st.columns([1, 2])
-                with c1: st.image(row["foto_url"], use_container_width=True)
-                with c2:
-                    st.markdown(f"### 🐾 {row['nombre']}")
-                    st.markdown(f"**Especie:** {row.get('especie', 'N/A')} | **Raza:** {row.get('raza', 'N/A')}")
-                    st.markdown(f"**Color:** {row.get('color', 'N/A')}")
-                    st.markdown(f"**📅 Fecha:** {row['fecha']} | **📞 Contacto:** {row.get('contacto', 'N/A')}")
-                st.markdown('</div>', unsafe_allow_html=True)
-        
-        if not encontrados.empty:
-            st.markdown(f'<h2 class="section-title encontrados-title">🟢 Encontradas ({len(encontrados)})</h2>', unsafe_allow_html=True)
-            for _, row in encontrados.iterrows():
-                st.markdown('<div class="reporte-card reporte-card-encontrada">', unsafe_allow_html=True)
-                c1, c2 = st.columns([1, 2])
-                with c1: st.image(row["foto_url"], use_container_width=True)
-                with c2:
-                    st.markdown(f"### 🐾 {row['nombre']}")
-                    st.markdown(f"**Especie:** {row.get('especie', 'N/A')} | **Raza:** {row.get('raza', 'N/A')}")
-                    st.markdown(f"**Color:** {row.get('color', 'N/A')}")
-                    st.markdown(f"**📅 Fecha:** {row['fecha']} | **📞 Contacto:** {row.get('contacto', 'N/A')}")
-                st.markdown('</div>', unsafe_allow_html=True)
+        for estado_filtro, emoji in [("Perdida", "🔴"), ("Encontrada", "🟢")]:
+            subset = df_f[df_f['estado'].str.contains(estado_filtro, na=False)]
+            if not subset.empty:
+                st.markdown(f"### {emoji} {estado_filtro}s ({len(subset)})")
+                for _, row in subset.iterrows():
+                    st.markdown(f"""
+                    <div class="reporte-card">
+                        <b>{row['nombre']}</b> - {row['estado']}<br>
+                        Especie: {row.get('especie', 'N/A')} | Raza: {row.get('raza', 'N/A')}<br>
+                        Color: {row.get('color', 'N/A')} | Tamaño: {row.get('tamano', 'N/A')}<br>
+                        📅 {row['fecha']} | 📞 {row.get('contacto', 'N/A')}<br>
+                        <i>{row.get('descripcion', '')}</i>
+                    </div>
+                    """, unsafe_allow_html=True)
     else:
-        st.info("🐾 No hay reportes todavía.")
+        st.info("🐾 No hay reportes todavía")
 
-# ==================== TAB 3: ADMINISTRAR ====================
+# ==================== TAB 3: ADMIN ====================
 if st.session_state.is_admin:
     with tab3:
         st.subheader("⚙️ Panel de Administración")
         
-        admin_tab1, admin_tab2 = st.tabs(["🗑️ Gestionar Reportes", "👥 Gestionar Usuarios"])
+        admin_tab1, admin_tab2 = st.tabs(["🗑️ Reportes", "👥 Usuarios"])
         
         with admin_tab1:
-            response = supabase.table("reportes").select("*").order("fecha", desc=True).execute()
-            datos = response.data
-            
-            if datos:
-                st.markdown(f"**Total de reportes:** {len(datos)}")
-                for row in datos:
-                    with st.container():
-                        col1, col2 = st.columns([3, 1])
-                        with col1:
-                            st.markdown(f"**{row['nombre']}** - {row['estado']} ({row['fecha']})")
-                        with col2:
-                            if st.button("🗑️ Eliminar", key=f"delete_{row['id']}"):
-                                supabase.table("reportes").delete().eq("id", row['id']).execute()
-                                st.success("✅ Eliminado")
-                                st.rerun()
+            st.markdown("### Eliminar Reportes")
+            reports = supabase.table("reportes").select("*").order("fecha", desc=True).execute().data
+            if reports:
+                for row in reports:
+                    col1, col2 = st.columns([4, 1])
+                    with col1:
+                        st.markdown(f"**{row['nombre']}** - {row['estado']} ({row['fecha']})")
+                    with col2:
+                        if st.button("🗑️", key=f"del_{row['id']}"):
+                            supabase.table("reportes").delete().eq("id", row['id']).execute()
+                            st.success("Eliminado")
+                            st.rerun()
         
         with admin_tab2:
-            st.markdown("### ➕ Agregar Usuario")
+            st.markdown("### Agregar Usuario")
             col1, col2, col3 = st.columns(3)
-            with col1: nuevo_email = st.text_input("Email", key="nuevo_email")
-            with col2: nuevo_nombre = st.text_input("Nombre", key="nuevo_nombre")
-            with col3: nuevo_telefono = st.text_input("Teléfono", key="nuevo_telefono")
+            with col1: n_email = st.text_input("Email", key="n_email")
+            with col2: n_nombre = st.text_input("Nombre", key="n_nombre")
+            with col3: n_tel = st.text_input("Teléfono", key="n_tel")
             
-            if st.button("✅ Agregar", key="btn_agregar_usuario"):
-                if nuevo_email and nuevo_nombre:
+            if st.button("Agregar Usuario", key="btn_add_user"):
+                if n_email and n_nombre:
                     try:
                         supabase.table("usuarios").insert({
-                            "email": nuevo_email, "nombre": nuevo_nombre, 
-                            "telefono": nuevo_telefono, "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"), "activo": True
+                            "email": n_email, "nombre": n_nombre, "telefono": n_tel,
+                            "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"), "activo": True
                         }).execute()
-                        st.success("✅ Usuario agregado!")
+                        st.success("✅ Usuario agregado")
+                        st.rerun()
                     except Exception as e:
-                        st.error(f"❌ Error: {str(e)}")
+                        st.error(f"Error: {e}")
 
-# --- FOOTER ---
+# FOOTER
 st.markdown("---")
 if not st.session_state.is_admin:
-    if st.button("🔐 Acceso Administrador", key="btn_acceso_admin_footer"):
-        st.session_state.show_admin_login = True
+    if st.button("🔐 Acceso Administrador", key="btn_footer_admin"):
+        st.session_state.show_admin = True
         st.rerun()
 st.markdown("© 2026 Red de Alerta de Mascotas 🐾")
