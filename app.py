@@ -88,6 +88,12 @@ st.markdown("""
     
     #MainMenu, footer { visibility: hidden; }
     
+    /* OCULTAR BOTONES PEQUEÑOS DE STREAMLIT */
+    div[data-testid="stHorizontalBlock"] button[kind="primary"],
+    div[data-testid="stHorizontalBlock"] button[kind="secondary"] {
+        display: none !important;
+    }
+    
     /* RESPONSIVE PARA CELULAR */
     @media (max-width: 768px) {
         .header {
@@ -167,37 +173,83 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 # APP PRINCIPAL
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
-# BOTONES DE NAVEGACIÓN GRANDES - FUNCIONALES
+# ════════════════════════════════════════════════════════════
+# BOTONES GRANDES FUNCIONALES (REEMPLAZAN LOS PEQUEÑOS)
+# ═════════════════════════════════════════════════════════════
+# Usamos form_submit_button dentro de forms para que funcionen sin mostrar botones extra
+col_nav1, col_nav2 = st.columns(2)
+
+with col_nav1:
+    with st.form(key="form_reportar", clear_on_submit=False):
+        if st.form_submit_button("📸 Reportar Mascota", use_container_width=True, type="primary"):
+            st.session_state.vista_actual = 'reportar'
+            st.rerun()
+
+with col_nav2:
+    with st.form(key="form_ver", clear_on_submit=False):
+        if st.form_submit_button("🔍 Ver Alertas", use_container_width=True):
+            st.session_state.vista_actual = 'ver'
+            st.rerun()
+
+# Ahora reemplazamos visualmente esos botones con los grandes HTML
+# Los botones de form están ocultos por CSS y los grandes HTML los reemplazan visualmente
+# Pero como los forms no se pueden ocultar fácilmente, usamos un enfoque diferente:
+
+# En lugar de forms, usamos botones normales pero los ocultamos con CSS específico
+# y mostramos los grandes HTML encima
+
+# Limpiamos y usamos el enfoque correcto:
+# Los botones grandes HTML llaman a funciones JS que hacen postMessage a Streamlit
+
 st.markdown("""
 <div class="nav-btn-container">
-    <button class="nav-btn nav-btn-reportar" onclick="document.getElementById('btn-nav-reportar').click()">
+    <button class="nav-btn nav-btn-reportar" onclick="handleNavClick('reportar')">
         <span class="nav-btn-icon">📸</span>
         <span class="nav-btn-title">Reportar Mascota</span>
         <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
     </button>
-    <button class="nav-btn nav-btn-ver" onclick="document.getElementById('btn-nav-ver').click()">
+    <button class="nav-btn nav-btn-ver" onclick="handleNavClick('ver')">
         <span class="nav-btn-icon">🔍</span>
         <span class="nav-btn-title">Ver Alertas</span>
         <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
     </button>
 </div>
+
+<script>
+function handleNavClick(vista) {
+    // Enviar mensaje a Streamlit para cambiar la vista
+    const doc = window.parent.document;
+    const buttons = doc.querySelectorAll('button[kind="primary"], button[kind="secondary"]');
+    
+    // Buscar el botón correcto por su texto
+    buttons.forEach(function(btn) {
+        const text = btn.innerText || btn.textContent;
+        if (vista === 'reportar' && text.includes('Reportar')) {
+            btn.click();
+        } else if (vista === 'ver' && text.includes('Ver Alertas')) {
+            btn.click();
+        }
+    });
+}
+</script>
 """, unsafe_allow_html=True)
 
-# Botones ocultos que activan la navegación (sin mostrar)
-col_nav1, col_nav2 = st.columns(2)
-with col_nav1:
-    if st.button("📸 Reportar Mascota", key="btn-nav-reportar", use_container_width=True, type="primary"):
-        st.session_state.vista_actual = 'reportar'
-        st.rerun()
-with col_nav2:
-    if st.button("🔍 Ver Alertas", key="btn-nav-ver", use_container_width=True):
-        st.session_state.vista_actual = 'ver'
-        st.rerun()
-
-# Ocultar los botones de Streamlit
+# CSS para ocultar los botones pequeños de Streamlit
 st.markdown("""
 <style>
-    button[kind="primary"][data-baseweb="button"] {
+    /* Ocultar los botones de navegación pequeños */
+    section[data-testid="stSidebar"] + div div[data-testid="stHorizontalBlock"] > div > div > button,
+    .stForm > button {
+        position: absolute;
+        left: -9999px;
+        opacity: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    
+    /* Ocultar específicamente los botones de los forms de navegación */
+    form[key="form_reportar"] button,
+    form[key="form_ver"] button {
         display: none !important;
     }
 </style>
@@ -212,7 +264,7 @@ with st.sidebar:
             st.session_state.is_admin = False
             st.rerun()
     else:
-        if st.button("🔐 Acceso Admin", key="bfa"):
+        if st.button(" Acceso Admin", key="bfa"):
             st.session_state.show_admin = True
             st.rerun()
 
@@ -220,7 +272,7 @@ with st.sidebar:
 # VISTA: REPORTAR
 # ═════════════════════════════════════════════════════════════
 if st.session_state.vista_actual == 'reportar':
-    st.subheader("📝 Registrar Mascota")
+    st.subheader(" Registrar Mascota")
     
     form_html = """
     <!DOCTYPE html>
@@ -329,7 +381,6 @@ if st.session_state.vista_actual == 'reportar':
             #preview-container { margin-top: 12px; display: none; }
             #preview-container img { max-width: 100%; max-height: 250px; border-radius: 10px; border: 3px solid #ddd; }
             
-            /* RESPONSIVE PARA CELULAR */
             @media (max-width: 600px) {
                 body { padding: 12px; }
                 .row { flex-direction: column; gap: 0; }
@@ -379,7 +430,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="gps-box">
-                <div class="section-title" style="border:none; margin:0 0 15px 0;">📍 Ubicación GPS</div>
+                <div class="section-title" style="border:none; margin:0 0 15px 0;"> Ubicación GPS</div>
                 <button type="button" class="btn-gps" id="btnGPS" onclick="getGPS()">
                     📍 Obtener mi ubicación automáticamente
                 </button>
@@ -448,7 +499,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="form-group">
-                <label>📷 Foto de la mascota *</label>
+                <label> Foto de la mascota *</label>
                 <div class="file-upload">
                     <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
                     <label for="foto" class="file-upload-label" id="fileLabel">
@@ -503,7 +554,7 @@ if st.session_state.vista_actual == 'reportar':
                     return;
                 }
                 status.className = 'status info';
-                status.textContent = '⏳ Solicitando permiso de ubicación...';
+                status.textContent = ' Solicitando permiso de ubicación...';
                 btn.disabled = true;
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
@@ -539,7 +590,7 @@ if st.session_state.vista_actual == 'reportar':
                 const lon = document.getElementById('lon').value;
                 const fotoFile = document.getElementById('foto').files[0];
                 
-                if (!lat || !lon) { status.className = 'status error'; status.textContent = '❌ Primero obtén la ubicación GPS'; return; }
+                if (!lat || !lon) { status.className = 'status error'; status.textContent = ' Primero obtén la ubicación GPS'; return; }
                 if (!fotoFile) { status.className = 'status error'; status.textContent = '❌ Debes subir una foto'; return; }
                 
                 btn.disabled = true;
@@ -628,34 +679,31 @@ if st.session_state.vista_actual == 'reportar':
 
 # ═════════════════════════════════════════════════════════════
 # VISTA: VER REPORTES - CON FILTROS Y MAPA INTERACTIVO
-# ═════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 elif st.session_state.vista_actual == 'ver':
-    st.subheader("🔍 Reportes de Mascotas")
+    st.subheader(" Reportes de Mascotas")
     datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
     
     if datos:
         df = pd.DataFrame(datos)
         
         # FILTROS MEJORADOS - 2 filas
-        # Fila 1: Estado, Especie, Raza
         col1, col2, col3 = st.columns(3)
         with col1:
-            f_estado = st.selectbox("🔴 Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
+            f_estado = st.selectbox(" Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
             f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         with col3:
             razas_unicas = sorted([r for r in df['raza'].dropna().unique().tolist() if r and str(r).strip()]) if 'raza' in df.columns else []
             f_raza = st.selectbox("🐕 Raza", ["Todas"] + razas_unicas, key="fr")
         
-        # Fila 2: Color, Sexo
         col4, col5 = st.columns(2)
         with col4:
             colores_unicos = sorted([c for c in df['color'].dropna().unique().tolist() if c and str(c).strip()]) if 'color' in df.columns else []
             f_color = st.selectbox("🎨 Color", ["Todos"] + colores_unicos, key="fc")
         with col5:
-            f_sexo = st.selectbox("⚧ Sexo", ["Todos", "Macho", "Hembra"], key="fx")
+            f_sexo = st.selectbox(" Sexo", ["Todos", "Macho", "Hembra"], key="fx")
         
-        # Aplicar todos los filtros
         df_f = df.copy()
         if f_estado != "Todos":
             df_f = df_f[df_f['estado'].str.contains(f_estado, na=False)]
@@ -671,11 +719,9 @@ elif st.session_state.vista_actual == 'ver':
         if not df_f.empty:
             st.markdown(f"**{len(df_f)} reporte(s) encontrado(s)**")
             
-            # MAPA INTERACTIVO CON FOLLIUM + DIRECCIÓN
             import folium
             from streamlit_folium import st_folium
             
-            # Centro del mapa (promedio de coordenadas)
             centro_lat = df_f['latitud'].mean()
             centro_lon = df_f['longitud'].mean()
             
@@ -696,7 +742,6 @@ elif st.session_state.vista_actual == 'ver':
                 descripcion = row.get('descripcion', '')
                 foto_url = row.get('foto_url', '')
                 
-                # Obtener dirección desde coordenadas (Geocoding inverso)
                 direccion = "Dirección no disponible"
                 try:
                     url_geo = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&zoom=18&addressdetails=1"
@@ -724,10 +769,8 @@ elif st.session_state.vista_actual == 'ver':
                 except:
                     pass
                 
-                # Pequeña pausa para no saturar la API
                 time.sleep(0.3)
                 
-                # Color del marcador según estado
                 if 'Perdida' in str(estado):
                     color_marcador = 'red'
                     icono = '🔴'
@@ -735,7 +778,6 @@ elif st.session_state.vista_actual == 'ver':
                     color_marcador = 'green'
                     icono = '🟢'
                 
-                # HTML del popup con foto, datos y DIRECCIÓN
                 popup_html = f"""
                 <div style="width: 340px; font-family: Arial, sans-serif;">
                     <h3 style="margin: 0 0 10px 0; color: #333;">{icono} {nombre}</h3>
@@ -745,7 +787,7 @@ elif st.session_state.vista_actual == 'ver':
                     {'<img src="' + foto_url + '" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;" onerror="this.style.display=\'none\'">' if foto_url else ''}
                     
                     <div style="background: #FFF9C4; border-left: 4px solid #FFC107; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;">
-                        <b>📍 Ubicación:</b><br>
+                        <b> Ubicación:</b><br>
                         <span style="font-size: 13px; color: #333;">{direccion}</span>
                     </div>
                     
@@ -775,12 +817,10 @@ elif st.session_state.vista_actual == 'ver':
                     icon=folium.Icon(color=color_marcador, icon='paw', prefix='fa')
                 ).add_to(mapa)
             
-            # Mostrar mapa interactivo
             st_folium(mapa, width=None, height=500, returned_objects=[])
             
             st.markdown("---")
             
-            # Mostrar reportes en tarjetas
             for est, emoji, clase in [("Perdida", "🔴", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
@@ -807,7 +847,7 @@ elif st.session_state.vista_actual == 'ver':
                                 <p><strong>Tamaño:</strong> {row.get('tamano', 'N/A')}</p>
                                 <p><strong>Sexo:</strong> {row.get('sexo', 'N/A')}</p>
                                 <p><strong>📅 Fecha:</strong> {row['fecha']}</p>
-                                <p><strong>📞 Contacto:</strong> {row.get('contacto', 'N/A')}</p>
+                                <p><strong> Contacto:</strong> {row.get('contacto', 'N/A')}</p>
                                 {f"<p><strong>📝 Descripción:</strong> {row.get('descripcion', '')}</p>" if row.get('descripcion') else ''}
                             </div>
                             """, unsafe_allow_html=True)
