@@ -12,7 +12,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="")
 
-# CSS MEJORADO - Más grande y profesional
+# CSS MEJORADO
 st.markdown("""
 <style>
     .header {
@@ -24,72 +24,95 @@ st.markdown("""
         margin-bottom: 2rem;
         box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     }
-    .header h1 {
-        font-size: 2.5rem;
-        margin: 0;
-    }
-    .card {
-        background: white;
-        border-radius: 15px;
-        padding: 2rem;
-        margin: 1.5rem 0;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        border-left: 6px solid #667eea;
-    }
-    .card img {
-        border-radius: 10px;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    }
-    #MainMenu, footer { visibility: hidden; }
+    .header h1 { font-size: 2.5rem; margin: 0; }
     
-    /* Estilos para las tarjetas de reporte */
+    /* Botones grandes de navegación */
+    .nav-btn-container {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin: 2rem 0;
+        flex-wrap: wrap;
+    }
+    .nav-btn {
+        flex: 1;
+        min-width: 280px;
+        max-width: 400px;
+        padding: 30px 40px;
+        border-radius: 20px;
+        border: none;
+        cursor: pointer;
+        font-size: 20px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    .nav-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+    }
+    .nav-btn-reportar {
+        background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%);
+    }
+    .nav-btn-ver {
+        background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
+    }
+    .nav-btn-icon {
+        font-size: 50px;
+    }
+    .nav-btn-subtitle {
+        font-size: 14px;
+        font-weight: normal;
+        opacity: 0.9;
+    }
+    
+    /* Tarjetas de reporte */
     .reporte-card {
         background: white;
-        border-radius: 15px;
-        padding: 2rem;
-        margin: 1.5rem 0;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        border: 2px solid #e0e0e0;
-        transition: all 0.3s ease;
-    }
-    .reporte-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border-radius: 20px;
+        padding: 30px;
+        margin: 25px 0;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        border: 3px solid #e0e0e0;
     }
     .reporte-perdida {
-        border-left: 8px solid #FF5252;
-        background: linear-gradient(135deg, #FFF5F5 0%, #FFE5E5 100%);
+        border-left: 10px solid #FF5252 !important;
+        background: linear-gradient(135deg, #FFF5F5 0%, #FFE5E5 100%) !important;
     }
     .reporte-encontrada {
-        border-left: 8px solid #4CAF50;
-        background: linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%);
+        border-left: 10px solid #4CAF50 !important;
+        background: linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%) !important;
     }
     .badge {
         display: inline-block;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
+        padding: 8px 20px;
+        border-radius: 25px;
         font-weight: bold;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
+        font-size: 16px;
+        margin-bottom: 15px;
     }
-    .badge-perdida {
-        background: #FF5252;
-        color: white;
-    }
-    .badge-encontrada {
-        background: #4CAF50;
-        color: white;
-    }
+    .badge-perdida { background: #FF5252; color: white; }
+    .badge-encontrada { background: #4CAF50; color: white; }
     .foto-container {
         text-align: center;
-        margin: 1rem 0;
+        margin: 20px 0;
     }
     .foto-container img {
-        max-width: 300px;
-        max-height: 300px;
+        max-width: 350px;
+        max-height: 350px;
         border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        object-fit: cover;
     }
+    
+    #MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -98,6 +121,8 @@ if 'is_admin' not in st.session_state:
     st.session_state.is_admin = False
 if 'show_admin' not in st.session_state:
     st.session_state.show_admin = False
+if 'vista_actual' not in st.session_state:
+    st.session_state.vista_actual = 'reportar'
 
 # LOGIN ADMIN
 if st.session_state.show_admin and not st.session_state.is_admin:
@@ -121,22 +146,52 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 # APP PRINCIPAL
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
+# BOTONES DE NAVEGACIÓN GRANDES (reemplazan los tabs)
+st.markdown("""
+<div class="nav-btn-container">
+    <button class="nav-btn nav-btn-reportar" onclick="document.getElementById('btn-nav-reportar').click()">
+        <span class="nav-btn-icon">📸</span>
+        <span>Reportar Mascota</span>
+        <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
+    </button>
+    <button class="nav-btn nav-btn-ver" onclick="document.getElementById('btn-nav-ver').click()">
+        <span class="nav-btn-icon">🔍</span>
+        <span>Ver Alertas</span>
+        <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
+    </button>
+</div>
+""", unsafe_allow_html=True)
+
+# Botones ocultos que activan la navegación
+col_nav1, col_nav2 = st.columns(2)
+with col_nav1:
+    if st.button(" Reportar Mascota", key="btn-nav-reportar", use_container_width=True, type="primary"):
+        st.session_state.vista_actual = 'reportar'
+        st.rerun()
+with col_nav2:
+    if st.button("🔍 Ver Alertas", key="btn-nav-ver", use_container_width=True):
+        st.session_state.vista_actual = 'ver'
+        st.rerun()
+
+st.markdown("---")
+
+# Sidebar
 with st.sidebar:
     if st.session_state.is_admin:
+        st.markdown("### 👑 Administrador")
         if st.button("🚪 Salir"):
             st.session_state.is_admin = False
             st.rerun()
-
-if st.session_state.is_admin:
-    tab1, tab2, tab3 = st.tabs(["Reportar", "Ver", "Admin"])
-else:
-    tab1, tab2 = st.tabs(["Reportar", "Ver"])
+    else:
+        if st.button("🔐 Acceso Admin", key="bfa"):
+            st.session_state.show_admin = True
+            st.rerun()
 
 # ═════════════════════════════════════════════════════════════
-# TAB 1: REPORTAR - FORMULARIO MÁS GRANDE
-# ═════════════════════════════════════════════════════════════
-with tab1:
-    st.subheader("📝 Registrar Mascota")
+# VISTA: REPORTAR (NO SE TOCA - funciona perfecto)
+# ════════════════════════════════════════════════════════════
+if st.session_state.vista_actual == 'reportar':
+    st.subheader(" Registrar Mascota")
     
     form_html = """
     <!DOCTYPE html>
@@ -239,22 +294,10 @@ with tab1:
                 transition: all 0.3s;
                 font-size: 16px;
             }
-            .file-upload-label:hover {
-                background: #e0e0e0;
-                border-color: #667eea;
-            }
-            .file-upload-label.has-file {
-                background: #d4edda;
-                border-color: #28a745;
-                color: #155724;
-            }
+            .file-upload-label:hover { background: #e0e0e0; border-color: #667eea; }
+            .file-upload-label.has-file { background: #d4edda; border-color: #28a745; color: #155724; }
             #preview-container { margin-top: 15px; display: none; }
-            #preview-container img {
-                max-width: 100%;
-                max-height: 300px;
-                border-radius: 12px;
-                border: 3px solid #ddd;
-            }
+            #preview-container img { max-width: 100%; max-height: 300px; border-radius: 12px; border: 3px solid #ddd; }
         </style>
     </head>
     <body>
@@ -314,7 +357,7 @@ with tab1:
                     <label>Especie *</label>
                     <select id="especie" required>
                         <option> Perro</option>
-                        <option>🐈 Gato</option>
+                        <option> Gato</option>
                         <option>🐰 Conejo</option>
                         <option>🐦 Ave</option>
                         <option>Otro</option>
@@ -360,7 +403,7 @@ with tab1:
                 <div class="file-upload">
                     <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
                     <label for="foto" class="file-upload-label" id="fileLabel">
-                        📁 Haz clic para seleccionar una foto (JPG, PNG)
+                         Haz clic para seleccionar una foto (JPG, PNG)
                     </label>
                 </div>
                 <div id="preview-container">
@@ -376,7 +419,7 @@ with tab1:
             <div id="submitStatus" class="status"></div>
             
             <button type="submit" class="btn-submit" id="btnSubmit">
-                🚨 PUBLICAR ALERTA
+                 PUBLICAR ALERTA
             </button>
         </form>
         
@@ -389,11 +432,9 @@ with tab1:
                 const label = document.getElementById('fileLabel');
                 const preview = document.getElementById('preview');
                 const previewContainer = document.getElementById('preview-container');
-                
                 if (file) {
                     label.textContent = '✅ ' + file.name;
                     label.classList.add('has-file');
-                    
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         preview.src = e.target.result;
@@ -407,38 +448,32 @@ with tab1:
                 const btn = document.getElementById('btnGPS');
                 const status = document.getElementById('gpsStatus');
                 const coordsDisplay = document.getElementById('coords-display');
-                
                 if (!navigator.geolocation) {
                     status.className = 'status error';
-                    status.textContent = ' Tu navegador no soporta GPS';
+                    status.textContent = '❌ Tu navegador no soporta GPS';
                     return;
                 }
-                
                 status.className = 'status info';
                 status.textContent = '⏳ Solicitando permiso de ubicación...';
                 btn.disabled = true;
-                
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
                         const lat = pos.coords.latitude;
                         const lon = pos.coords.longitude;
-                        
                         document.getElementById('lat').value = lat;
                         document.getElementById('lon').value = lon;
                         document.getElementById('latDisplay').textContent = lat.toFixed(6);
                         document.getElementById('lonDisplay').textContent = lon.toFixed(6);
-                        
                         status.className = 'status success';
                         status.textContent = '✅ ¡Ubicación obtenida correctamente!';
                         coordsDisplay.style.display = 'block';
                         btn.disabled = false;
                     },
                     function(err) {
-                        let msg = 'Error al obtener ubicación';
-                        if (err.code === 1) msg = '❌ Permiso denegado. Permite el acceso a la ubicación.';
-                        else if (err.code === 2) msg = '❌ Ubicación no disponible. Activa el GPS.';
-                        else if (err.code === 3) msg = '❌ Tiempo agotado. Intenta nuevamente.';
-                        
+                        let msg = 'Error';
+                        if (err.code === 1) msg = '❌ Permiso denegado. Permite el acceso.';
+                        else if (err.code === 2) msg = '❌ Ubicación no disponible.';
+                        else if (err.code === 3) msg = '❌ Tiempo agotado.';
                         status.className = 'status error';
                         status.textContent = msg;
                         btn.disabled = false;
@@ -449,25 +484,14 @@ with tab1:
             
             document.getElementById('mascotaForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
                 const btn = document.getElementById('btnSubmit');
                 const status = document.getElementById('submitStatus');
-                
                 const lat = document.getElementById('lat').value;
                 const lon = document.getElementById('lon').value;
                 const fotoFile = document.getElementById('foto').files[0];
                 
-                if (!lat || !lon) {
-                    status.className = 'status error';
-                    status.textContent = '❌ Primero obtén la ubicación GPS';
-                    return;
-                }
-                
-                if (!fotoFile) {
-                    status.className = 'status error';
-                    status.textContent = '❌ Debes subir una foto';
-                    return;
-                }
+                if (!lat || !lon) { status.className = 'status error'; status.textContent = '❌ Primero obtén la ubicación GPS'; return; }
+                if (!fotoFile) { status.className = 'status error'; status.textContent = '❌ Debes subir una foto'; return; }
                 
                 btn.disabled = true;
                 status.className = 'status info';
@@ -485,9 +509,7 @@ with tab1:
                 const tamano = document.getElementById('tamano').value;
                 const sexo = document.getElementById('sexo').value;
                 const descripcion = document.getElementById('descripcion').value;
-                
                 const contacto = telefono;
-                
                 const now = new Date();
                 const fecha = now.toISOString().slice(0, 19).replace('T', ' ');
                 
@@ -495,20 +517,8 @@ with tab1:
                     try {
                         await fetch(SUPABASE_URL + '/rest/v1/usuarios', {
                             method: 'POST',
-                            headers: {
-                                'apikey': SUPABASE_KEY,
-                                'Authorization': 'Bearer ' + SUPABASE_KEY,
-                                'Content-Type': 'application/json',
-                                'Prefer': 'resolution=merge-duplicates'
-                            },
-                            body: JSON.stringify({
-                                email: email,
-                                nombre: nombre,
-                                telefono: telefono,
-                                tipo_mascota: tipo,
-                                fecha_registro: fecha,
-                                activo: true
-                            })
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+                            body: JSON.stringify({ email: email, nombre: nombre, telefono: telefono, tipo_mascota: tipo, fecha_registro: fecha, activo: true })
                         });
                     } catch(e) { console.log('Usuario:', e); }
                     
@@ -518,50 +528,29 @@ with tab1:
                     
                     const uploadResponse = await fetch(SUPABASE_URL + '/storage/v1/object/' + filePath, {
                         method: 'POST',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': 'Bearer ' + SUPABASE_KEY,
-                            'Content-Type': fotoFile.type
-                        },
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': fotoFile.type },
                         body: fotoFile
                     });
                     
-                    if (!uploadResponse.ok) {
-                        throw new Error('Error al subir la foto');
-                    }
-                    
+                    if (!uploadResponse.ok) throw new Error('Error al subir la foto');
                     const fotoUrl = SUPABASE_URL + '/storage/v1/object/public/' + filePath;
                     
                     const reporteData = {
-                        estado: estado,
-                        especie: especie,
-                        raza: raza,
-                        nombre: nombreMascota,
-                        color: color,
-                        tamano: tamano,
-                        sexo: sexo,
-                        descripcion: descripcion,
-                        latitud: parseFloat(lat),
-                        longitud: parseFloat(lon),
-                        fecha: fecha,
-                        foto_url: fotoUrl,
-                        contacto: contacto
+                        estado: estado, especie: especie, raza: raza, nombre: nombreMascota,
+                        color: color, tamano: tamano, sexo: sexo, descripcion: descripcion,
+                        latitud: parseFloat(lat), longitud: parseFloat(lon), fecha: fecha,
+                        foto_url: fotoUrl, contacto: contacto
                     };
                     
                     const response = await fetch(SUPABASE_URL + '/rest/v1/reportes', {
                         method: 'POST',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': 'Bearer ' + SUPABASE_KEY,
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
                         body: JSON.stringify(reporteData)
                     });
                     
                     if (response.ok) {
                         status.className = 'status success';
                         status.textContent = '✅ ¡Alerta publicada con éxito!';
-                        
                         document.getElementById('mascotaForm').reset();
                         document.getElementById('lat').value = '';
                         document.getElementById('lon').value = '';
@@ -569,10 +558,7 @@ with tab1:
                         document.getElementById('preview-container').style.display = 'none';
                         document.getElementById('fileLabel').textContent = '📁 Haz clic para seleccionar una foto (JPG, PNG)';
                         document.getElementById('fileLabel').classList.remove('has-file');
-                        
-                        if (window.parent) {
-                            window.parent.postMessage({ type: 'published' }, '*');
-                        }
+                        if (window.parent) window.parent.postMessage({ type: 'published' }, '*');
                     } else {
                         const error = await response.json();
                         status.className = 'status error';
@@ -582,7 +568,6 @@ with tab1:
                     status.className = 'status error';
                     status.textContent = '❌ Error: ' + error.message;
                 }
-                
                 btn.disabled = false;
             });
         </script>
@@ -593,9 +578,9 @@ with tab1:
     st.components.v1.html(form_html, height=1800)
 
 # ═════════════════════════════════════════════════════════════
-# TAB 2: VER - CON FOTOS Y DISEÑO MEJORADO
+# VISTA: VER REPORTES - CORREGIDA CON FOTOS
 # ═════════════════════════════════════════════════════════════
-with tab2:
+elif st.session_state.vista_actual == 'ver':
     st.subheader("🔍 Reportes de Mascotas")
     datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
     
@@ -622,83 +607,83 @@ with tab2:
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
                     for _, row in subset.iterrows():
-                        foto_url = row.get('foto_url', '')
-                        nombre = row['nombre']
-                        estado_text = row['estado']
-                        especie = row.get('especie', 'N/A')
-                        raza = row.get('raza', 'N/A')
-                        color = row.get('color', 'N/A')
-                        tamano = row.get('tamano', 'N/A')
-                        sexo = row.get('sexo', 'N/A')
-                        fecha = row['fecha']
-                        contacto = row.get('contacto', 'N/A')
-                        descripcion = row.get('descripcion', '')
+                        # Usar st.columns para mostrar foto + info lado a lado
+                        col_img, col_info = st.columns([1, 2])
                         
-                        # Crear tarjeta con foto
-                        card_html = f"""
-                        <div class="reporte-card {clase}">
-                            <span class="badge badge-{est.lower()}">{emoji} {estado_text}</span>
-                            <h2 style="margin: 10px 0;">🐾 {nombre}</h2>
-                            
-                            <div class="foto-container">
-                                <img src="{foto_url}" alt="{nombre}" onerror="this.style.display='none'">
+                        with col_img:
+                            foto_url = row.get('foto_url', '')
+                            if foto_url:
+                                st.image(foto_url, caption=row['nombre'], use_container_width=True)
+                            else:
+                                st.markdown("📷 Sin foto")
+                        
+                        with col_info:
+                            badge_color = "#FF5252" if est == "Perdida" else "#4CAF50"
+                            st.markdown(f"""
+                            <div style="background:{'#FFF5F5' if est=='Perdida' else '#F1F8E9'}; padding:20px; border-radius:15px; border-left:6px solid {badge_color};">
+                                <span style="background:{badge_color}; color:white; padding:6px 16px; border-radius:20px; font-weight:bold; font-size:14px;">{emoji} {row['estado']}</span>
+                                <h2 style="margin:15px 0 10px 0;">🐾 {row['nombre']}</h2>
+                                <p><strong>Especie:</strong> {row.get('especie', 'N/A')}</p>
+                                <p><strong>Raza:</strong> {row.get('raza', 'N/A')}</p>
+                                <p><strong>Color:</strong> {row.get('color', 'N/A')}</p>
+                                <p><strong>Tamaño:</strong> {row.get('tamano', 'N/A')}</p>
+                                <p><strong>Sexo:</strong> {row.get('sexo', 'N/A')}</p>
+                                <p><strong> Fecha:</strong> {row['fecha']}</p>
+                                <p><strong>📞 Contacto:</strong> {row.get('contacto', 'N/A')}</p>
+                                {f"<p><strong>📝 Descripción:</strong> {row.get('descripcion', '')}</p>" if row.get('descripcion') else ''}
                             </div>
-                            
-                            <div style="margin-top: 20px;">
-                                <p><strong>Especie:</strong> {especie}</p>
-                                <p><strong>Raza:</strong> {raza}</p>
-                                <p><strong>Color:</strong> {color}</p>
-                                <p><strong>Tamaño:</strong> {tamano}</p>
-                                <p><strong>Sexo:</strong> {sexo}</p>
-                                <p><strong>📅 Fecha:</strong> {fecha}</p>
-                                <p><strong> Contacto:</strong> {contacto}</p>
-                                {f'<p><strong>📝 Descripción:</strong> {descripcion}</p>' if descripcion else ''}
-                            </div>
-                        </div>
-                        """
-                        st.markdown(card_html, unsafe_allow_html=True)
+                            """, unsafe_allow_html=True)
+                        
+                        st.markdown("---")
     else:
         st.info("🐾 Sin reportes")
 
 # ═════════════════════════════════════════════════════════════
-# TAB 3: ADMIN
+# VISTA: ADMIN
 # ═════════════════════════════════════════════════════════════
-if st.session_state.is_admin:
-    with tab3:
-        st.subheader("⚙️ Admin")
-        at1, at2 = st.tabs(["Reportes", "Usuarios"])
+if st.session_state.is_admin and st.session_state.vista_actual != 'admin':
+    if st.button("⚙️ Panel de Administración", use_container_width=True):
+        st.session_state.vista_actual = 'admin'
+        st.rerun()
+
+if st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
+    st.subheader("⚙️ Admin")
+    if st.button("⬅️ Volver", key="btn_volver_admin"):
+        st.session_state.vista_actual = 'reportar'
+        st.rerun()
+    
+    at1, at2 = st.tabs(["Reportes", "Usuarios"])
+    
+    with at1:
+        reports = supabase.table("reportes").select("*").order("fecha", desc=True).execute().data
+        if reports:
+            for row in reports:
+                c1, c2, c3 = st.columns([2, 3, 1])
+                with c1:
+                    if row.get('foto_url'):
+                        st.image(row['foto_url'], width=100)
+                with c2:
+                    st.markdown(f"**{row['nombre']}** - {row['estado']}")
+                with c3:
+                    if st.button("🗑️", key=f"d{row['id']}"):
+                        supabase.table("reportes").delete().eq("id", row['id']).execute()
+                        st.rerun()
+    
+    with at2:
+        c1, c2, c3 = st.columns(3)
+        with c1: ne = st.text_input("Email", key="ne")
+        with c2: nn = st.text_input("Nombre", key="nn")
+        with c3: nt = st.text_input("Tel", key="nt")
         
-        with at1:
-            reports = supabase.table("reportes").select("*").order("fecha", desc=True).execute().data
-            if reports:
-                for row in reports:
-                    c1, c2 = st.columns([4, 1])
-                    with c1:
-                        st.markdown(f"**{row['nombre']}** - {row['estado']}")
-                    with c2:
-                        if st.button("🗑️", key=f"d{row['id']}"):
-                            supabase.table("reportes").delete().eq("id", row['id']).execute()
-                            st.rerun()
-        
-        with at2:
-            c1, c2, c3 = st.columns(3)
-            with c1: ne = st.text_input("Email", key="ne")
-            with c2: nn = st.text_input("Nombre", key="nn")
-            with c3: nt = st.text_input("Tel", key="nt")
-            
-            if st.button("Agregar", key="ba"):
-                if ne and nn:
-                    supabase.table("usuarios").insert({
-                        "email": ne, "nombre": nn, "telefono": nt,
-                        "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"), "activo": True
-                    }).execute()
-                    st.success("✅ Agregado")
-                    st.rerun()
+        if st.button("Agregar", key="ba"):
+            if ne and nn:
+                supabase.table("usuarios").insert({
+                    "email": ne, "nombre": nn, "telefono": nt,
+                    "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"), "activo": True
+                }).execute()
+                st.success("✅ Agregado")
+                st.rerun()
 
 # FOOTER
 st.markdown("---")
-if not st.session_state.is_admin:
-    if st.button("🔐 Acceso Admin", key="bfa"):
-        st.session_state.show_admin = True
-        st.rerun()
-st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta </div>", unsafe_allow_html=True)
