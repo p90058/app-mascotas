@@ -41,7 +41,6 @@ st.markdown("""
         color: white; border: none; border-radius: 12px; cursor: pointer;
         box-shadow: 0 4px 15px rgba(76,175,80,0.4);
     }
-    .btn-gps:hover { opacity: 0.9; }
     
     .reporte-card {
         background: white; border-radius: 15px; padding: 1.5rem; margin-bottom: 1.5rem;
@@ -61,67 +60,31 @@ st.markdown("""
     .location-box { background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%); border: 3px solid #81C784; padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem; text-align: center; }
     
     #MainMenu {visibility: hidden;} footer {visibility: hidden;}
-    
-    .stTextInput > div > div > input, .stTextArea textarea, .stSelectbox select {
-        border-radius: 10px; border: 2px solid #E0E0E0;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- FUNCIONES DE SEGURIDAD Y SESIÓN ---
-def asegurar_admin():
-    try:
-        response = supabase.table("administradores").select("*").eq("codigo", "ADMIN2024").execute()
-        if not response.data:
-            supabase.table("administradores").insert({
-                "codigo": "ADMIN2024", "contrasena": "admin123", 
-                "nombre": "Administrador", "email": "admin@mascotas.com"
-            }).execute()
-    except Exception as e:
-        print(f"Error asegurando admin: {e}")
-
-# Inicializar session_state
+# --- INICIALIZAR SESSION_STATE ---
 if 'is_admin' not in st.session_state:
     st.session_state.is_admin = False
-if 'user_registered' not in st.session_state:
-    st.session_state.user_registered = False
 if 'latitud' not in st.session_state:
     st.session_state.latitud = None
 if 'longitud' not in st.session_state:
     st.session_state.longitud = None
+if 'show_admin_login' not in st.session_state:
+    st.session_state.show_admin_login = False
 
-# Inicializar campos del formulario si no existen
-if 'inp_nombre' not in st.session_state:
-    st.session_state.inp_nombre = ""
-if 'inp_email' not in st.session_state:
-    st.session_state.inp_email = ""
-if 'inp_telefono' not in st.session_state:
-    st.session_state.inp_telefono = ""
-if 'inp_tipo_mascota' not in st.session_state:
-    st.session_state.inp_tipo_mascota = "Perro"
-if 'inp_estado' not in st.session_state:
-    st.session_state.inp_estado = "Perdida 🔴"
-if 'inp_especie' not in st.session_state:
-    st.session_state.inp_especie = "🐕 Perro"
-if 'inp_raza' not in st.session_state:
-    st.session_state.inp_raza = ""
-if 'inp_nombre_mascota' not in st.session_state:
-    st.session_state.inp_nombre_mascota = ""
-if 'inp_color' not in st.session_state:
-    st.session_state.inp_color = ""
-if 'inp_tamano' not in st.session_state:
-    st.session_state.inp_tamano = "Pequeño"
-if 'inp_sexo' not in st.session_state:
-    st.session_state.inp_sexo = "Macho"
-if 'inp_contacto' not in st.session_state:
-    st.session_state.inp_contacto = ""
-if 'inp_descripcion' not in st.session_state:
-    st.session_state.inp_descripcion = ""
+# --- ASEGURAR ADMIN ---
+try:
+    response = supabase.table("administradores").select("*").eq("codigo", "ADMIN2024").execute()
+    if not response.data:
+        supabase.table("administradores").insert({
+            "codigo": "ADMIN2024", "contrasena": "admin123", 
+            "nombre": "Administrador", "email": "admin@mascotas.com"
+        }).execute()
+except:
+    pass
 
-# Asegurar que el admin exista al iniciar
-asegurar_admin()
-
-# --- LÓGICA DE GPS (Captura de URL) ---
+# --- CAPTURAR GPS DE URL ---
 query_params = st.query_params
 if "lat" in query_params and "lon" in query_params:
     try:
@@ -132,12 +95,9 @@ if "lat" in query_params and "lon" in query_params:
     except:
         pass
 
-# --- LÓGICA DE LOGIN ADMIN ---
-if 'show_admin_login' not in st.session_state:
-    st.session_state.show_admin_login = False
-
+# --- LOGIN ADMIN ---
 if st.session_state.show_admin_login and not st.session_state.is_admin:
-    st.markdown('<div class="logo-container" style="font-size: 5rem;">🐾</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size: 5rem; text-align: center;">🐾</div>', unsafe_allow_html=True)
     st.markdown('<h1 class="main-header">🔐 Acceso de Administrador</h1>', unsafe_allow_html=True)
     
     codigo = st.text_input("Código", key="admin_codigo_input")
@@ -150,7 +110,6 @@ if st.session_state.show_admin_login and not st.session_state.is_admin:
                 response = supabase.table("administradores").select("*").eq("codigo", codigo).eq("contrasena", contrasena).execute()
                 if response.data:
                     st.session_state.is_admin = True
-                    st.session_state.user_info = response.data[0]
                     st.session_state.show_admin_login = False
                     st.success("✅ Bienvenido Administrador!")
                     st.rerun()
@@ -165,7 +124,7 @@ if st.session_state.show_admin_login and not st.session_state.is_admin:
     st.stop()
 
 # --- APP PRINCIPAL ---
-st.markdown('<div class="logo-container" style="font-size: 5rem;">🐾</div>', unsafe_allow_html=True)
+st.markdown('<div style="font-size: 5rem; text-align: center;">🐾</div>', unsafe_allow_html=True)
 st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
 # Sidebar
@@ -174,11 +133,9 @@ with st.sidebar:
         st.markdown("### 👑 Administrador")
         if st.button("🚪 Cerrar Sesión", key="btn_logout_admin"):
             st.session_state.is_admin = False
-            st.session_state.user_info = None
             st.rerun()
     else:
         st.markdown("### 👤 Visitante")
-        st.info("Llena el formulario para registrarte y publicar.")
 
 # Tabs
 if st.session_state.is_admin:
@@ -192,27 +149,19 @@ with tab1:
     
     st.markdown('<div class="info-box">📝 <b>Paso 1:</b> Completa tus datos y los de la mascota. <b>Paso 2:</b> Presiona el botón verde para obtener tu ubicación GPS.</div>', unsafe_allow_html=True)
     
-    # --- SECCIÓN DATOS USUARIO ---
+    # --- DATOS USUARIO ---
     st.markdown("### 👤 Tus Datos")
     col_u1, col_u2, col_u3 = st.columns(3)
     with col_u1:
-        nombre_usuario = st.text_input("Tu Nombre", key="inp_nombre", value=st.session_state.inp_nombre)
+        nombre_usuario = st.text_input("Tu Nombre", key="inp_nombre")
     with col_u2:
-        email_usuario = st.text_input("📧 Email", key="inp_email", value=st.session_state.inp_email)
+        email_usuario = st.text_input("📧 Email", key="inp_email")
     with col_u3:
-        telefono_usuario = st.text_input("📞 Teléfono", key="inp_telefono", value=st.session_state.inp_telefono)
+        telefono_usuario = st.text_input("📞 Teléfono", key="inp_telefono")
     
-    # Actualizar session_state con los valores actuales
-    st.session_state.inp_nombre = nombre_usuario
-    st.session_state.inp_email = email_usuario
-    st.session_state.inp_telefono = telefono_usuario
+    tipo_mascota_usuario = st.selectbox("🐾 Tipo de mascota", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="inp_tipo_mascota")
     
-    tipo_mascota_usuario = st.selectbox("🐾 Tipo de mascota", ["Perro", "Gato", "Conejo", "Ave", "Otro"], 
-                                         key="inp_tipo_mascota", 
-                                         index=["Perro", "Gato", "Conejo", "Ave", "Otro"].index(st.session_state.inp_tipo_mascota) if st.session_state.inp_tipo_mascota in ["Perro", "Gato", "Conejo", "Ave", "Otro"] else 0)
-    st.session_state.inp_tipo_mascota = tipo_mascota_usuario
-    
-    # --- SECCIÓN GPS ---
+    # --- GPS ---
     st.markdown('<div class="location-box">', unsafe_allow_html=True)
     st.markdown("### 📍 Ubicación de la Mascota")
     
@@ -236,7 +185,7 @@ with tab1:
                 window.location.href = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
             },
             (err) => {
-                alert("Error al obtener ubicación: " + err.message);
+                alert("Error: " + err.message);
                 btn.innerText = "📍 Reintentar ubicación";
                 btn.disabled = false;
             },
@@ -253,44 +202,28 @@ with tab1:
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- SECCIÓN DATOS MASCOTA ---
+    # --- DATOS MASCOTA ---
     st.markdown("---")
     st.markdown("### 🐾 Datos de la Mascota")
     
     col1, col2 = st.columns(2)
     with col1:
-        estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="inp_estado", 
-                             index=0 if st.session_state.inp_estado == "Perdida 🔴" else 1)
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="inp_especie",
-                              index=["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"].index(st.session_state.inp_especie) if st.session_state.inp_especie in ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"] else 0)
-        raza = st.text_input("Raza", placeholder="Ej: Labrador", key="inp_raza", value=st.session_state.inp_raza)
-        nombre_mascota = st.text_input("Nombre de la mascota", placeholder="Ej: Max", key="inp_nombre_mascota", value=st.session_state.inp_nombre_mascota)
+        estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="inp_estado")
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="inp_especie")
+        raza = st.text_input("Raza", placeholder="Ej: Labrador", key="inp_raza")
+        nombre_mascota = st.text_input("Nombre de la mascota", placeholder="Ej: Max", key="inp_nombre_mascota")
     
     with col2:
-        color = st.text_input("Color", placeholder="Ej: Marrón", key="inp_color", value=st.session_state.inp_color)
-        tamano = st.selectbox("Tamaño", ["Pequeño", "Mediano", "Grande", "No especificado"], key="inp_tamano",
-                             index=["Pequeño", "Mediano", "Grande", "No especificado"].index(st.session_state.inp_tamano) if st.session_state.inp_tamano in ["Pequeño", "Mediano", "Grande", "No especificado"] else 0)
-        sexo = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"], key="inp_sexo",
-                           index=["Macho", "Hembra", "No especificado"].index(st.session_state.inp_sexo) if st.session_state.inp_sexo in ["Macho", "Hembra", "No especificado"] else 0)
-        contacto = st.text_input("📞 Teléfono de contacto", key="inp_contacto", value=st.session_state.inp_contacto if st.session_state.inp_contacto else st.session_state.inp_telefono)
-    
-    # Actualizar session_state
-    st.session_state.inp_estado = estado
-    st.session_state.inp_especie = especie
-    st.session_state.inp_raza = raza
-    st.session_state.inp_nombre_mascota = nombre_mascota
-    st.session_state.inp_color = color
-    st.session_state.inp_tamano = tamano
-    st.session_state.inp_sexo = sexo
-    st.session_state.inp_contacto = contacto
+        color = st.text_input("Color", placeholder="Ej: Marrón", key="inp_color")
+        tamano = st.selectbox("Tamaño", ["Pequeño", "Mediano", "Grande", "No especificado"], key="inp_tamano")
+        sexo = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"], key="inp_sexo")
+        contacto = st.text_input("📞 Teléfono de contacto", key="inp_contacto", value=telefono_usuario)
 
     foto = st.file_uploader("📷 Subir Foto", type=["jpg", "png", "jpeg"], key="inp_foto")
-    descripcion = st.text_area("Señas particulares", height=100, key="inp_descripcion", value=st.session_state.inp_descripcion)
-    st.session_state.inp_descripcion = descripcion
+    descripcion = st.text_area("Señas particulares", height=100, key="inp_descripcion")
 
-    # --- BOTÓN PUBLICAR ---
+    # --- PUBLICAR ---
     if st.button("🚨 PUBLICAR ALERTA", type="primary", key="btn_publicar", use_container_width=True):
-        # Validaciones - AHORA VERIFICA LOS VALORES ACTUALES DE LOS CAMPOS
         if not nombre_usuario.strip() or not email_usuario.strip() or not telefono_usuario.strip():
             st.error("❌ Por favor, completa tus datos (Nombre, Email, Teléfono).")
         elif not st.session_state.latitud or not st.session_state.longitud:
@@ -298,9 +231,9 @@ with tab1:
         elif not foto or not nombre_mascota.strip():
             st.error("❌ Sube una foto y escribe el nombre de la mascota.")
         else:
-            with st.spinner("🔄 Guardando reporte y registrando usuario..."):
+            with st.spinner("🔄 Guardando..."):
                 try:
-                    # 1. Guardar/Actualizar Usuario
+                    # Guardar Usuario
                     supabase.table("usuarios").upsert({
                         "email": email_usuario,
                         "nombre": nombre_usuario,
@@ -310,7 +243,7 @@ with tab1:
                         "activo": True
                     }, on_conflict="email").execute()
                     
-                    # 2. Subir Foto
+                    # Subir Foto
                     file_extension = foto.name.split('.')[-1]
                     file_name = f"{uuid.uuid4()}.{file_extension}"
                     supabase.storage.from_("fotos-mascotas").upload(
@@ -318,7 +251,7 @@ with tab1:
                     )
                     foto_url = supabase.storage.from_("fotos-mascotas").get_public_url(file_name)
                     
-                    # 3. Guardar Reporte
+                    # Guardar Reporte
                     data = {
                         "estado": estado,
                         "especie": especie,
@@ -341,13 +274,9 @@ with tab1:
                     st.success("✅ ¡Alerta publicada con éxito!")
                     st.balloons()
                     
-                    # Limpiar solo ubicación y foto, mantener datos del usuario
+                    # Limpiar
                     st.session_state.latitud = None
                     st.session_state.longitud = None
-                    st.session_state.inp_raza = ""
-                    st.session_state.inp_nombre_mascota = ""
-                    st.session_state.inp_color = ""
-                    st.session_state.inp_descripcion = ""
                     st.rerun()
                     
                 except Exception as e:
@@ -391,8 +320,7 @@ with tab2:
                 with c2:
                     st.markdown(f"### 🐾 {row['nombre']}")
                     st.markdown(f"**Especie:** {row.get('especie', 'N/A')} | **Raza:** {row.get('raza', 'N/A')}")
-                    st.markdown(f"**Color:** {row.get('color', 'N/A')} | **Tamaño:** {row.get('tamano', 'N/A')}")
-                    if row.get('descripcion'): st.markdown(f"**Señas:** {row['descripcion']}")
+                    st.markdown(f"**Color:** {row.get('color', 'N/A')}")
                     st.markdown(f"**📅 Fecha:** {row['fecha']} | **📞 Contacto:** {row.get('contacto', 'N/A')}")
                 st.markdown('</div>', unsafe_allow_html=True)
         
@@ -405,14 +333,13 @@ with tab2:
                 with c2:
                     st.markdown(f"### 🐾 {row['nombre']}")
                     st.markdown(f"**Especie:** {row.get('especie', 'N/A')} | **Raza:** {row.get('raza', 'N/A')}")
-                    st.markdown(f"**Color:** {row.get('color', 'N/A')} | **Tamaño:** {row.get('tamano', 'N/A')}")
-                    if row.get('descripcion'): st.markdown(f"**Señas:** {row['descripcion']}")
+                    st.markdown(f"**Color:** {row.get('color', 'N/A')}")
                     st.markdown(f"**📅 Fecha:** {row['fecha']} | **📞 Contacto:** {row.get('contacto', 'N/A')}")
                 st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("🐾 No hay reportes todavía.")
 
-# ==================== TAB 3: ADMINISTRAR (SOLO ADMIN) ====================
+# ==================== TAB 3: ADMINISTRAR ====================
 if st.session_state.is_admin:
     with tab3:
         st.subheader("⚙️ Panel de Administración")
@@ -420,36 +347,30 @@ if st.session_state.is_admin:
         admin_tab1, admin_tab2 = st.tabs(["🗑️ Gestionar Reportes", "👥 Gestionar Usuarios"])
         
         with admin_tab1:
-            st.markdown("### 🗑️ Eliminar Reportes Incorrectos")
             response = supabase.table("reportes").select("*").order("fecha", desc=True).execute()
             datos = response.data
             
             if datos:
-                df = pd.DataFrame(datos)
-                st.markdown(f"**Total de reportes:** {len(df)}")
-                
-                for idx, row in df.iterrows():
+                st.markdown(f"**Total de reportes:** {len(datos)}")
+                for row in datos:
                     with st.container():
                         col1, col2 = st.columns([3, 1])
                         with col1:
                             st.markdown(f"**{row['nombre']}** - {row['estado']} ({row['fecha']})")
-                            st.markdown(f"Especie: {row.get('especie', 'N/A')}")
                         with col2:
-                            if st.button("🗑️ Eliminar", key=f"delete_{row['id']}", type="primary"):
+                            if st.button("🗑️ Eliminar", key=f"delete_{row['id']}"):
                                 supabase.table("reportes").delete().eq("id", row['id']).execute()
-                                st.success("✅ Reporte eliminado")
+                                st.success("✅ Eliminado")
                                 st.rerun()
-            else:
-                st.info("No hay reportes para gestionar.")
         
         with admin_tab2:
-            st.markdown("### ➕ Agregar Nuevo Usuario")
+            st.markdown("### ➕ Agregar Usuario")
             col1, col2, col3 = st.columns(3)
             with col1: nuevo_email = st.text_input("Email", key="nuevo_email")
             with col2: nuevo_nombre = st.text_input("Nombre", key="nuevo_nombre")
             with col3: nuevo_telefono = st.text_input("Teléfono", key="nuevo_telefono")
             
-            if st.button("✅ Agregar Usuario", key="btn_agregar_usuario"):
+            if st.button("✅ Agregar", key="btn_agregar_usuario"):
                 if nuevo_email and nuevo_nombre:
                     try:
                         supabase.table("usuarios").insert({
@@ -459,29 +380,8 @@ if st.session_state.is_admin:
                         st.success("✅ Usuario agregado!")
                     except Exception as e:
                         st.error(f"❌ Error: {str(e)}")
-            
-            st.markdown("---")
-            st.markdown("### 📋 Usuarios Registrados")
-            response = supabase.table("usuarios").select("*").order("fecha_registro", desc=True).execute()
-            usuarios = response.data
-            
-            if usuarios:
-                for user in usuarios:
-                    col1, col2 = st.columns([3, 1])
-                    with col1:
-                        st.markdown(f"**{user['nombre']}** - {user['email']}")
-                        st.markdown(f"Tel: {user.get('telefono', 'N/A')}")
-                    with col2:
-                        if user.get('activo', True):
-                            if st.button("🚫 Desactivar", key=f"deactivate_{user['id']}"):
-                                supabase.table("usuarios").update({"activo": False}).eq("id", user['id']).execute()
-                                st.rerun()
-                        else:
-                            if st.button("✅ Activar", key=f"activate_{user['id']}"):
-                                supabase.table("usuarios").update({"activo": True}).eq("id", user['id']).execute()
-                                st.rerun()
 
-# --- FOOTER CON ACCESO ADMIN ---
+# --- FOOTER ---
 st.markdown("---")
 if not st.session_state.is_admin:
     if st.button("🔐 Acceso Administrador", key="btn_acceso_admin_footer"):
