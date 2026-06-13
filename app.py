@@ -14,21 +14,21 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="")
+st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
 
-# CSS MEJORADO
+# CSS MEJORADO - RESPONSIVE
 st.markdown("""
 <style>
     .header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 3rem;
-        border-radius: 20px;
+        padding: 2rem 1rem;
+        border-radius: 15px;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     }
-    .header h1 { font-size: 2.5rem; margin: 0; }
+    .header h1 { font-size: 1.8rem; margin: 0; }
     
     .nav-btn-container {
         display: flex;
@@ -36,16 +36,17 @@ st.markdown("""
         justify-content: center;
         margin: 2rem 0;
         flex-wrap: wrap;
+        padding: 0 10px;
     }
     .nav-btn {
         flex: 1;
         min-width: 280px;
-        max-width: 400px;
-        padding: 30px 40px;
+        max-width: 450px;
+        padding: 40px 30px;
         border-radius: 20px;
         border: none;
         cursor: pointer;
-        font-size: 20px;
+        font-size: 22px;
         font-weight: bold;
         color: white;
         text-align: center;
@@ -55,11 +56,14 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 10px;
+        gap: 15px;
     }
     .nav-btn:hover {
         transform: translateY(-5px);
         box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+    }
+    .nav-btn:active {
+        transform: translateY(-2px);
     }
     .nav-btn-reportar {
         background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%);
@@ -68,53 +72,68 @@ st.markdown("""
         background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
     }
     .nav-btn-icon {
-        font-size: 50px;
+        font-size: 60px;
+    }
+    .nav-btn-title {
+        font-size: 24px;
+        font-weight: bold;
     }
     .nav-btn-subtitle {
         font-size: 14px;
         font-weight: normal;
-        opacity: 0.9;
-    }
-    
-    .reporte-card {
-        background: white;
-        border-radius: 20px;
-        padding: 30px;
-        margin: 25px 0;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-        border: 3px solid #e0e0e0;
-    }
-    .reporte-perdida {
-        border-left: 10px solid #FF5252 !important;
-        background: linear-gradient(135deg, #FFF5F5 0%, #FFE5E5 100%) !important;
-    }
-    .reporte-encontrada {
-        border-left: 10px solid #4CAF50 !important;
-        background: linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%) !important;
-    }
-    .badge {
-        display: inline-block;
-        padding: 8px 20px;
-        border-radius: 25px;
-        font-weight: bold;
-        font-size: 16px;
-        margin-bottom: 15px;
-    }
-    .badge-perdida { background: #FF5252; color: white; }
-    .badge-encontrada { background: #4CAF50; color: white; }
-    .foto-container {
+        opacity: 0.95;
         text-align: center;
-        margin: 20px 0;
-    }
-    .foto-container img {
-        max-width: 350px;
-        max-height: 350px;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        object-fit: cover;
+        line-height: 1.4;
     }
     
     #MainMenu, footer { visibility: hidden; }
+    
+    /* RESPONSIVE PARA CELULAR */
+    @media (max-width: 768px) {
+        .header {
+            padding: 1.5rem 1rem;
+        }
+        .header h1 {
+            font-size: 1.4rem;
+        }
+        .nav-btn-container {
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .nav-btn {
+            min-width: 100%;
+            max-width: 100%;
+            padding: 35px 25px;
+        }
+        .nav-btn-icon {
+            font-size: 50px;
+        }
+        .nav-btn-title {
+            font-size: 20px;
+        }
+        .nav-btn-subtitle {
+            font-size: 13px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .header h1 {
+            font-size: 1.2rem;
+        }
+        .nav-btn {
+            padding: 30px 20px;
+        }
+        .nav-btn-icon {
+            font-size: 45px;
+        }
+        .nav-btn-title {
+            font-size: 18px;
+        }
+        .nav-btn-subtitle {
+            font-size: 12px;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -148,22 +167,23 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 # APP PRINCIPAL
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
-# BOTONES DE NAVEGACIÓN
+# BOTONES DE NAVEGACIÓN GRANDES - FUNCIONALES
 st.markdown("""
 <div class="nav-btn-container">
     <button class="nav-btn nav-btn-reportar" onclick="document.getElementById('btn-nav-reportar').click()">
         <span class="nav-btn-icon">📸</span>
-        <span>Reportar Mascota</span>
+        <span class="nav-btn-title">Reportar Mascota</span>
         <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
     </button>
     <button class="nav-btn nav-btn-ver" onclick="document.getElementById('btn-nav-ver').click()">
         <span class="nav-btn-icon">🔍</span>
-        <span>Ver Alertas</span>
+        <span class="nav-btn-title">Ver Alertas</span>
         <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
     </button>
 </div>
 """, unsafe_allow_html=True)
 
+# Botones ocultos que activan la navegación (sin mostrar)
 col_nav1, col_nav2 = st.columns(2)
 with col_nav1:
     if st.button("📸 Reportar Mascota", key="btn-nav-reportar", use_container_width=True, type="primary"):
@@ -173,6 +193,15 @@ with col_nav2:
     if st.button("🔍 Ver Alertas", key="btn-nav-ver", use_container_width=True):
         st.session_state.vista_actual = 'ver'
         st.rerun()
+
+# Ocultar los botones de Streamlit
+st.markdown("""
+<style>
+    button[kind="primary"][data-baseweb="button"] {
+        display: none !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -198,106 +227,126 @@ if st.session_state.vista_actual == 'reportar':
     <html>
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
             * { box-sizing: border-box; font-family: Arial, sans-serif; }
-            body { padding: 30px; background: #f5f5f5; margin: 0; }
-            .form-group { margin-bottom: 20px; }
-            label { display: block; font-weight: bold; margin-bottom: 8px; color: #333; font-size: 16px; }
+            body { padding: 20px; background: #f5f5f5; margin: 0; }
+            .form-group { margin-bottom: 15px; }
+            label { display: block; font-weight: bold; margin-bottom: 6px; color: #333; font-size: 15px; }
             input, select, textarea {
                 width: 100%;
-                padding: 15px;
+                padding: 12px;
                 border: 2px solid #ddd;
-                border-radius: 10px;
-                font-size: 16px;
+                border-radius: 8px;
+                font-size: 15px;
             }
             input:focus, select:focus, textarea:focus {
                 border-color: #667eea;
                 outline: none;
                 box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             }
-            .row { display: flex; gap: 15px; }
-            .row > div { flex: 1; }
+            .row { display: flex; gap: 10px; flex-wrap: wrap; }
+            .row > div { flex: 1; min-width: 140px; }
             .btn-gps {
                 width: 100%;
-                padding: 20px;
+                padding: 16px;
                 background: linear-gradient(135deg, #4CAF50, #45a049);
                 color: white;
                 border: none;
-                border-radius: 12px;
+                border-radius: 10px;
                 cursor: pointer;
                 font-weight: bold;
-                font-size: 18px;
-                margin: 20px 0;
-                box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+                font-size: 16px;
+                margin: 15px 0;
+                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
             }
-            .btn-gps:hover { opacity: 0.9; transform: translateY(-2px); }
+            .btn-gps:hover { opacity: 0.9; }
             .btn-gps:disabled { opacity: 0.6; cursor: not-allowed; }
             .btn-submit {
                 width: 100%;
-                padding: 20px;
+                padding: 18px;
                 background: linear-gradient(135deg, #667eea, #764ba2);
                 color: white;
                 border: none;
-                border-radius: 12px;
+                border-radius: 10px;
                 cursor: pointer;
                 font-weight: bold;
-                font-size: 20px;
-                margin-top: 30px;
-                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+                font-size: 18px;
+                margin-top: 20px;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
             }
-            .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); }
+            .btn-submit:hover { opacity: 0.9; }
             .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
             .status {
-                padding: 15px;
-                border-radius: 10px;
-                margin: 15px 0;
+                padding: 12px;
+                border-radius: 8px;
+                margin: 12px 0;
                 font-weight: bold;
-                font-size: 16px;
+                font-size: 14px;
                 display: none;
             }
             .status.success { background: #d4edda; color: #155724; display: block; }
             .status.error { background: #f8d7da; color: #721c24; display: block; }
             .status.info { background: #d1ecf1; color: #0c5460; display: block; }
             .section-title {
-                font-size: 22px;
+                font-size: 18px;
                 font-weight: bold;
-                margin: 30px 0 15px 0;
-                padding-bottom: 10px;
+                margin: 20px 0 12px 0;
+                padding-bottom: 8px;
                 border-bottom: 3px solid #667eea;
                 color: #333;
             }
             .gps-box {
                 background: #e8f5e9;
                 border: 3px solid #4CAF50;
-                border-radius: 15px;
-                padding: 25px;
-                margin: 20px 0;
+                border-radius: 12px;
+                padding: 18px;
+                margin: 15px 0;
             }
             #coords-display {
                 background: white;
-                padding: 15px;
-                border-radius: 10px;
-                margin-top: 15px;
+                padding: 12px;
+                border-radius: 8px;
+                margin-top: 12px;
                 display: none;
-                font-size: 16px;
+                font-size: 14px;
             }
             .file-upload { position: relative; display: inline-block; width: 100%; }
             .file-upload input[type="file"] { display: none; }
             .file-upload-label {
                 display: block;
-                padding: 20px;
+                padding: 16px;
                 background: #f0f0f0;
                 border: 3px dashed #ccc;
-                border-radius: 12px;
+                border-radius: 10px;
                 text-align: center;
                 cursor: pointer;
                 transition: all 0.3s;
-                font-size: 16px;
+                font-size: 15px;
             }
             .file-upload-label:hover { background: #e0e0e0; border-color: #667eea; }
             .file-upload-label.has-file { background: #d4edda; border-color: #28a745; color: #155724; }
-            #preview-container { margin-top: 15px; display: none; }
-            #preview-container img { max-width: 100%; max-height: 300px; border-radius: 12px; border: 3px solid #ddd; }
+            #preview-container { margin-top: 12px; display: none; }
+            #preview-container img { max-width: 100%; max-height: 250px; border-radius: 10px; border: 3px solid #ddd; }
+            
+            /* RESPONSIVE PARA CELULAR */
+            @media (max-width: 600px) {
+                body { padding: 12px; }
+                .row { flex-direction: column; gap: 0; }
+                .row > div { min-width: 100%; }
+                label { font-size: 14px; }
+                input, select, textarea { font-size: 14px; padding: 10px; }
+                .btn-gps { font-size: 15px; padding: 14px; }
+                .btn-submit { font-size: 16px; padding: 16px; }
+                .section-title { font-size: 16px; }
+                .file-upload-label { font-size: 14px; padding: 14px; }
+            }
+            
+            @media (max-width: 400px) {
+                body { padding: 8px; }
+                .btn-gps { font-size: 14px; padding: 12px; }
+                .btn-submit { font-size: 15px; padding: 14px; }
+            }
         </style>
     </head>
     <body>
