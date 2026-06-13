@@ -5,9 +5,7 @@ from datetime import datetime
 import uuid
 from streamlit_javascript import st_javascript
 
-# ═══════════════════════════════════════════════════════════════
 # CONFIGURACIÓN
-# ══════════════════════════════════════════════════════════════
 SUPABASE_URL = "https://iaxtfsqipwbvexkfcprv.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlheHRmc3FpcHdidmV4a2ZjcHJ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTI5NjkxNSwiZXhwIjoyMDk2ODcyOTE1fQ.7ineE_CVWjbMMWzURUZl87q5z8tE8V7K1xoh4pfwiDI"
 
@@ -15,9 +13,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
 
-# ═══════════════════════════════════════════════════════════════
 # CSS
-# ═══════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
     .header {
@@ -35,13 +31,27 @@ st.markdown("""
         margin: 0.5rem 0;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
+    .success-box {
+        background: #d4edda;
+        border: 2px solid #28a745;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+        color: #155724;
+    }
+    .error-box {
+        background: #f8d7da;
+        border: 2px solid #dc3545;
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+        color: #721c24;
+    }
     #MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════
 # SESSION STATE
-# ═══════════════════════════════════════════════════════════════
 if 'is_admin' not in st.session_state:
     st.session_state.is_admin = False
 if 'show_admin' not in st.session_state:
@@ -50,10 +60,10 @@ if 'lat' not in st.session_state:
     st.session_state.lat = None
 if 'lon' not in st.session_state:
     st.session_state.lon = None
+if 'gps_error' not in st.session_state:
+    st.session_state.gps_error = None
 
-# ═══════════════════════════════════════════════════════════════
 # LOGIN ADMIN
-# ═══════════════════════════════════════════════════════════════
 if st.session_state.show_admin and not st.session_state.is_admin:
     st.markdown('<div class="header"><h1>🔐 Admin</h1></div>', unsafe_allow_html=True)
     codigo = st.text_input("Código")
@@ -72,9 +82,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
         st.rerun()
     st.stop()
 
-# ═══════════════════════════════════════════════════════════════
 # APP PRINCIPAL
-# ══════════════════════════════════════════════════════════════
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
 with st.sidebar:
@@ -88,9 +96,7 @@ if st.session_state.is_admin:
 else:
     tab1, tab2 = st.tabs(["Reportar", "Ver"])
 
-# ══════════════════════════════════════════════════════════════
 # TAB 1: REPORTAR
-# ═══════════════════════════════════════════════════════════════
 with tab1:
     st.subheader("📝 Registrar Mascota")
     
@@ -105,68 +111,137 @@ with tab1:
     
     tipo = st.selectbox("Tipo", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="f_tipo")
     
-    # ═══════════════════════════════════════════════════════════
-    # GPS CON st_javascript - SIN REDIRECCIONES
-    # ═══════════════════════════════════════════════════════════
+    # GPS
     st.markdown("### 📍 Ubicación GPS")
     
     if st.session_state.lat and st.session_state.lon:
-        st.success(f"✅ Ubicación obtenida: {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
+        st.markdown(f"""
+        <div class="success-box">
+            <b>✅ Ubicación obtenida correctamente</b><br>
+            Latitud: {st.session_state.lat:.6f}<br>
+            Longitud: {st.session_state.lon:.6f}
+        </div>
+        """, unsafe_allow_html=True)
         if st.button("🔄 Obtener nueva ubicación", key="btn_reset"):
             st.session_state.lat = None
             st.session_state.lon = None
+            st.session_state.gps_error = None
             st.rerun()
     else:
-        # Botón de Streamlit que ejecuta JavaScript directamente
+        st.info("ℹ️ Haz clic en el botón de abajo para obtener tu ubicación automáticamente. Tu navegador te pedirá permiso.")
+        
         if st.button("📍 Obtener mi ubicación automáticamente", key="btn_gps", type="primary", use_container_width=True):
             try:
-                # JavaScript que obtiene la ubicación y la devuelve a Python
+                # JavaScript más robusto con mejor manejo de errores
                 js_code = """
                 new Promise((resolve, reject) => {
+                    // Verificar si el navegador soporta geolocalización
                     if (!navigator.geolocation) {
-                        reject({error: 'GPS no soportado en este navegador'});
+                        reject({
+                            error: 'Tu navegador no soporta geolocalización. Usa Chrome, Firefox o Safari.',
+                            code: 'NOT_SUPPORTED'
+                        });
                         return;
                     }
+                    
+                    // Verificar si es HTTPS
+                    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                        reject({
+                            error: 'La geolocalización requiere HTTPS. Si estás en Streamlit Cloud, esto ya está configurado.',
+                            code: 'NOT_SECURE'
+                        });
+                        return;
+                    }
+                    
+                    // Solicitar ubicación
                     navigator.geolocation.getCurrentPosition(
-                        (pos) => resolve({
-                            lat: pos.coords.latitude,
-                            lon: pos.coords.longitude,
-                            accuracy: pos.coords.accuracy
-                        }),
-                        (err) => {
-                            let msg = 'Error desconocido';
-                            if (err.code === 1) msg = 'Permiso denegado. Debes permitir el acceso a la ubicación.';
-                            else if (err.code === 2) msg = 'Ubicación no disponible. Activa el GPS.';
-                            else if (err.code === 3) msg = 'Tiempo de espera agotado.';
-                            reject({error: msg});
+                        (pos) => {
+                            resolve({
+                                lat: pos.coords.latitude,
+                                lon: pos.coords.longitude,
+                                accuracy: pos.coords.accuracy
+                            });
                         },
-                        {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
+                        (err) => {
+                            let msg = '';
+                            let code = '';
+                            
+                            switch(err.code) {
+                                case err.PERMISSION_DENIED:
+                                    msg = 'Permiso denegado. Debes permitir el acceso a la ubicación en tu navegador. Haz clic en el ícono de candado 🔒 en la barra de direcciones y permite la ubicación.';
+                                    code = 'PERMISSION_DENIED';
+                                    break;
+                                case err.POSITION_UNAVAILABLE:
+                                    msg = 'La información de ubicación no está disponible. Activa el GPS de tu dispositivo.';
+                                    code = 'POSITION_UNAVAILABLE';
+                                    break;
+                                case err.TIMEOUT:
+                                    msg = 'La solicitud de ubicación expiró. Intenta nuevamente.';
+                                    code = 'TIMEOUT';
+                                    break;
+                                default:
+                                    msg = 'Error desconocido al obtener la ubicación.';
+                                    code = 'UNKNOWN';
+                            }
+                            
+                            reject({error: msg, code: code});
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 20000,
+                            maximumAge: 0
+                        }
                     );
                 })
                 """
                 
-                with st.spinner(" Solicitando permiso de ubicación..."):
+                with st.spinner("⏳ Solicitando permiso de ubicación..."):
                     result = st_javascript(js_code)
                 
                 if result and isinstance(result, dict) and 'lat' in result:
                     st.session_state.lat = float(result['lat'])
                     st.session_state.lon = float(result['lon'])
+                    st.session_state.gps_error = None
                     st.success(f"✅ Ubicación obtenida: {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
                     st.rerun()
                 elif result and isinstance(result, dict) and 'error' in result:
+                    st.session_state.gps_error = result['error']
                     st.error(f"❌ {result['error']}")
+                    
+                    # Mostrar instrucciones específicas según el error
+                    if result.get('code') == 'PERMISSION_DENIED':
+                        st.markdown("""
+                        <div class="error-box">
+                            <b>📋 Cómo permitir el acceso:</b><br>
+                            <b>Chrome:</b> Click en 🔒 (candado) → Configuración del sitio → Ubicación → Permitir<br>
+                            <b>Firefox:</b> Click en 🔒 → Más información → Permisos → Permitir ubicación<br>
+                            <b>Safari:</b> Ajustes → Safari → Configuración de sitios web → Ubicación → Permitir<br><br>
+                            Luego recarga la página e intenta nuevamente.
+                        </div>
+                        """, unsafe_allow_html=True)
+                    elif result.get('code') == 'POSITION_UNAVAILABLE':
+                        st.markdown("""
+                        <div class="error-box">
+                            <b>📱 Activa el GPS:</b><br>
+                            - En celular: Activa la ubicación/GPS en Configuración<br>
+                            - En PC: Asegúrate de tener servicios de ubicación activados<br>
+                            Luego intenta nuevamente.
+                        </div>
+                        """, unsafe_allow_html=True)
                 else:
-                    st.error(" No se pudo obtener la ubicación")
+                    st.error("❌ No se pudo obtener la ubicación. Verifica que hayas permitido el acceso.")
                     
             except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-                st.info("💡 Asegúrate de permitir el acceso a la ubicación cuando el navegador lo solicite")
+                error_msg = str(e)
+                st.session_state.gps_error = error_msg
+                st.error(f"❌ Error: {error_msg}")
+                st.info("💡 Asegúrate de permitir el acceso a la ubicación cuando el navegador lo solicite.")
     
     # DATOS MASCOTA
     col1, col2 = st.columns(2)
     with col1:
         estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="f_estado")
-        especie = st.selectbox("Especie", [" Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="f_especie")
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="f_especie")
         raza = st.text_input("Raza", key="f_raza")
         nombre_mascota = st.text_input("Nombre", key="f_nombre_mascota")
     with col2:
@@ -184,7 +259,7 @@ with tab1:
         elif not st.session_state.lat:
             st.error("❌ Primero obtén la ubicación GPS")
         elif not foto:
-            st.error(" Sube una foto")
+            st.error("❌ Sube una foto")
         elif not nombre_mascota:
             st.error("❌ Escribe el nombre")
         else:
@@ -225,9 +300,7 @@ with tab1:
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
 
-# ═══════════════════════════════════════════════════════════════
 # TAB 2: VER
-# ═══════════════════════════════════════════════════════════════
 with tab2:
     st.subheader("🔍 Reportes")
     datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
@@ -238,7 +311,7 @@ with tab2:
         with col1:
             f_estado = st.selectbox("Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox("Especie", ["Todas", " Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         df_f = df.copy()
         if f_estado != "Todos":
@@ -249,7 +322,7 @@ with tab2:
         if not df_f.empty:
             st.map(df_f.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})[["latitude", "longitude"]])
             
-            for est, emoji in [("Perdida", "🔴"), ("Encontrada", "")]:
+            for est, emoji in [("Perdida", "🔴"), ("Encontrada", "🟢")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
@@ -264,9 +337,7 @@ with tab2:
     else:
         st.info("🐾 Sin reportes")
 
-# ═══════════════════════════════════════════════════════════════
 # TAB 3: ADMIN
-# ═══════════════════════════════════════════════════════════════
 if st.session_state.is_admin:
     with tab3:
         st.subheader("⚙️ Admin")
