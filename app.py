@@ -3,6 +3,7 @@ from supabase import create_client
 import pandas as pd
 from datetime import datetime
 import uuid
+from streamlit_javascript import st_javascript
 
 # CONFIGURACIÓN
 SUPABASE_URL = "https://iaxtfsqipwbvexkfcprv.supabase.co"
@@ -43,12 +44,6 @@ if 'lat' not in st.session_state:
     st.session_state.lat = None
 if 'lon' not in st.session_state:
     st.session_state.lon = None
-
-# CAPTURAR GPS DE URL
-if "lat" in st.query_params and "lon" in st.query_params:
-    st.session_state.lat = float(st.query_params["lat"])
-    st.session_state.lon = float(st.query_params["lon"])
-    st.query_params.clear()
 
 # LOGIN ADMIN
 if st.session_state.show_admin and not st.session_state.is_admin:
@@ -97,7 +92,7 @@ with tab1:
     
     tipo = st.selectbox("Tipo", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="f_tipo")
     
-    # GPS - IMPLEMENTACIÓN FUNCIONAL
+    # GPS CON streamlit-javascript
     st.markdown("### 📍 Ubicación GPS")
     
     if st.session_state.lat and st.session_state.lon:
@@ -107,109 +102,44 @@ with tab1:
             st.session_state.lon = None
             st.rerun()
     else:
-        # COMPONENTE HTML CON GPS
-        gps_html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    text-align: center;
-                    padding: 20px;
-                    margin: 0;
-                }
-                #btnGPS {
-                    width: 100%;
-                    padding: 18px;
-                    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-                    color: white;
-                    border: none;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    font-weight: bold;
-                    font-size: 16px;
-                    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-                }
-                #btnGPS:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6);
-                }
-                #btnGPS:disabled {
-                    opacity: 0.6;
-                    cursor: not-allowed;
-                }
-                #msg {
-                    margin-top: 15px;
-                    font-weight: 600;
-                    font-size: 14px;
-                }
-                #fallbackLink {
-                    display: none;
-                    margin-top: 15px;
-                    padding: 12px;
-                    background: #fff3cd;
-                    border-radius: 8px;
-                    font-size: 13px;
-                }
-            </style>
-        </head>
-        <body>
-            <button id="btnGPS" onclick="getGPS()">📍 Obtener mi ubicación automáticamente</button>
-            <div id="msg"></div>
-            <div id="fallbackLink"></div>
-            
-            <script>
-            function getGPS() {
-                const msg = document.getElementById('msg');
-                const btn = document.getElementById('btnGPS');
-                const fallback = document.getElementById('fallbackLink');
-                
-                if (!navigator.geolocation) {
-                    msg.innerHTML = '<span style="color:red">❌ GPS no soportado</span>';
-                    return;
-                }
-                
-                msg.innerHTML = '<span style="color:blue">⏳ Obteniendo ubicación...</span>';
-                btn.disabled = true;
-                
-                navigator.geolocation.getCurrentPosition(
-                    function(pos) {
-                        const lat = pos.coords.latitude;
-                        const lon = pos.coords.longitude;
-                        msg.innerHTML = '<span style="color:green">✅ ¡Ubicación obtenida!<br>Redirigiendo...</span>';
+        # Botón para obtener GPS
+        if st.button("📍 Obtener mi ubicación automáticamente", key="btn_gps", type="primary"):
+            with st.spinner("⏳ Solicitando permiso de ubicación..."):
+                try:
+                    # JavaScript que obtiene la ubicación
+                    js_code = """
+                    new Promise((resolve, reject) => {
+                        if (!navigator.geolocation) {
+                            reject('GPS no soportado');
+                            return;
+                        }
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => resolve({lat: pos.coords.latitude, lon: pos.coords.longitude}),
+                            (err) => {
+                                let msg = 'Error';
+                                if (err.code === 1) msg = 'Permiso denegado';
+                                else if (err.code === 2) msg = 'Ubicación no disponible';
+                                else if (err.code === 3) msg = 'Tiempo agotado';
+                                reject(msg);
+                            },
+                            {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
+                        );
+                    })
+                    """
+                    
+                    result = st_javascript(js_code)
+                    
+                    if result and isinstance(result, dict) and 'lat' in result:
+                        st.session_state.lat = float(result['lat'])
+                        st.session_state.lon = float(result['lon'])
+                        st.success(f"✅ Ubicación obtenida: {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
+                        st.rerun()
+                    else:
+                        st.error("❌ No se pudo obtener la ubicación")
                         
-                        // Intentar redirección con window.top
-                        setTimeout(function() {
-                            try {
-                                const baseUrl = window.top.location.pathname;
-                                window.top.location.href = baseUrl + '?lat=' + lat + '&lon=' + lon;
-                            } catch(e) {
-                                // Si falla, mostrar enlace de fallback
-                                fallback.style.display = 'block';
-                                fallback.innerHTML = '<a href="?lat=' + lat + '&lon=' + lon + '" target="_top" style="color:#0066cc; font-weight:bold;">👉 Click aquí para continuar con tu ubicación</a>';
-                                msg.innerHTML = '<span style="color:orange">️ Haz clic en el enlace de abajo para continuar</span>';
-                                btn.disabled = false;
-                            }
-                        }, 800);
-                    },
-                    function(err) {
-                        let text = 'Error';
-                        if(err.code === 1) text = 'Permiso denegado. Permite el acceso.';
-                        else if(err.code === 2) text = 'GPS no disponible. Actívalo.';
-                        else if(err.code === 3) text = 'Tiempo agotado.';
-                        msg.innerHTML = '<span style="color:red">❌ ' + text + '</span>';
-                        btn.disabled = false;
-                    },
-                    {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
-                );
-            }
-            </script>
-        </body>
-        </html>
-        """
-        
-        st.components.v1.html(gps_html, height=200)
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                    st.info("💡 Asegúrate de permitir el acceso a la ubicación cuando el navegador lo solicite")
     
     # DATOS MASCOTA
     col1, col2 = st.columns(2)
@@ -239,26 +169,53 @@ with tab1:
         else:
             with st.spinner("Guardando..."):
                 try:
-                    supabase.table("usuarios").upsert({
-                        "email": email, "nombre": nombre, "telefono": telefono,
-                        "tipo_mascota": tipo, "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    # Guardar usuario con manejo de errores detallado
+                    user_data = {
+                        "email": email,
+                        "nombre": nombre,
+                        "telefono": telefono,
+                        "tipo_mascota": tipo,
+                        "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"),
                         "activo": True
-                    }, on_conflict="email").execute()
+                    }
                     
+                    # Intentar upsert
+                    try:
+                        supabase.table("usuarios").upsert(user_data, on_conflict="email").execute()
+                        st.info(f"✅ Usuario guardado: {nombre}")
+                    except Exception as e:
+                        st.warning(f"⚠️ No se pudo guardar usuario: {e}")
+                        # Intentar insert directo
+                        try:
+                            supabase.table("usuarios").insert(user_data).execute()
+                        except:
+                            pass
+                    
+                    # Subir foto
                     ext = foto.name.split('.')[-1]
                     fname = f"{uuid.uuid4()}.{ext}"
                     supabase.storage.from_("fotos-mascotas").upload(fname, foto.getvalue(), file_options={"content-type": foto.type})
                     foto_url = supabase.storage.from_("fotos-mascotas").get_public_url(fname)
                     
-                    supabase.table("reportes").insert({
-                        "estado": estado, "especie": especie, "raza": raza,
-                        "nombre": nombre_mascota, "color": color, "tamano": tamano,
-                        "sexo": sexo, "descripcion": descripcion,
+                    # Guardar reporte
+                    reporte_data = {
+                        "estado": estado,
+                        "especie": especie,
+                        "raza": raza,
+                        "nombre": nombre_mascota,
+                        "color": color,
+                        "tamano": tamano,
+                        "sexo": sexo,
+                        "descripcion": descripcion,
                         "latitud": st.session_state.lat,
                         "longitud": st.session_state.lon,
                         "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "foto_url": foto_url, "contacto": contacto, "usuario_email": email
-                    }).execute()
+                        "foto_url": foto_url,
+                        "contacto": contacto,
+                        "usuario_email": email
+                    }
+                    
+                    supabase.table("reportes").insert(reporte_data).execute()
                     
                     st.success("✅ ¡Publicado!")
                     st.balloons()
@@ -266,7 +223,7 @@ with tab1:
                     st.session_state.lon = None
                     st.rerun()
                 except Exception as e:
-                    st.error(f"❌ Error: {e}")
+                    st.error(f" Error: {e}")
 
 # TAB 2: VER
 with tab2:
@@ -279,7 +236,7 @@ with tab2:
         with col1:
             f_estado = st.selectbox("Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         df_f = df.copy()
         if f_estado != "Todos":
@@ -299,11 +256,11 @@ with tab2:
                         <div class="card">
                             <b>{row['nombre']}</b> - {row['estado']}<br>
                             {row.get('especie', 'N/A')} | {row.get('raza', 'N/A')}<br>
-                            📅 {row['fecha']} |  {row.get('contacto', 'N/A')}
+                            📅 {row['fecha']} | 📞 {row.get('contacto', 'N/A')}
                         </div>
                         """, unsafe_allow_html=True)
     else:
-        st.info(" Sin reportes")
+        st.info("🐾 Sin reportes")
 
 # TAB 3: ADMIN
 if st.session_state.is_admin:
@@ -319,7 +276,7 @@ if st.session_state.is_admin:
                     with c1:
                         st.markdown(f"**{row['nombre']}** - {row['estado']}")
                     with c2:
-                        if st.button("️", key=f"d{row['id']}"):
+                        if st.button("🗑️", key=f"d{row['id']}"):
                             supabase.table("reportes").delete().eq("id", row['id']).execute()
                             st.rerun()
         
