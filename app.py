@@ -3,10 +3,11 @@ from supabase import create_client
 import pandas as pd
 from datetime import datetime
 import uuid
+from streamlit_javascript import st_javascript
 
 # ═══════════════════════════════════════════════════════════════
 # CONFIGURACIÓN
-# ═══════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
 SUPABASE_URL = "https://iaxtfsqipwbvexkfcprv.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlheHRmc3FpcHdidmV4a2ZjcHJ2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTI5NjkxNSwiZXhwIjoyMDk2ODcyOTE1fQ.7ineE_CVWjbMMWzURUZl87q5z8tE8V7K1xoh4pfwiDI"
 
@@ -34,51 +35,21 @@ st.markdown("""
         margin: 0.5rem 0;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    .gps-box {
-        background: #e8f5e9;
-        border: 2px solid #4CAF50;
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-    }
     #MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════
-# SESSION STATE - CLAVE PARA PRESERVAR DATOS
+# SESSION STATE
 # ═══════════════════════════════════════════════════════════════
-defaults = {
-    'is_admin': False,
-    'show_admin': False,
-    'lat': None,
-    'lon': None,
-    'f_nombre': '',
-    'f_email': '',
-    'f_telefono': '',
-    'f_tipo': 'Perro',
-    'f_estado': 'Perdida 🔴',
-    'f_especie': '🐕 Perro',
-    'f_raza': '',
-    'f_nombre_mascota': '',
-    'f_color': '',
-    'f_tamano': 'Pequeño',
-    'f_sexo': 'Macho',
-    'f_contacto': '',
-    'f_desc': '',
-}
-
-for key, value in defaults.items():
-    if key not in st.session_state:
-        st.session_state[key] = value
-
-# ═══════════════════════════════════════════════════════════════
-# CAPTURAR GPS DE URL
-# ═══════════════════════════════════════════════════════════════
-if "lat" in st.query_params and "lon" in st.query_params:
-    st.session_state.lat = float(st.query_params["lat"])
-    st.session_state.lon = float(st.query_params["lon"])
-    st.query_params.clear()
+if 'is_admin' not in st.session_state:
+    st.session_state.is_admin = False
+if 'show_admin' not in st.session_state:
+    st.session_state.show_admin = False
+if 'lat' not in st.session_state:
+    st.session_state.lat = None
+if 'lon' not in st.session_state:
+    st.session_state.lon = None
 
 # ═══════════════════════════════════════════════════════════════
 # LOGIN ADMIN
@@ -103,8 +74,8 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 
 # ═══════════════════════════════════════════════════════════════
 # APP PRINCIPAL
-# ═══════════════════════════════════════════════════════════════
-st.markdown('<div class="header"><h1 style="margin:0;"> Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
+# ══════════════════════════════════════════════════════════════
+st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
 with st.sidebar:
     if st.session_state.is_admin:
@@ -117,129 +88,103 @@ if st.session_state.is_admin:
 else:
     tab1, tab2 = st.tabs(["Reportar", "Ver"])
 
-# ═══════════════════════════════════════════════════════════════
-# TAB 1: REPORTAR - CON PERSISTENCIA DE DATOS
 # ══════════════════════════════════════════════════════════════
+# TAB 1: REPORTAR
+# ═══════════════════════════════════════════════════════════════
 with tab1:
     st.subheader("📝 Registrar Mascota")
     
-    # DATOS USUARIO - Con value=st.session_state para preservar
+    # DATOS USUARIO
     col1, col2, col3 = st.columns(3)
     with col1:
-        nombre = st.text_input("Nombre", value=st.session_state.f_nombre, key="f_nombre")
+        nombre = st.text_input("Nombre", key="f_nombre")
     with col2:
-        email = st.text_input("Email", value=st.session_state.f_email, key="f_email")
+        email = st.text_input("Email", key="f_email")
     with col3:
-        telefono = st.text_input("Teléfono", value=st.session_state.f_telefono, key="f_telefono")
+        telefono = st.text_input("Teléfono", key="f_telefono")
     
-    tipo = st.selectbox("Tipo", ["Perro", "Gato", "Conejo", "Ave", "Otro"], 
-                        index=["Perro", "Gato", "Conejo", "Ave", "Otro"].index(st.session_state.f_tipo),
-                        key="f_tipo")
+    tipo = st.selectbox("Tipo", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="f_tipo")
     
-    # GPS
-    st.markdown('<div class="gps-box">', unsafe_allow_html=True)
+    # ═══════════════════════════════════════════════════════════
+    # GPS CON st_javascript - SIN REDIRECCIONES
+    # ═══════════════════════════════════════════════════════════
     st.markdown("### 📍 Ubicación GPS")
     
     if st.session_state.lat and st.session_state.lon:
-        st.success(f"✅ Ubicación: {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
-        if st.button("🔄 Nueva ubicación", key="btn_reset"):
+        st.success(f"✅ Ubicación obtenida: {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
+        if st.button("🔄 Obtener nueva ubicación", key="btn_reset"):
             st.session_state.lat = None
             st.session_state.lon = None
             st.rerun()
     else:
-        gps_html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial; text-align: center; padding: 20px; background: transparent; }
-                #btnGPS {
-                    width: 100%; padding: 18px;
-                    background: linear-gradient(135deg, #4CAF50, #45a049);
-                    color: white; border: none; border-radius: 12px;
-                    cursor: pointer; font-weight: bold; font-size: 16px;
-                    box-shadow: 0 5px 15px rgba(76,175,80,0.4);
-                }
-                #btnGPS:hover { transform: translateY(-2px); }
-                #btnGPS:disabled { opacity: 0.6; }
-                #msg { margin-top: 15px; font-weight: 600; }
-            </style>
-        </head>
-        <body>
-            <button id="btnGPS" onclick="getGPS()">📍 Obtener mi ubicación automáticamente</button>
-            <div id="msg"></div>
-            <script>
-            function getGPS() {
-                var msg = document.getElementById('msg');
-                var btn = document.getElementById('btnGPS');
-                if (!navigator.geolocation) {
-                    msg.innerHTML = '<span style="color:red">❌ GPS no soportado</span>';
-                    return;
-                }
-                msg.innerHTML = '<span style="color:blue">⏳ Obteniendo...</span>';
-                btn.disabled = true;
-                navigator.geolocation.getCurrentPosition(
-                    function(pos) {
-                        var lat = pos.coords.latitude;
-                        var lon = pos.coords.longitude;
-                        msg.innerHTML = '<span style="color:green">✅ ¡Listo! Redirigiendo...</span>';
-                        setTimeout(function() {
-                            window.parent.location.href = '?lat=' + lat + '&lon=' + lon;
-                        }, 800);
-                    },
-                    function(err) {
-                        var text = 'Error';
-                        if(err.code === 1) text = 'Permiso denegado';
-                        else if(err.code === 2) text = 'GPS no disponible';
-                        else if(err.code === 3) text = 'Tiempo agotado';
-                        msg.innerHTML = '<span style="color:red">❌ ' + text + '</span>';
-                        btn.disabled = false;
-                    },
-                    {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
-                );
-            }
-            </script>
-        </body>
-        </html>
-        """
-        st.components.v1.html(gps_html, height=180)
+        # Botón de Streamlit que ejecuta JavaScript directamente
+        if st.button("📍 Obtener mi ubicación automáticamente", key="btn_gps", type="primary", use_container_width=True):
+            try:
+                # JavaScript que obtiene la ubicación y la devuelve a Python
+                js_code = """
+                new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject({error: 'GPS no soportado en este navegador'});
+                        return;
+                    }
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve({
+                            lat: pos.coords.latitude,
+                            lon: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy
+                        }),
+                        (err) => {
+                            let msg = 'Error desconocido';
+                            if (err.code === 1) msg = 'Permiso denegado. Debes permitir el acceso a la ubicación.';
+                            else if (err.code === 2) msg = 'Ubicación no disponible. Activa el GPS.';
+                            else if (err.code === 3) msg = 'Tiempo de espera agotado.';
+                            reject({error: msg});
+                        },
+                        {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
+                    );
+                })
+                """
+                
+                with st.spinner(" Solicitando permiso de ubicación..."):
+                    result = st_javascript(js_code)
+                
+                if result and isinstance(result, dict) and 'lat' in result:
+                    st.session_state.lat = float(result['lat'])
+                    st.session_state.lon = float(result['lon'])
+                    st.success(f"✅ Ubicación obtenida: {st.session_state.lat:.6f}, {st.session_state.lon:.6f}")
+                    st.rerun()
+                elif result and isinstance(result, dict) and 'error' in result:
+                    st.error(f"❌ {result['error']}")
+                else:
+                    st.error(" No se pudo obtener la ubicación")
+                    
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
+                st.info("💡 Asegúrate de permitir el acceso a la ubicación cuando el navegador lo solicite")
     
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # DATOS MASCOTA - Con value=st.session_state
+    # DATOS MASCOTA
     col1, col2 = st.columns(2)
     with col1:
-        estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"],
-                              index=0 if st.session_state.f_estado == "Perdida 🔴" else 1,
-                              key="f_estado")
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", " Conejo", "🐦 Ave", "Otro"],
-                               index=["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"].index(st.session_state.f_especie),
-                               key="f_especie")
-        raza = st.text_input("Raza", value=st.session_state.f_raza, key="f_raza")
-        nombre_mascota = st.text_input("Nombre", value=st.session_state.f_nombre_mascota, key="f_nombre_mascota")
+        estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="f_estado")
+        especie = st.selectbox("Especie", [" Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="f_especie")
+        raza = st.text_input("Raza", key="f_raza")
+        nombre_mascota = st.text_input("Nombre", key="f_nombre_mascota")
     with col2:
-        color = st.text_input("Color", value=st.session_state.f_color, key="f_color")
-        tamano = st.selectbox("Tamaño", ["Pequeño", "Mediano", "Grande"],
-                              index=["Pequeño", "Mediano", "Grande"].index(st.session_state.f_tamano),
-                              key="f_tamano")
-        sexo = st.selectbox("Sexo", ["Macho", "Hembra"],
-                            index=["Macho", "Hembra"].index(st.session_state.f_sexo),
-                            key="f_sexo")
-        contacto = st.text_input("Teléfono contacto", 
-                                 value=st.session_state.f_contacto if st.session_state.f_contacto else telefono,
-                                 key="f_contacto")
+        color = st.text_input("Color", key="f_color")
+        tamano = st.selectbox("Tamaño", ["Pequeño", "Mediano", "Grande"], key="f_tamano")
+        sexo = st.selectbox("Sexo", ["Macho", "Hembra"], key="f_sexo")
+        contacto = st.text_input("Teléfono contacto", value=telefono if telefono else "", key="f_contacto")
     
     foto = st.file_uploader("Foto", type=["jpg", "png", "jpeg"], key="f_foto")
-    descripcion = st.text_area("Descripción", value=st.session_state.f_desc, key="f_desc")
+    descripcion = st.text_area("Descripción", key="f_desc")
     
-    # PUBLICAR
     if st.button("🚨 PUBLICAR", type="primary", use_container_width=True, key="btn_pub"):
         if not nombre or not email or not telefono:
             st.error("❌ Completa Nombre, Email y Teléfono")
         elif not st.session_state.lat:
             st.error("❌ Primero obtén la ubicación GPS")
         elif not foto:
-            st.error("❌ Sube una foto")
+            st.error(" Sube una foto")
         elif not nombre_mascota:
             st.error("❌ Escribe el nombre")
         else:
@@ -274,18 +219,8 @@ with tab1:
                     
                     st.success("✅ ¡Publicado!")
                     st.balloons()
-                    
-                    # Limpiar
                     st.session_state.lat = None
                     st.session_state.lon = None
-                    st.session_state.f_nombre = ''
-                    st.session_state.f_email = ''
-                    st.session_state.f_telefono = ''
-                    st.session_state.f_raza = ''
-                    st.session_state.f_nombre_mascota = ''
-                    st.session_state.f_color = ''
-                    st.session_state.f_desc = ''
-                    st.session_state.f_contacto = ''
                     st.rerun()
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
@@ -314,7 +249,7 @@ with tab2:
         if not df_f.empty:
             st.map(df_f.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})[["latitude", "longitude"]])
             
-            for est, emoji in [("Perdida", ""), ("Encontrada", "🟢")]:
+            for est, emoji in [("Perdida", "🔴"), ("Encontrada", "")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
@@ -329,7 +264,7 @@ with tab2:
     else:
         st.info("🐾 Sin reportes")
 
-# ══════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════
 # TAB 3: ADMIN
 # ═══════════════════════════════════════════════════════════════
 if st.session_state.is_admin:
