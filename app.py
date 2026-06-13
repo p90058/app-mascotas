@@ -16,7 +16,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
 
-# CSS MEJORADO - RESPONSIVE
+# CSS - Botones grandes funcionales, pequeños ocultos
 st.markdown("""
 <style>
     .header {
@@ -30,6 +30,7 @@ st.markdown("""
     }
     .header h1 { font-size: 1.8rem; margin: 0; }
     
+    /* BOTONES GRANDES */
     .nav-btn-container {
         display: flex;
         gap: 20px;
@@ -52,7 +53,6 @@ st.markdown("""
         text-align: center;
         transition: all 0.3s ease;
         box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        text-decoration: none;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -71,13 +71,8 @@ st.markdown("""
     .nav-btn-ver {
         background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
     }
-    .nav-btn-icon {
-        font-size: 60px;
-    }
-    .nav-btn-title {
-        font-size: 24px;
-        font-weight: bold;
-    }
+    .nav-btn-icon { font-size: 60px; }
+    .nav-btn-title { font-size: 24px; font-weight: bold; }
     .nav-btn-subtitle {
         font-size: 14px;
         font-weight: normal;
@@ -86,22 +81,25 @@ st.markdown("""
         line-height: 1.4;
     }
     
-    #MainMenu, footer { visibility: hidden; }
-    
     /* OCULTAR BOTONES PEQUEÑOS DE STREAMLIT */
-    div[data-testid="stHorizontalBlock"] button[kind="primary"],
-    div[data-testid="stHorizontalBlock"] button[kind="secondary"] {
-        display: none !important;
+    .hidden-nav-buttons {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        pointer-events: none;
     }
     
-    /* RESPONSIVE PARA CELULAR */
+    #MainMenu, footer { visibility: hidden; }
+    
     @media (max-width: 768px) {
-        .header {
-            padding: 1.5rem 1rem;
-        }
-        .header h1 {
-            font-size: 1.4rem;
-        }
+        .header { padding: 1.5rem 1rem; }
+        .header h1 { font-size: 1.4rem; }
         .nav-btn-container {
             flex-direction: column;
             align-items: center;
@@ -112,33 +110,17 @@ st.markdown("""
             max-width: 100%;
             padding: 35px 25px;
         }
-        .nav-btn-icon {
-            font-size: 50px;
-        }
-        .nav-btn-title {
-            font-size: 20px;
-        }
-        .nav-btn-subtitle {
-            font-size: 13px;
-        }
+        .nav-btn-icon { font-size: 50px; }
+        .nav-btn-title { font-size: 20px; }
+        .nav-btn-subtitle { font-size: 13px; }
     }
     
     @media (max-width: 480px) {
-        .header h1 {
-            font-size: 1.2rem;
-        }
-        .nav-btn {
-            padding: 30px 20px;
-        }
-        .nav-btn-icon {
-            font-size: 45px;
-        }
-        .nav-btn-title {
-            font-size: 18px;
-        }
-        .nav-btn-subtitle {
-            font-size: 12px;
-        }
+        .header h1 { font-size: 1.2rem; }
+        .nav-btn { padding: 30px 20px; }
+        .nav-btn-icon { font-size: 45px; }
+        .nav-btn-title { font-size: 18px; }
+        .nav-btn-subtitle { font-size: 12px; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -174,41 +156,27 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
-# BOTONES GRANDES FUNCIONALES (REEMPLAZAN LOS PEQUEÑOS)
+# BOTONES OCULTOS DE STREAMLIT (funcionan pero no se ven)
 # ═════════════════════════════════════════════════════════════
-# Usamos form_submit_button dentro de forms para que funcionen sin mostrar botones extra
+st.markdown('<div class="hidden-nav-buttons">', unsafe_allow_html=True)
 col_nav1, col_nav2 = st.columns(2)
-
 with col_nav1:
-    with st.form(key="form_reportar", clear_on_submit=False):
-        if st.form_submit_button("📸 Reportar Mascota", use_container_width=True, type="primary"):
-            st.session_state.vista_actual = 'reportar'
-            st.rerun()
-
+    btn_reportar = st.button("📸 Reportar Mascota", key="btn_nav_reportar", use_container_width=True, type="primary")
 with col_nav2:
-    with st.form(key="form_ver", clear_on_submit=False):
-        if st.form_submit_button("🔍 Ver Alertas", use_container_width=True):
-            st.session_state.vista_actual = 'ver'
-            st.rerun()
+    btn_ver = st.button("🔍 Ver Alertas", key="btn_nav_ver", use_container_width=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# Ahora reemplazamos visualmente esos botones con los grandes HTML
-# Los botones de form están ocultos por CSS y los grandes HTML los reemplazan visualmente
-# Pero como los forms no se pueden ocultar fácilmente, usamos un enfoque diferente:
-
-# En lugar de forms, usamos botones normales pero los ocultamos con CSS específico
-# y mostramos los grandes HTML encima
-
-# Limpiamos y usamos el enfoque correcto:
-# Los botones grandes HTML llaman a funciones JS que hacen postMessage a Streamlit
-
+# ════════════════════════════════════════════════════════════
+# BOTONES GRANDES VISIBLES QUE ACTIVAN LOS OCULTOS
+# ════════════════════════════════════════════════════════════
 st.markdown("""
 <div class="nav-btn-container">
-    <button class="nav-btn nav-btn-reportar" onclick="handleNavClick('reportar')">
+    <button class="nav-btn nav-btn-reportar" onclick="clickHiddenButton('btn_nav_reportar')">
         <span class="nav-btn-icon">📸</span>
         <span class="nav-btn-title">Reportar Mascota</span>
         <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
     </button>
-    <button class="nav-btn nav-btn-ver" onclick="handleNavClick('ver')">
+    <button class="nav-btn nav-btn-ver" onclick="clickHiddenButton('btn_nav_ver')">
         <span class="nav-btn-icon">🔍</span>
         <span class="nav-btn-title">Ver Alertas</span>
         <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
@@ -216,63 +184,66 @@ st.markdown("""
 </div>
 
 <script>
-function handleNavClick(vista) {
-    // Enviar mensaje a Streamlit para cambiar la vista
-    const doc = window.parent.document;
-    const buttons = doc.querySelectorAll('button[kind="primary"], button[kind="secondary"]');
-    
-    // Buscar el botón correcto por su texto
-    buttons.forEach(function(btn) {
-        const text = btn.innerText || btn.textContent;
-        if (vista === 'reportar' && text.includes('Reportar')) {
+function clickHiddenButton(key) {
+    // Buscar todos los botones en la página
+    var buttons = document.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+        var btn = buttons[i];
+        // Los botones de Streamlit tienen data-testid con el key
+        if (btn.getAttribute('data-testid') && btn.getAttribute('data-testid').includes(key)) {
             btn.click();
-        } else if (vista === 'ver' && text.includes('Ver Alertas')) {
-            btn.click();
+            return;
         }
-    });
+        // Fallback: buscar por clase específica de Streamlit
+        if (btn.className && btn.className.includes('stButton') === false) {
+            // Buscar en el contenedor padre
+            var parent = btn.closest('[data-testid="stHorizontalBlock"]');
+            if (parent) {
+                var innerButtons = parent.querySelectorAll('button');
+                for (var j = 0; j < innerButtons.length; j++) {
+                    if (innerButtons[j].textContent.includes(key.replace('btn_nav_', ''))) {
+                        innerButtons[j].click();
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Método alternativo: buscar por texto del botón
+    for (var i = 0; i < buttons.length; i++) {
+        var text = buttons[i].textContent || buttons[i].innerText;
+        if (key === 'btn_nav_reportar' && text.includes('Reportar Mascota')) {
+            buttons[i].click();
+            return;
+        }
+        if (key === 'btn_nav_ver' && text.includes('Ver Alertas')) {
+            buttons[i].click();
+            return;
+        }
+    }
 }
 </script>
-""", unsafe_allow_html=True)
-
-# CSS para ocultar los botones pequeños de Streamlit
-st.markdown("""
-<style>
-    /* Ocultar los botones de navegación pequeños */
-    section[data-testid="stSidebar"] + div div[data-testid="stHorizontalBlock"] > div > div > button,
-    .stForm > button {
-        position: absolute;
-        left: -9999px;
-        opacity: 0;
-        height: 0;
-        overflow: hidden;
-    }
-    
-    /* Ocultar específicamente los botones de los forms de navegación */
-    form[key="form_reportar"] button,
-    form[key="form_ver"] button {
-        display: none !important;
-    }
-</style>
 """, unsafe_allow_html=True)
 
 st.markdown("---")
 
 with st.sidebar:
     if st.session_state.is_admin:
-        st.markdown("### 👑 Administrador")
-        if st.button("🚪 Salir"):
+        st.markdown("###  Administrador")
+        if st.button(" Salir"):
             st.session_state.is_admin = False
             st.rerun()
     else:
-        if st.button(" Acceso Admin", key="bfa"):
+        if st.button("🔐 Acceso Admin", key="bfa"):
             st.session_state.show_admin = True
             st.rerun()
 
-# ═════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 # VISTA: REPORTAR
 # ═════════════════════════════════════════════════════════════
 if st.session_state.vista_actual == 'reportar':
-    st.subheader(" Registrar Mascota")
+    st.subheader("📝 Registrar Mascota")
     
     form_html = """
     <!DOCTYPE html>
@@ -430,7 +401,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="gps-box">
-                <div class="section-title" style="border:none; margin:0 0 15px 0;"> Ubicación GPS</div>
+                <div class="section-title" style="border:none; margin:0 0 15px 0;">📍 Ubicación GPS</div>
                 <button type="button" class="btn-gps" id="btnGPS" onclick="getGPS()">
                     📍 Obtener mi ubicación automáticamente
                 </button>
@@ -444,7 +415,7 @@ if st.session_state.vista_actual == 'reportar':
                 <input type="hidden" id="lon" value="">
             </div>
             
-            <div class="section-title">🐾 Datos de la Mascota</div>
+            <div class="section-title"> Datos de la Mascota</div>
             <div class="row">
                 <div class="form-group">
                     <label>Estado *</label>
@@ -456,7 +427,7 @@ if st.session_state.vista_actual == 'reportar':
                 <div class="form-group">
                     <label>Especie *</label>
                     <select id="especie" required>
-                        <option>🐕 Perro</option>
+                        <option> Perro</option>
                         <option>🐈 Gato</option>
                         <option>🐰 Conejo</option>
                         <option>🐦 Ave</option>
@@ -499,7 +470,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="form-group">
-                <label> Foto de la mascota *</label>
+                <label>📷 Foto de la mascota *</label>
                 <div class="file-upload">
                     <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
                     <label for="foto" class="file-upload-label" id="fileLabel">
@@ -554,7 +525,7 @@ if st.session_state.vista_actual == 'reportar':
                     return;
                 }
                 status.className = 'status info';
-                status.textContent = ' Solicitando permiso de ubicación...';
+                status.textContent = '⏳ Solicitando permiso de ubicación...';
                 btn.disabled = true;
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
@@ -590,7 +561,7 @@ if st.session_state.vista_actual == 'reportar':
                 const lon = document.getElementById('lon').value;
                 const fotoFile = document.getElementById('foto').files[0];
                 
-                if (!lat || !lon) { status.className = 'status error'; status.textContent = ' Primero obtén la ubicación GPS'; return; }
+                if (!lat || !lon) { status.className = 'status error'; status.textContent = '❌ Primero obtén la ubicación GPS'; return; }
                 if (!fotoFile) { status.className = 'status error'; status.textContent = '❌ Debes subir una foto'; return; }
                 
                 btn.disabled = true;
@@ -662,7 +633,7 @@ if st.session_state.vista_actual == 'reportar':
                     } else {
                         const error = await response.json();
                         status.className = 'status error';
-                        status.textContent = '❌ Error: ' + (error.message || 'Desconocido');
+                        status.textContent = ' Error: ' + (error.message || 'Desconocido');
                     }
                 } catch (error) {
                     status.className = 'status error';
@@ -678,31 +649,30 @@ if st.session_state.vista_actual == 'reportar':
     st.components.v1.html(form_html, height=1800)
 
 # ═════════════════════════════════════════════════════════════
-# VISTA: VER REPORTES - CON FILTROS Y MAPA INTERACTIVO
-# ════════════════════════════════════════════════════════════
+# VISTA: VER REPORTES
+# ═════════════════════════════════════════════════════════════
 elif st.session_state.vista_actual == 'ver':
-    st.subheader(" Reportes de Mascotas")
+    st.subheader("🔍 Reportes de Mascotas")
     datos = supabase.table("reportes").select("*").order("fecha", desc=True).limit(200).execute().data
     
     if datos:
         df = pd.DataFrame(datos)
         
-        # FILTROS MEJORADOS - 2 filas
         col1, col2, col3 = st.columns(3)
         with col1:
-            f_estado = st.selectbox(" Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
+            f_estado = st.selectbox("🔴 Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
             f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         with col3:
             razas_unicas = sorted([r for r in df['raza'].dropna().unique().tolist() if r and str(r).strip()]) if 'raza' in df.columns else []
-            f_raza = st.selectbox("🐕 Raza", ["Todas"] + razas_unicas, key="fr")
+            f_raza = st.selectbox(" Raza", ["Todas"] + razas_unicas, key="fr")
         
         col4, col5 = st.columns(2)
         with col4:
             colores_unicos = sorted([c for c in df['color'].dropna().unique().tolist() if c and str(c).strip()]) if 'color' in df.columns else []
             f_color = st.selectbox("🎨 Color", ["Todos"] + colores_unicos, key="fc")
         with col5:
-            f_sexo = st.selectbox(" Sexo", ["Todos", "Macho", "Hembra"], key="fx")
+            f_sexo = st.selectbox("⚧ Sexo", ["Todos", "Macho", "Hembra"], key="fx")
         
         df_f = df.copy()
         if f_estado != "Todos":
@@ -787,7 +757,7 @@ elif st.session_state.vista_actual == 'ver':
                     {'<img src="' + foto_url + '" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;" onerror="this.style.display=\'none\'">' if foto_url else ''}
                     
                     <div style="background: #FFF9C4; border-left: 4px solid #FFC107; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;">
-                        <b> Ubicación:</b><br>
+                        <b>📍 Ubicación:</b><br>
                         <span style="font-size: 13px; color: #333;">{direccion}</span>
                     </div>
                     
@@ -821,7 +791,7 @@ elif st.session_state.vista_actual == 'ver':
             
             st.markdown("---")
             
-            for est, emoji, clase in [("Perdida", "🔴", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
+            for est, emoji, clase in [("Perdida", "", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
@@ -847,7 +817,7 @@ elif st.session_state.vista_actual == 'ver':
                                 <p><strong>Tamaño:</strong> {row.get('tamano', 'N/A')}</p>
                                 <p><strong>Sexo:</strong> {row.get('sexo', 'N/A')}</p>
                                 <p><strong>📅 Fecha:</strong> {row['fecha']}</p>
-                                <p><strong> Contacto:</strong> {row.get('contacto', 'N/A')}</p>
+                                <p><strong>📞 Contacto:</strong> {row.get('contacto', 'N/A')}</p>
                                 {f"<p><strong>📝 Descripción:</strong> {row.get('descripcion', '')}</p>" if row.get('descripcion') else ''}
                             </div>
                             """, unsafe_allow_html=True)
