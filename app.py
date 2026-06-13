@@ -26,7 +26,6 @@ st.markdown("""
     }
     .header h1 { font-size: 2.5rem; margin: 0; }
     
-    /* Botones grandes de navegación */
     .nav-btn-container {
         display: flex;
         gap: 20px;
@@ -73,7 +72,6 @@ st.markdown("""
         opacity: 0.9;
     }
     
-    /* Tarjetas de reporte */
     .reporte-card {
         background: white;
         border-radius: 20px;
@@ -126,7 +124,7 @@ if 'vista_actual' not in st.session_state:
 
 # LOGIN ADMIN
 if st.session_state.show_admin and not st.session_state.is_admin:
-    st.markdown('<div class="header"><h1>🔐 Admin</h1></div>', unsafe_allow_html=True)
+    st.markdown('<div class="header"><h1> Admin</h1></div>', unsafe_allow_html=True)
     codigo = st.text_input("Código")
     password = st.text_input("Contraseña", type="password")
     
@@ -138,7 +136,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
         else:
             st.error("❌ Incorrecto")
     
-    if st.button("⬅️ Volver"):
+    if st.button("️ Volver"):
         st.session_state.show_admin = False
         st.rerun()
     st.stop()
@@ -146,7 +144,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 # APP PRINCIPAL
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
-# BOTONES DE NAVEGACIÓN GRANDES (reemplazan los tabs)
+# BOTONES DE NAVEGACIÓN
 st.markdown("""
 <div class="nav-btn-container">
     <button class="nav-btn nav-btn-reportar" onclick="document.getElementById('btn-nav-reportar').click()">
@@ -155,14 +153,13 @@ st.markdown("""
         <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
     </button>
     <button class="nav-btn nav-btn-ver" onclick="document.getElementById('btn-nav-ver').click()">
-        <span class="nav-btn-icon">🔍</span>
+        <span class="nav-btn-icon"></span>
         <span>Ver Alertas</span>
         <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
     </button>
 </div>
 """, unsafe_allow_html=True)
 
-# Botones ocultos que activan la navegación
 col_nav1, col_nav2 = st.columns(2)
 with col_nav1:
     if st.button(" Reportar Mascota", key="btn-nav-reportar", use_container_width=True, type="primary"):
@@ -175,11 +172,10 @@ with col_nav2:
 
 st.markdown("---")
 
-# Sidebar
 with st.sidebar:
     if st.session_state.is_admin:
         st.markdown("### 👑 Administrador")
-        if st.button("🚪 Salir"):
+        if st.button(" Salir"):
             st.session_state.is_admin = False
             st.rerun()
     else:
@@ -188,10 +184,10 @@ with st.sidebar:
             st.rerun()
 
 # ═════════════════════════════════════════════════════════════
-# VISTA: REPORTAR (NO SE TOCA - funciona perfecto)
-# ════════════════════════════════════════════════════════════
+# VISTA: REPORTAR
+# ═════════════════════════════════════════════════════════════
 if st.session_state.vista_actual == 'reportar':
-    st.subheader(" Registrar Mascota")
+    st.subheader("📝 Registrar Mascota")
     
     form_html = """
     <!DOCTYPE html>
@@ -302,7 +298,7 @@ if st.session_state.vista_actual == 'reportar':
     </head>
     <body>
         <form id="mascotaForm">
-            <div class="section-title">👤 Tus Datos</div>
+            <div class="section-title"> Tus Datos</div>
             <div class="row">
                 <div class="form-group">
                     <label>Nombre *</label>
@@ -332,7 +328,7 @@ if st.session_state.vista_actual == 'reportar':
             <div class="gps-box">
                 <div class="section-title" style="border:none; margin:0 0 15px 0;">📍 Ubicación GPS</div>
                 <button type="button" class="btn-gps" id="btnGPS" onclick="getGPS()">
-                    📍 Obtener mi ubicación automáticamente
+                     Obtener mi ubicación automáticamente
                 </button>
                 <div id="gpsStatus" class="status"></div>
                 <div id="coords-display">
@@ -344,7 +340,7 @@ if st.session_state.vista_actual == 'reportar':
                 <input type="hidden" id="lon" value="">
             </div>
             
-            <div class="section-title"> Datos de la Mascota</div>
+            <div class="section-title">🐾 Datos de la Mascota</div>
             <div class="row">
                 <div class="form-group">
                     <label>Estado *</label>
@@ -356,10 +352,10 @@ if st.session_state.vista_actual == 'reportar':
                 <div class="form-group">
                     <label>Especie *</label>
                     <select id="especie" required>
-                        <option> Perro</option>
-                        <option> Gato</option>
+                        <option>🐕 Perro</option>
+                        <option>🐈 Gato</option>
                         <option>🐰 Conejo</option>
-                        <option>🐦 Ave</option>
+                        <option> Ave</option>
                         <option>Otro</option>
                     </select>
                 </div>
@@ -403,7 +399,7 @@ if st.session_state.vista_actual == 'reportar':
                 <div class="file-upload">
                     <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
                     <label for="foto" class="file-upload-label" id="fileLabel">
-                         Haz clic para seleccionar una foto (JPG, PNG)
+                        📁 Haz clic para seleccionar una foto (JPG, PNG)
                     </label>
                 </div>
                 <div id="preview-container">
@@ -412,14 +408,14 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="form-group">
-                <label>📝 Descripción</label>
+                <label> Descripción</label>
                 <textarea id="descripcion" rows="4" placeholder="Señas particulares..."></textarea>
             </div>
             
             <div id="submitStatus" class="status"></div>
             
             <button type="submit" class="btn-submit" id="btnSubmit">
-                 PUBLICAR ALERTA
+                🚨 PUBLICAR ALERTA
             </button>
         </form>
         
@@ -556,7 +552,7 @@ if st.session_state.vista_actual == 'reportar':
                         document.getElementById('lon').value = '';
                         document.getElementById('coords-display').style.display = 'none';
                         document.getElementById('preview-container').style.display = 'none';
-                        document.getElementById('fileLabel').textContent = '📁 Haz clic para seleccionar una foto (JPG, PNG)';
+                        document.getElementById('fileLabel').textContent = ' Haz clic para seleccionar una foto (JPG, PNG)';
                         document.getElementById('fileLabel').classList.remove('has-file');
                         if (window.parent) window.parent.postMessage({ type: 'published' }, '*');
                     } else {
@@ -566,7 +562,7 @@ if st.session_state.vista_actual == 'reportar':
                     }
                 } catch (error) {
                     status.className = 'status error';
-                    status.textContent = '❌ Error: ' + error.message;
+                    status.textContent = ' Error: ' + error.message;
                 }
                 btn.disabled = false;
             });
@@ -578,7 +574,7 @@ if st.session_state.vista_actual == 'reportar':
     st.components.v1.html(form_html, height=1800)
 
 # ═════════════════════════════════════════════════════════════
-# VISTA: VER REPORTES - CORREGIDA CON FOTOS
+# VISTA: VER REPORTES - CON FILTROS MEJORADOS (Raza, Color, Sexo)
 # ═════════════════════════════════════════════════════════════
 elif st.session_state.vista_actual == 'ver':
     st.subheader("🔍 Reportes de Mascotas")
@@ -586,17 +582,38 @@ elif st.session_state.vista_actual == 'ver':
     
     if datos:
         df = pd.DataFrame(datos)
-        col1, col2 = st.columns(2)
-        with col1:
-            f_estado = st.selectbox("Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
-        with col2:
-            f_especie = st.selectbox("Especie", ["Todas", "🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
+        # FILTROS MEJORADOS - 2 filas
+        # Fila 1: Estado, Especie, Raza
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            f_estado = st.selectbox("🔴 Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
+        with col2:
+            f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+        with col3:
+            razas_unicas = sorted([r for r in df['raza'].dropna().unique().tolist() if r and str(r).strip()]) if 'raza' in df.columns else []
+            f_raza = st.selectbox("🐕 Raza", ["Todas"] + razas_unicas, key="fr")
+        
+        # Fila 2: Color, Sexo
+        col4, col5 = st.columns(2)
+        with col4:
+            colores_unicos = sorted([c for c in df['color'].dropna().unique().tolist() if c and str(c).strip()]) if 'color' in df.columns else []
+            f_color = st.selectbox("🎨 Color", ["Todos"] + colores_unicos, key="fc")
+        with col5:
+            f_sexo = st.selectbox("⚧ Sexo", ["Todos", "Macho", "Hembra"], key="fx")
+        
+        # Aplicar todos los filtros
         df_f = df.copy()
         if f_estado != "Todos":
             df_f = df_f[df_f['estado'].str.contains(f_estado, na=False)]
         if f_especie != "Todas":
             df_f = df_f[df_f['especie'] == f_especie]
+        if f_raza != "Todas":
+            df_f = df_f[df_f['raza'] == f_raza]
+        if f_color != "Todos":
+            df_f = df_f[df_f['color'] == f_color]
+        if f_sexo != "Todos":
+            df_f = df_f[df_f['sexo'] == f_sexo]
         
         if not df_f.empty:
             st.markdown(f"**{len(df_f)} reporte(s) encontrado(s)**")
@@ -607,7 +624,6 @@ elif st.session_state.vista_actual == 'ver':
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
                     for _, row in subset.iterrows():
-                        # Usar st.columns para mostrar foto + info lado a lado
                         col_img, col_info = st.columns([1, 2])
                         
                         with col_img:
@@ -615,14 +631,14 @@ elif st.session_state.vista_actual == 'ver':
                             if foto_url:
                                 st.image(foto_url, caption=row['nombre'], use_container_width=True)
                             else:
-                                st.markdown("📷 Sin foto")
+                                st.markdown(" Sin foto")
                         
                         with col_info:
                             badge_color = "#FF5252" if est == "Perdida" else "#4CAF50"
                             st.markdown(f"""
                             <div style="background:{'#FFF5F5' if est=='Perdida' else '#F1F8E9'}; padding:20px; border-radius:15px; border-left:6px solid {badge_color};">
                                 <span style="background:{badge_color}; color:white; padding:6px 16px; border-radius:20px; font-weight:bold; font-size:14px;">{emoji} {row['estado']}</span>
-                                <h2 style="margin:15px 0 10px 0;">🐾 {row['nombre']}</h2>
+                                <h2 style="margin:15px 0 10px 0;"> {row['nombre']}</h2>
                                 <p><strong>Especie:</strong> {row.get('especie', 'N/A')}</p>
                                 <p><strong>Raza:</strong> {row.get('raza', 'N/A')}</p>
                                 <p><strong>Color:</strong> {row.get('color', 'N/A')}</p>
@@ -636,11 +652,11 @@ elif st.session_state.vista_actual == 'ver':
                         
                         st.markdown("---")
     else:
-        st.info("🐾 Sin reportes")
+        st.info(" Sin reportes")
 
 # ═════════════════════════════════════════════════════════════
 # VISTA: ADMIN
-# ═════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 if st.session_state.is_admin and st.session_state.vista_actual != 'admin':
     if st.button("⚙️ Panel de Administración", use_container_width=True):
         st.session_state.vista_actual = 'admin'
@@ -686,4 +702,4 @@ if st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
 
 # FOOTER
 st.markdown("---")
-st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta </div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
