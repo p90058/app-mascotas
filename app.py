@@ -80,20 +80,48 @@ def asegurar_admin():
     except Exception as e:
         print(f"Error asegurando admin: {e}")
 
+# Inicializar session_state
 if 'is_admin' not in st.session_state:
     st.session_state.is_admin = False
-if 'user_info' not in st.session_state:
-    st.session_state.user_info = None
+if 'user_registered' not in st.session_state:
+    st.session_state.user_registered = False
 if 'latitud' not in st.session_state:
     st.session_state.latitud = None
 if 'longitud' not in st.session_state:
     st.session_state.longitud = None
 
+# Inicializar campos del formulario si no existen
+if 'inp_nombre' not in st.session_state:
+    st.session_state.inp_nombre = ""
+if 'inp_email' not in st.session_state:
+    st.session_state.inp_email = ""
+if 'inp_telefono' not in st.session_state:
+    st.session_state.inp_telefono = ""
+if 'inp_tipo_mascota' not in st.session_state:
+    st.session_state.inp_tipo_mascota = "Perro"
+if 'inp_estado' not in st.session_state:
+    st.session_state.inp_estado = "Perdida 🔴"
+if 'inp_especie' not in st.session_state:
+    st.session_state.inp_especie = "🐕 Perro"
+if 'inp_raza' not in st.session_state:
+    st.session_state.inp_raza = ""
+if 'inp_nombre_mascota' not in st.session_state:
+    st.session_state.inp_nombre_mascota = ""
+if 'inp_color' not in st.session_state:
+    st.session_state.inp_color = ""
+if 'inp_tamano' not in st.session_state:
+    st.session_state.inp_tamano = "Pequeño"
+if 'inp_sexo' not in st.session_state:
+    st.session_state.inp_sexo = "Macho"
+if 'inp_contacto' not in st.session_state:
+    st.session_state.inp_contacto = ""
+if 'inp_descripcion' not in st.session_state:
+    st.session_state.inp_descripcion = ""
+
 # Asegurar que el admin exista al iniciar
 asegurar_admin()
 
 # --- LÓGICA DE GPS (Captura de URL) ---
-# Si la URL tiene ?lat=X&lon=Y, lo guardamos y limpiamos la URL
 query_params = st.query_params
 if "lat" in query_params and "lon" in query_params:
     try:
@@ -129,7 +157,7 @@ if st.session_state.show_admin_login and not st.session_state.is_admin:
                 else:
                     st.error("❌ Código o contraseña incorrectos")
             except Exception as e:
-                st.error(f" Error: {str(e)}")
+                st.error(f"❌ Error: {str(e)}")
     with col2:
         if st.button("⬅️ Volver", key="btn_volver"):
             st.session_state.show_admin_login = False
@@ -144,7 +172,7 @@ st.markdown('<h1 class="main-header">🐾 Red de Alerta de Mascotas</h1>', unsaf
 with st.sidebar:
     if st.session_state.is_admin:
         st.markdown("### 👑 Administrador")
-        if st.button(" Cerrar Sesión", key="btn_logout_admin"):
+        if st.button("🚪 Cerrar Sesión", key="btn_logout_admin"):
             st.session_state.is_admin = False
             st.session_state.user_info = None
             st.rerun()
@@ -154,39 +182,46 @@ with st.sidebar:
 
 # Tabs
 if st.session_state.is_admin:
-    tab1, tab2, tab3 = st.tabs(["📸 Reportar Mascota", "️ Ver Reportes", "⚙️ Administrar"])
+    tab1, tab2, tab3 = st.tabs(["📸 Reportar Mascota", "🗺️ Ver Reportes", "⚙️ Administrar"])
 else:
     tab1, tab2 = st.tabs(["📸 Reportar Mascota", "🗺️ Ver Reportes"])
 
 # ==================== TAB 1: REPORTAR ====================
 with tab1:
-    st.subheader(" Registrar Mascota Perdida o Encontrada")
+    st.subheader("📝 Registrar Mascota Perdida o Encontrada")
     
     st.markdown('<div class="info-box">📝 <b>Paso 1:</b> Completa tus datos y los de la mascota. <b>Paso 2:</b> Presiona el botón verde para obtener tu ubicación GPS.</div>', unsafe_allow_html=True)
     
-    # --- SECCIÓN DATOS USUARIO (Se guardan en session_state para no perderse al recargar por GPS) ---
-    st.markdown("###  Tus Datos")
+    # --- SECCIÓN DATOS USUARIO ---
+    st.markdown("### 👤 Tus Datos")
     col_u1, col_u2, col_u3 = st.columns(3)
     with col_u1:
-        nombre_usuario = st.text_input("Tu Nombre", key="inp_nombre", value=st.session_state.get("inp_nombre", ""))
+        nombre_usuario = st.text_input("Tu Nombre", key="inp_nombre", value=st.session_state.inp_nombre)
     with col_u2:
-        email_usuario = st.text_input("📧 Email", key="inp_email", value=st.session_state.get("inp_email", ""))
+        email_usuario = st.text_input("📧 Email", key="inp_email", value=st.session_state.inp_email)
     with col_u3:
-        telefono_usuario = st.text_input(" Teléfono", key="inp_telefono", value=st.session_state.get("inp_telefono", ""))
+        telefono_usuario = st.text_input("📞 Teléfono", key="inp_telefono", value=st.session_state.inp_telefono)
     
-    tipo_mascota_usuario = st.selectbox("🐾 Tipo de mascota", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="inp_tipo_mascota", index=0)
+    # Actualizar session_state con los valores actuales
+    st.session_state.inp_nombre = nombre_usuario
+    st.session_state.inp_email = email_usuario
+    st.session_state.inp_telefono = telefono_usuario
+    
+    tipo_mascota_usuario = st.selectbox("🐾 Tipo de mascota", ["Perro", "Gato", "Conejo", "Ave", "Otro"], 
+                                         key="inp_tipo_mascota", 
+                                         index=["Perro", "Gato", "Conejo", "Ave", "Otro"].index(st.session_state.inp_tipo_mascota) if st.session_state.inp_tipo_mascota in ["Perro", "Gato", "Conejo", "Ave", "Otro"] else 0)
+    st.session_state.inp_tipo_mascota = tipo_mascota_usuario
     
     # --- SECCIÓN GPS ---
     st.markdown('<div class="location-box">', unsafe_allow_html=True)
     st.markdown("### 📍 Ubicación de la Mascota")
     
-    # Botón HTML/JS que no recarga la página inmediatamente, sino que llama a la API de GPS
     st.markdown("""
     <button id="btn-gps" class="btn-gps" onclick="getGPS()">📍 Enviar ubicación de la mascota</button>
     <script>
     function getGPS() {
         const btn = document.getElementById('btn-gps');
-        btn.innerText = " Obteniendo ubicación...";
+        btn.innerText = "⏳ Obteniendo ubicación...";
         btn.disabled = true;
         
         if (!navigator.geolocation) {
@@ -198,7 +233,6 @@ with tab1:
         
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                // Recarga la página con las coordenadas en la URL
                 window.location.href = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`;
             },
             (err) => {
@@ -225,31 +259,46 @@ with tab1:
     
     col1, col2 = st.columns(2)
     with col1:
-        estado = st.selectbox("Estado", ["Perdida ", "Encontrada 🟢"], key="inp_estado")
-        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="inp_especie")
-        raza = st.text_input("Raza", placeholder="Ej: Labrador", key="inp_raza")
-        nombre_mascota = st.text_input("Nombre de la mascota", placeholder="Ej: Max", key="inp_nombre_mascota")
+        estado = st.selectbox("Estado", ["Perdida 🔴", "Encontrada 🟢"], key="inp_estado", 
+                             index=0 if st.session_state.inp_estado == "Perdida 🔴" else 1)
+        especie = st.selectbox("Especie", ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="inp_especie",
+                              index=["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"].index(st.session_state.inp_especie) if st.session_state.inp_especie in ["🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"] else 0)
+        raza = st.text_input("Raza", placeholder="Ej: Labrador", key="inp_raza", value=st.session_state.inp_raza)
+        nombre_mascota = st.text_input("Nombre de la mascota", placeholder="Ej: Max", key="inp_nombre_mascota", value=st.session_state.inp_nombre_mascota)
     
     with col2:
-        color = st.text_input("Color", placeholder="Ej: Marrón", key="inp_color")
-        tamano = st.selectbox("Tamaño", ["Pequeño", "Mediano", "Grande", "No especificado"], key="inp_tamano")
-        sexo = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"], key="inp_sexo")
-        contacto = st.text_input("📞 Teléfono de contacto", value=st.session_state.get("inp_telefono", ""), key="inp_contacto")
+        color = st.text_input("Color", placeholder="Ej: Marrón", key="inp_color", value=st.session_state.inp_color)
+        tamano = st.selectbox("Tamaño", ["Pequeño", "Mediano", "Grande", "No especificado"], key="inp_tamano",
+                             index=["Pequeño", "Mediano", "Grande", "No especificado"].index(st.session_state.inp_tamano) if st.session_state.inp_tamano in ["Pequeño", "Mediano", "Grande", "No especificado"] else 0)
+        sexo = st.selectbox("Sexo", ["Macho", "Hembra", "No especificado"], key="inp_sexo",
+                           index=["Macho", "Hembra", "No especificado"].index(st.session_state.inp_sexo) if st.session_state.inp_sexo in ["Macho", "Hembra", "No especificado"] else 0)
+        contacto = st.text_input("📞 Teléfono de contacto", key="inp_contacto", value=st.session_state.inp_contacto if st.session_state.inp_contacto else st.session_state.inp_telefono)
+    
+    # Actualizar session_state
+    st.session_state.inp_estado = estado
+    st.session_state.inp_especie = especie
+    st.session_state.inp_raza = raza
+    st.session_state.inp_nombre_mascota = nombre_mascota
+    st.session_state.inp_color = color
+    st.session_state.inp_tamano = tamano
+    st.session_state.inp_sexo = sexo
+    st.session_state.inp_contacto = contacto
 
     foto = st.file_uploader("📷 Subir Foto", type=["jpg", "png", "jpeg"], key="inp_foto")
-    descripcion = st.text_area("Señas particulares", height=100, key="inp_descripcion")
+    descripcion = st.text_area("Señas particulares", height=100, key="inp_descripcion", value=st.session_state.inp_descripcion)
+    st.session_state.inp_descripcion = descripcion
 
     # --- BOTÓN PUBLICAR ---
-    if st.button(" PUBLICAR ALERTA", type="primary", key="btn_publicar", use_container_width=True):
-        # Validaciones
-        if not nombre_usuario or not email_usuario or not telefono_usuario:
-            st.error(" Por favor, completa tus datos (Nombre, Email, Teléfono).")
+    if st.button("🚨 PUBLICAR ALERTA", type="primary", key="btn_publicar", use_container_width=True):
+        # Validaciones - AHORA VERIFICA LOS VALORES ACTUALES DE LOS CAMPOS
+        if not nombre_usuario.strip() or not email_usuario.strip() or not telefono_usuario.strip():
+            st.error("❌ Por favor, completa tus datos (Nombre, Email, Teléfono).")
         elif not st.session_state.latitud or not st.session_state.longitud:
             st.error("❌ Primero obtén la ubicación con el botón verde de arriba.")
-        elif not foto or not nombre_mascota:
+        elif not foto or not nombre_mascota.strip():
             st.error("❌ Sube una foto y escribe el nombre de la mascota.")
         else:
-            with st.spinner(" Guardando reporte y registrando usuario..."):
+            with st.spinner("🔄 Guardando reporte y registrando usuario..."):
                 try:
                     # 1. Guardar/Actualizar Usuario
                     supabase.table("usuarios").upsert({
@@ -292,15 +341,17 @@ with tab1:
                     st.success("✅ ¡Alerta publicada con éxito!")
                     st.balloons()
                     
-                    # Limpiar formulario
+                    # Limpiar solo ubicación y foto, mantener datos del usuario
                     st.session_state.latitud = None
                     st.session_state.longitud = None
-                    for key in ["inp_nombre", "inp_email", "inp_telefono", "inp_raza", "inp_nombre_mascota", "inp_color", "inp_descripcion"]:
-                        st.session_state[key] = ""
+                    st.session_state.inp_raza = ""
+                    st.session_state.inp_nombre_mascota = ""
+                    st.session_state.inp_color = ""
+                    st.session_state.inp_descripcion = ""
                     st.rerun()
                     
                 except Exception as e:
-                    st.error(f" Error: {str(e)}")
+                    st.error(f"❌ Error: {str(e)}")
 
 # ==================== TAB 2: VER REPORTES ====================
 with tab2:
@@ -332,17 +383,17 @@ with tab2:
         encontrados = df_filtrado[df_filtrado['estado'].str.contains('Encontrada', na=False)]
         
         if not perdidos.empty:
-            st.markdown(f'<h2 class="section-title perdidos-title"> Perdidas ({len(perdidos)})</h2>', unsafe_allow_html=True)
+            st.markdown(f'<h2 class="section-title perdidos-title">🔴 Perdidas ({len(perdidos)})</h2>', unsafe_allow_html=True)
             for _, row in perdidos.iterrows():
                 st.markdown('<div class="reporte-card reporte-card-perdida">', unsafe_allow_html=True)
                 c1, c2 = st.columns([1, 2])
                 with c1: st.image(row["foto_url"], use_container_width=True)
                 with c2:
-                    st.markdown(f"### {row['nombre']}")
+                    st.markdown(f"### 🐾 {row['nombre']}")
                     st.markdown(f"**Especie:** {row.get('especie', 'N/A')} | **Raza:** {row.get('raza', 'N/A')}")
                     st.markdown(f"**Color:** {row.get('color', 'N/A')} | **Tamaño:** {row.get('tamano', 'N/A')}")
                     if row.get('descripcion'): st.markdown(f"**Señas:** {row['descripcion']}")
-                    st.markdown(f"**📅 Fecha:** {row['fecha']} | ** Contacto:** {row.get('contacto', 'N/A')}")
+                    st.markdown(f"**📅 Fecha:** {row['fecha']} | **📞 Contacto:** {row.get('contacto', 'N/A')}")
                 st.markdown('</div>', unsafe_allow_html=True)
         
         if not encontrados.empty:
@@ -352,7 +403,7 @@ with tab2:
                 c1, c2 = st.columns([1, 2])
                 with c1: st.image(row["foto_url"], use_container_width=True)
                 with c2:
-                    st.markdown(f"### {row['nombre']}")
+                    st.markdown(f"### 🐾 {row['nombre']}")
                     st.markdown(f"**Especie:** {row.get('especie', 'N/A')} | **Raza:** {row.get('raza', 'N/A')}")
                     st.markdown(f"**Color:** {row.get('color', 'N/A')} | **Tamaño:** {row.get('tamano', 'N/A')}")
                     if row.get('descripcion'): st.markdown(f"**Señas:** {row['descripcion']}")
@@ -407,10 +458,10 @@ if st.session_state.is_admin:
                         }).execute()
                         st.success("✅ Usuario agregado!")
                     except Exception as e:
-                        st.error(f" Error: {str(e)}")
+                        st.error(f"❌ Error: {str(e)}")
             
             st.markdown("---")
-            st.markdown("###  Usuarios Registrados")
+            st.markdown("### 📋 Usuarios Registrados")
             response = supabase.table("usuarios").select("*").order("fecha_registro", desc=True).execute()
             usuarios = response.data
             
