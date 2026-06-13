@@ -3,6 +3,10 @@ from supabase import create_client
 import pandas as pd
 from datetime import datetime
 import uuid
+import folium
+from streamlit_folium import st_folium
+import requests
+import time
 
 # CONFIGURACIÓN
 SUPABASE_URL = "https://iaxtfsqipwbvexkfcprv.supabase.co"
@@ -124,7 +128,7 @@ if 'vista_actual' not in st.session_state:
 
 # LOGIN ADMIN
 if st.session_state.show_admin and not st.session_state.is_admin:
-    st.markdown('<div class="header"><h1> Admin</h1></div>', unsafe_allow_html=True)
+    st.markdown('<div class="header"><h1>🔐 Admin</h1></div>', unsafe_allow_html=True)
     codigo = st.text_input("Código")
     password = st.text_input("Contraseña", type="password")
     
@@ -136,7 +140,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
         else:
             st.error("❌ Incorrecto")
     
-    if st.button("️ Volver"):
+    if st.button("⬅️ Volver"):
         st.session_state.show_admin = False
         st.rerun()
     st.stop()
@@ -153,7 +157,7 @@ st.markdown("""
         <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
     </button>
     <button class="nav-btn nav-btn-ver" onclick="document.getElementById('btn-nav-ver').click()">
-        <span class="nav-btn-icon"></span>
+        <span class="nav-btn-icon">🔍</span>
         <span>Ver Alertas</span>
         <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
     </button>
@@ -162,7 +166,7 @@ st.markdown("""
 
 col_nav1, col_nav2 = st.columns(2)
 with col_nav1:
-    if st.button(" Reportar Mascota", key="btn-nav-reportar", use_container_width=True, type="primary"):
+    if st.button("📸 Reportar Mascota", key="btn-nav-reportar", use_container_width=True, type="primary"):
         st.session_state.vista_actual = 'reportar'
         st.rerun()
 with col_nav2:
@@ -175,7 +179,7 @@ st.markdown("---")
 with st.sidebar:
     if st.session_state.is_admin:
         st.markdown("### 👑 Administrador")
-        if st.button(" Salir"):
+        if st.button("🚪 Salir"):
             st.session_state.is_admin = False
             st.rerun()
     else:
@@ -298,7 +302,7 @@ if st.session_state.vista_actual == 'reportar':
     </head>
     <body>
         <form id="mascotaForm">
-            <div class="section-title"> Tus Datos</div>
+            <div class="section-title">👤 Tus Datos</div>
             <div class="row">
                 <div class="form-group">
                     <label>Nombre *</label>
@@ -328,7 +332,7 @@ if st.session_state.vista_actual == 'reportar':
             <div class="gps-box">
                 <div class="section-title" style="border:none; margin:0 0 15px 0;">📍 Ubicación GPS</div>
                 <button type="button" class="btn-gps" id="btnGPS" onclick="getGPS()">
-                     Obtener mi ubicación automáticamente
+                    📍 Obtener mi ubicación automáticamente
                 </button>
                 <div id="gpsStatus" class="status"></div>
                 <div id="coords-display">
@@ -355,7 +359,7 @@ if st.session_state.vista_actual == 'reportar':
                         <option>🐕 Perro</option>
                         <option>🐈 Gato</option>
                         <option>🐰 Conejo</option>
-                        <option> Ave</option>
+                        <option>🐦 Ave</option>
                         <option>Otro</option>
                     </select>
                 </div>
@@ -408,7 +412,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="form-group">
-                <label> Descripción</label>
+                <label>📝 Descripción</label>
                 <textarea id="descripcion" rows="4" placeholder="Señas particulares..."></textarea>
             </div>
             
@@ -552,7 +556,7 @@ if st.session_state.vista_actual == 'reportar':
                         document.getElementById('lon').value = '';
                         document.getElementById('coords-display').style.display = 'none';
                         document.getElementById('preview-container').style.display = 'none';
-                        document.getElementById('fileLabel').textContent = ' Haz clic para seleccionar una foto (JPG, PNG)';
+                        document.getElementById('fileLabel').textContent = '📁 Haz clic para seleccionar una foto (JPG, PNG)';
                         document.getElementById('fileLabel').classList.remove('has-file');
                         if (window.parent) window.parent.postMessage({ type: 'published' }, '*');
                     } else {
@@ -562,7 +566,7 @@ if st.session_state.vista_actual == 'reportar':
                     }
                 } catch (error) {
                     status.className = 'status error';
-                    status.textContent = ' Error: ' + error.message;
+                    status.textContent = '❌ Error: ' + error.message;
                 }
                 btn.disabled = false;
             });
@@ -574,7 +578,7 @@ if st.session_state.vista_actual == 'reportar':
     st.components.v1.html(form_html, height=1800)
 
 # ═════════════════════════════════════════════════════════════
-# VISTA: VER REPORTES - CON FILTROS MEJORADOS (Raza, Color, Sexo)
+# VISTA: VER REPORTES - CON FILTROS Y MAPA INTERACTIVO
 # ═════════════════════════════════════════════════════════════
 elif st.session_state.vista_actual == 'ver':
     st.subheader("🔍 Reportes de Mascotas")
@@ -617,8 +621,117 @@ elif st.session_state.vista_actual == 'ver':
         
         if not df_f.empty:
             st.markdown(f"**{len(df_f)} reporte(s) encontrado(s)**")
-            st.map(df_f.rename(columns={'latitud': 'latitude', 'longitud': 'longitude'})[["latitude", "longitude"]])
             
+            # MAPA INTERACTIVO CON FOLLIUM + DIRECCIÓN
+            import folium
+            from streamlit_folium import st_folium
+            
+            # Centro del mapa (promedio de coordenadas)
+            centro_lat = df_f['latitud'].mean()
+            centro_lon = df_f['longitud'].mean()
+            
+            mapa = folium.Map(location=[centro_lat, centro_lon], zoom_start=13)
+            
+            for _, row in df_f.iterrows():
+                lat = row['latitud']
+                lon = row['longitud']
+                nombre = row['nombre']
+                estado = row.get('estado', '')
+                especie = row.get('especie', 'N/A')
+                raza = row.get('raza', 'N/A')
+                color = row.get('color', 'N/A')
+                tamano = row.get('tamano', 'N/A')
+                sexo = row.get('sexo', 'N/A')
+                fecha = row['fecha']
+                contacto = row.get('contacto', 'N/A')
+                descripcion = row.get('descripcion', '')
+                foto_url = row.get('foto_url', '')
+                
+                # Obtener dirección desde coordenadas (Geocoding inverso)
+                direccion = "Dirección no disponible"
+                try:
+                    url_geo = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&zoom=18&addressdetails=1"
+                    headers = {'User-Agent': 'AlertaMascotas/1.0'}
+                    response_geo = requests.get(url_geo, headers=headers, timeout=5)
+                    if response_geo.status_code == 200:
+                        data_geo = response_geo.json()
+                        addr = data_geo.get('address', {})
+                        calle = addr.get('road', '') or addr.get('street', '') or addr.get('path', '')
+                        numero = addr.get('house_number', '')
+                        barrio = addr.get('neighbourhood', '') or addr.get('suburb', '') or addr.get('city_district', '')
+                        ciudad = addr.get('city', '') or addr.get('town', '') or addr.get('village', '')
+                        provincia = addr.get('state', '')
+                        
+                        if calle:
+                            direccion = f"{calle} {numero}".strip()
+                            if barrio:
+                                direccion += f", {barrio}"
+                            if ciudad:
+                                direccion += f", {ciudad}"
+                            if provincia:
+                                direccion += f", {provincia}"
+                        elif ciudad:
+                            direccion = f"{ciudad}, {provincia}" if provincia else ciudad
+                except:
+                    pass
+                
+                # Pequeña pausa para no saturar la API
+                time.sleep(0.3)
+                
+                # Color del marcador según estado
+                if 'Perdida' in str(estado):
+                    color_marcador = 'red'
+                    icono = '🔴'
+                else:
+                    color_marcador = 'green'
+                    icono = '🟢'
+                
+                # HTML del popup con foto, datos y DIRECCIÓN
+                popup_html = f"""
+                <div style="width: 340px; font-family: Arial, sans-serif;">
+                    <h3 style="margin: 0 0 10px 0; color: #333;">{icono} {nombre}</h3>
+                    <div style="background: {'#FFE5E5' if 'Perdida' in str(estado) else '#DCEDC8'}; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; display: inline-block; font-weight: bold; color: {'#FF5252' if 'Perdida' in str(estado) else '#4CAF50'};">
+                        {estado}
+                    </div>
+                    {'<img src="' + foto_url + '" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;" onerror="this.style.display=\'none\'">' if foto_url else ''}
+                    
+                    <div style="background: #FFF9C4; border-left: 4px solid #FFC107; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;">
+                        <b>📍 Ubicación:</b><br>
+                        <span style="font-size: 13px; color: #333;">{direccion}</span>
+                    </div>
+                    
+                    <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
+                        <tr><td style="padding: 3px 0;"><b>Especie:</b></td><td>{especie}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Raza:</b></td><td>{raza}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Color:</b></td><td>{color}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Tamaño:</b></td><td>{tamano}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>Sexo:</b></td><td>{sexo}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>📅 Fecha:</b></td><td>{fecha}</td></tr>
+                        <tr><td style="padding: 3px 0;"><b>📞 Contacto:</b></td><td>{contacto}</td></tr>
+                    </table>
+                    {'<p style="margin-top: 10px; font-size: 13px; color: #666;"><b>📝 Descripción:</b> ' + descripcion + '</p>' if descripcion else ''}
+                    
+                    <div style="margin-top: 10px; text-align: center;">
+                        <a href="https://www.google.com/maps?q={lat},{lon}" target="_blank" style="background: #4285F4; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold;">
+                            🗺️ Ver en Google Maps
+                        </a>
+                    </div>
+                </div>
+                """
+                
+                folium.Marker(
+                    location=[lat, lon],
+                    popup=folium.Popup(popup_html, max_width=370),
+                    tooltip=f"{nombre} - {estado}",
+                    icon=folium.Icon(color=color_marcador, icon='paw', prefix='fa')
+                ).add_to(mapa)
+            
+            # Mostrar mapa interactivo
+            st_folium(mapa, width=None, height=500, returned_objects=[])
+            
+            st.markdown("---")
+            
+            # Mostrar reportes en tarjetas
             for est, emoji, clase in [("Perdida", "🔴", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
@@ -631,20 +744,20 @@ elif st.session_state.vista_actual == 'ver':
                             if foto_url:
                                 st.image(foto_url, caption=row['nombre'], use_container_width=True)
                             else:
-                                st.markdown(" Sin foto")
+                                st.markdown("📷 Sin foto")
                         
                         with col_info:
                             badge_color = "#FF5252" if est == "Perdida" else "#4CAF50"
                             st.markdown(f"""
                             <div style="background:{'#FFF5F5' if est=='Perdida' else '#F1F8E9'}; padding:20px; border-radius:15px; border-left:6px solid {badge_color};">
                                 <span style="background:{badge_color}; color:white; padding:6px 16px; border-radius:20px; font-weight:bold; font-size:14px;">{emoji} {row['estado']}</span>
-                                <h2 style="margin:15px 0 10px 0;"> {row['nombre']}</h2>
+                                <h2 style="margin:15px 0 10px 0;">🐾 {row['nombre']}</h2>
                                 <p><strong>Especie:</strong> {row.get('especie', 'N/A')}</p>
                                 <p><strong>Raza:</strong> {row.get('raza', 'N/A')}</p>
                                 <p><strong>Color:</strong> {row.get('color', 'N/A')}</p>
                                 <p><strong>Tamaño:</strong> {row.get('tamano', 'N/A')}</p>
                                 <p><strong>Sexo:</strong> {row.get('sexo', 'N/A')}</p>
-                                <p><strong> Fecha:</strong> {row['fecha']}</p>
+                                <p><strong>📅 Fecha:</strong> {row['fecha']}</p>
                                 <p><strong>📞 Contacto:</strong> {row.get('contacto', 'N/A')}</p>
                                 {f"<p><strong>📝 Descripción:</strong> {row.get('descripcion', '')}</p>" if row.get('descripcion') else ''}
                             </div>
@@ -652,11 +765,11 @@ elif st.session_state.vista_actual == 'ver':
                         
                         st.markdown("---")
     else:
-        st.info(" Sin reportes")
+        st.info("🐾 Sin reportes")
 
 # ═════════════════════════════════════════════════════════════
 # VISTA: ADMIN
-# ════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════════
 if st.session_state.is_admin and st.session_state.vista_actual != 'admin':
     if st.button("⚙️ Panel de Administración", use_container_width=True):
         st.session_state.vista_actual = 'admin'
