@@ -16,7 +16,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
 
-# CSS - Solo botones grandes visibles
+# CSS
 st.markdown("""
 <style>
     .header {
@@ -30,7 +30,6 @@ st.markdown("""
     }
     .header h1 { font-size: 1.8rem; margin: 0; }
     
-    /* BOTONES GRANDES - UNICOS VISIBLES */
     .nav-btn-container {
         display: flex;
         gap: 20px;
@@ -81,6 +80,11 @@ st.markdown("""
         line-height: 1.4;
     }
     
+    /* Ocultar botones pequeños de Streamlit */
+    .hidden-buttons {
+        display: none !important;
+    }
+    
     #MainMenu, footer { visibility: hidden; }
     
     @media (max-width: 768px) {
@@ -119,6 +123,80 @@ if 'show_admin' not in st.session_state:
 if 'vista_actual' not in st.session_state:
     st.session_state.vista_actual = 'reportar'
 
+# ════════════════════════════════════════════════════════════
+# BOTONES OCULTOS DE STREAMLIT (funcionan pero no se ven)
+# ═════════════════════════════════════════════════════════════
+col_nav1, col_nav2 = st.columns(2)
+with col_nav1:
+    if st.button("📸 Reportar Mascota", key="btn_reportar_hidden", use_container_width=True, type="primary"):
+        st.session_state.vista_actual = 'reportar'
+        st.rerun()
+with col_nav2:
+    if st.button("🔍 Ver Alertas", key="btn_ver_hidden", use_container_width=True):
+        st.session_state.vista_actual = 'ver'
+        st.rerun()
+
+# Ocultar visualmente los botones de Streamlit
+st.markdown("""
+<style>
+    button[key="btn_reportar_hidden"],
+    button[key="btn_ver_hidden"] {
+        display: none !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ════════════════════════════════════════════════════════════
+# BOTONES GRANDES VISIBLES QUE ACTIVAN LOS OCULTOS
+# ════════════════════════════════════════════════════════════
+st.markdown("""
+<div class="nav-btn-container">
+    <button class="nav-btn nav-btn-reportar" onclick="triggerButton('btn_reportar_hidden')">
+        <span class="nav-btn-icon">📸</span>
+        <span class="nav-btn-title">Reportar Mascota</span>
+        <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
+    </button>
+    <button class="nav-btn nav-btn-ver" onclick="triggerButton('btn_ver_hidden')">
+        <span class="nav-btn-icon">🔍</span>
+        <span class="nav-btn-title">Ver Alertas</span>
+        <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
+    </button>
+</div>
+
+<script>
+function triggerButton(key) {
+    // Buscar el botón de Streamlit por su key
+    var buttons = document.querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+        if (buttons[i].getAttribute('data-testid') === 'stButton' && 
+            buttons[i].textContent.includes(key.replace('_hidden', '').replace('btn_', ''))) {
+            buttons[i].click();
+            return;
+        }
+    }
+    
+    // Método alternativo: buscar en el DOM de Streamlit
+    var allElements = document.querySelectorAll('*');
+    for (var j = 0; j < allElements.length; j++) {
+        var elem = allElements[j];
+        if (elem.className && elem.className.includes('stButton')) {
+            var btn = elem.querySelector('button');
+            if (btn && btn.textContent.includes('Reportar') && key === 'btn_reportar_hidden') {
+                btn.click();
+                return;
+            }
+            if (btn && btn.textContent.includes('Ver Alertas') && key === 'btn_ver_hidden') {
+                btn.click();
+                return;
+            }
+        }
+    }
+}
+</script>
+""", unsafe_allow_html=True)
+
+st.markdown("---")
+
 # LOGIN ADMIN
 if st.session_state.show_admin and not st.session_state.is_admin:
     st.markdown('<div class="header"><h1>🔐 Admin</h1></div>', unsafe_allow_html=True)
@@ -140,51 +218,6 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 
 # APP PRINCIPAL
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
-
-# ════════════════════════════════════════════════════════════
-# SOLO BOTONES GRANDES HTML - SIN BOTONES PEQUEÑOS
-# ═════════════════════════════════════════════════════════════
-st.markdown("""
-<div class="nav-btn-container">
-    <button class="nav-btn nav-btn-reportar" onclick="cambiarVista('reportar')">
-        <span class="nav-btn-icon">📸</span>
-        <span class="nav-btn-title">Reportar Mascota</span>
-        <span class="nav-btn-subtitle">Publica una alerta de mascota perdida o encontrada</span>
-    </button>
-    <button class="nav-btn nav-btn-ver" onclick="cambiarVista('ver')">
-        <span class="nav-btn-icon">🔍</span>
-        <span class="nav-btn-title">Ver Alertas</span>
-        <span class="nav-btn-subtitle">Consulta las alertas activas con fotos y detalles</span>
-    </button>
-</div>
-
-<script>
-function cambiarVista(vista) {
-    // Crear un formulario temporal y enviarlo a Streamlit
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.style.display = 'none';
-    
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'vista_cambio';
-    input.value = vista;
-    
-    form.appendChild(input);
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-}
-</script>
-""", unsafe_allow_html=True)
-
-# Manejar el cambio de vista desde JavaScript
-if 'vista_cambio' in st.query_params:
-    st.session_state.vista_actual = st.query_params['vista_cambio']
-    st.query_params.clear()
-    st.rerun()
-
-st.markdown("---")
 
 with st.sidebar:
     if st.session_state.is_admin:
