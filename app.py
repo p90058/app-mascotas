@@ -13,7 +13,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="🐶")
 
-# CSS MINIMALISTA
+# CSS
 st.markdown("""
 <style>
     .main-header {
@@ -61,7 +61,7 @@ if 'lat' not in st.session_state:
 if 'lon' not in st.session_state:
     st.session_state.lon = None
 
-# CAPTURAR GPS
+# CAPTURAR GPS DE URL
 if "lat" in st.query_params and "lon" in st.query_params:
     st.session_state.lat = float(st.query_params["lat"])
     st.session_state.lon = float(st.query_params["lon"])
@@ -86,7 +86,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
         st.rerun()
     st.stop()
 
-# APP
+# APP PRINCIPAL
 st.markdown('<div style="font-size: 4rem; text-align: center;">🐾</div>', unsafe_allow_html=True)
 st.markdown('<h1 class="main-header">Red de Alerta de Mascotas</h1>', unsafe_allow_html=True)
 
@@ -116,9 +116,9 @@ with tab1:
     
     tipo = st.selectbox("Tipo", ["Perro", "Gato", "Conejo", "Ave", "Otro"], key="f_tipo")
     
-    # GPS - IMPLEMENTACIÓN SIMPLE
+    # GPS AUTOMÁTICO
     st.markdown('<div class="gps-box">', unsafe_allow_html=True)
-    st.markdown("### Ubicación GPS")
+    st.markdown("### 📍 Ubicación GPS")
     
     if st.session_state.lat and st.session_state.lon:
         st.markdown(f"""
@@ -133,34 +133,10 @@ with tab1:
             st.session_state.lon = None
             st.rerun()
     else:
-        # FORMULARIO MANUAL PARA GPS
-        with st.form(key="gps_form"):
-            st.markdown("**Ingresa las coordenadas manualmente:**")
-            st.markdown("*Abre Google Maps, presiona tu ubicación y copia las coordenadas*")
-            
-            col_lat, col_lon = st.columns(2)
-            with col_lat:
-                lat_input = st.number_input("Latitud", value=0.0, format="%.6f", key="lat_in")
-            with col_lon:
-                lon_input = st.number_input("Longitud", value=0.0, format="%.6f", key="lon_in")
-            
-            submit = st.form_submit_button("💾 Guardar ubicación", use_container_width=True)
-            
-            if submit and lat_input != 0.0 and lon_input != 0.0:
-                st.session_state.lat = lat_input
-                st.session_state.lon = lon_input
-                st.success("✅ Ubicación guardada")
-                st.rerun()
-            elif submit:
-                st.error("❌ Ingresa coordenadas válidas")
-        
-        st.markdown("---")
-        st.markdown("**O usa el botón automático:**")
-        
         # BOTÓN GPS AUTOMÁTICO
         st.markdown("""
-        <button id="btnGPS" style="width:100%; padding:1rem; background:#4CAF50; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:1.1rem;" onclick="getGPS()">
-            📍 Obtener ubicación automáticamente
+        <button id="btnGPS" style="width:100%; padding:1.2rem; background:#4CAF50; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:1.1rem;" onclick="getGPS()">
+            📍 Obtener mi ubicación automáticamente
         </button>
         <div id="gpsMsg" style="margin-top:1rem; font-weight:bold; text-align:center;"></div>
         
@@ -170,30 +146,45 @@ with tab1:
             const btn = document.getElementById('btnGPS');
             
             if (!navigator.geolocation) {
-                msg.innerHTML = '<span style="color:red">❌ No soporta GPS</span>';
+                msg.innerHTML = '<span style="color:red">❌ Tu navegador no soporta GPS</span>';
                 return;
             }
             
-            msg.innerHTML = '<span style="color:blue">⏳ Obteniendo...</span>';
+            msg.innerHTML = '<span style="color:blue">⏳ Solicitando permiso...</span>';
             btn.disabled = true;
+            btn.style.opacity = '0.6';
             
             navigator.geolocation.getCurrentPosition(
                 function(pos) {
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    msg.innerHTML = '<span style="color:green">✅ ¡Listo!</span>';
+                    msg.innerHTML = '<span style="color:green; font-size:1.2rem">✅ ¡Ubicación obtenida!<br>Redirigiendo...</span>';
+                    
                     setTimeout(() => {
                         window.location.href = '?lat=' + lat + '&lon=' + lon;
-                    }, 500);
+                    }, 800);
                 },
                 function(err) {
-                    msg.innerHTML = '<span style="color:red">❌ Error</span>';
+                    let text = 'Error al obtener ubicación';
+                    if(err.code === 1) text = 'Permiso denegado. Permite el acceso a la ubicación.';
+                    else if(err.code === 2) text = 'Ubicación no disponible';
+                    else if(err.code === 3) text = 'Tiempo agotado';
+                    msg.innerHTML = '<span style="color:red">❌ ' + text + '</span>';
                     btn.disabled = false;
+                    btn.style.opacity = '1';
                 },
-                {enableHighAccuracy: true, timeout: 10000}
+                {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
             );
         }
         </script>
+        
+        <div style="margin-top:1rem; padding:0.8rem; background:white; border-radius:8px; font-size:0.9rem;">
+            <b>💡 Instrucciones:</b><br>
+            1. Presiona el botón verde<br>
+            2. Cuando el navegador pregunte, haz clic en <b>"Permitir"</b><br>
+            3. Espera 2-5 segundos<br>
+            4. La página se recargará con tu ubicación
+        </div>
         """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
@@ -218,7 +209,7 @@ with tab1:
         if not nombre or not email or not telefono:
             st.error("❌ Completa Nombre, Email y Teléfono")
         elif not st.session_state.lat:
-            st.error("❌ Primero guarda la ubicación GPS")
+            st.error("❌ Primero obtén la ubicación GPS (botón verde)")
         elif not foto:
             st.error("❌ Sube una foto")
         elif not nombre_mascota:
