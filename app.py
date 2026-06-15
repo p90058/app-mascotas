@@ -129,15 +129,19 @@ if 'show_admin' not in st.session_state:
 if 'vista_actual' not in st.session_state:
     st.session_state.vista_actual = 'reportar'
 
-# ══════════════════════════════════════════════════════════
-# LOGIN ADMIN
+# ═══════════════════════════════════════════════════════════
+# LOGIN ADMIN - CORREGIDO (campos completamente vacíos)
 # ═══════════════════════════════════════════════════════════
 if st.session_state.show_admin and not st.session_state.is_admin:
     st.markdown('<div class="header"><h1>🔐 Acceso Administrador</h1></div>', unsafe_allow_html=True)
     
     st.markdown("### Ingresa tus credenciales")
-    codigo = st.text_input("Código de administrador", placeholder="ADMIND2024", key="login_codigo")
-    password = st.text_input("Contraseña", type="password", placeholder="admind123", key="login_password")
+    
+    # Campo dummy para evitar autocompletado del navegador
+    st.text_input("Usuario", key="dummy_user", value="", help=" ", label_visibility="collapsed")
+    
+    codigo = st.text_input("Código de administrador", key="login_codigo", value="")
+    password = st.text_input("Contraseña", type="password", key="login_password", value="")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -203,7 +207,7 @@ with st.sidebar:
 # VISTA: REPORTAR
 # ═════════════════════════════════════════════════════════════
 if st.session_state.vista_actual == 'reportar':
-    st.subheader(" Registrar Mascota")
+    st.subheader("📝 Registrar Mascota")
     
     form_html = """
     <!DOCTYPE html>
@@ -425,7 +429,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="form-group">
-                <label> Foto *</label>
+                <label>📷 Foto *</label>
                 <div class="file-upload">
                     <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
                     <label for="foto" class="file-upload-label" id="fileLabel">
@@ -632,7 +636,7 @@ elif st.session_state.vista_actual == 'ver':
         with col1:
             f_estado = st.selectbox("🔴 Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         col3, col4 = st.columns(2, gap="small")
         with col3:
@@ -701,7 +705,7 @@ elif st.session_state.vista_actual == 'ver':
             
             st.markdown("---")
             
-            for est, emoji, clase in [("Perdida", "", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
+            for est, emoji, clase in [("Perdida", "🔴", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
@@ -744,7 +748,7 @@ elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
         st.session_state.vista_actual = 'reportar'
         st.rerun()
     
-    at1, at2 = st.tabs(["🗑️ Gestionar Reportes", " Gestionar Usuarios"])
+    at1, at2 = st.tabs(["🗑️ Gestionar Reportes", "👥 Gestionar Usuarios"])
     
     with at1:
         st.markdown("### Eliminar Reportes")
@@ -806,4 +810,4 @@ elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
 
 # FOOTER
 st.markdown("---")
-st.markdown("<div style='text-align:center;color:#999;padding:1.5rem;font-size:12px;'>© 2026 Red de Alerta </div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#999;padding:1.5rem;font-size:12px;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
