@@ -129,7 +129,7 @@ if 'show_admin' not in st.session_state:
 if 'vista_actual' not in st.session_state:
     st.session_state.vista_actual = 'reportar'
 
-# ══════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════
 # LOGIN ADMIN
 # ═══════════════════════════════════════════════════════════
 if st.session_state.show_admin and not st.session_state.is_admin:
@@ -198,7 +198,7 @@ with st.sidebar:
             st.session_state.vista_actual = 'reportar'
             st.rerun()
     else:
-        if st.button(" Acceso Admin", key="bfa", use_container_width=True):
+        if st.button("🔐 Acceso Admin", key="bfa", use_container_width=True):
             st.session_state.show_admin = True
             st.rerun()
 
@@ -206,7 +206,7 @@ with st.sidebar:
 # VISTA: REPORTAR
 # ════════════════════════════════════════════════════════════
 if st.session_state.vista_actual == 'reportar':
-    st.subheader(" Registrar Mascota")
+    st.subheader("📝 Registrar Mascota")
     
     form_html = """
     <!DOCTYPE html>
@@ -372,7 +372,7 @@ if st.session_state.vista_actual == 'reportar':
                 <input type="hidden" id="lon" value="">
             </div>
             
-            <div class="section-title"> Datos Mascota</div>
+            <div class="section-title">🐾 Datos Mascota</div>
             <div class="row">
                 <div class="form-group">
                     <label>Estado *</label>
@@ -384,9 +384,9 @@ if st.session_state.vista_actual == 'reportar':
                 <div class="form-group">
                     <label>Especie *</label>
                     <select id="especie" required>
-                        <option>🐕 Perro</option>
-                        <option> Gato</option>
-                        <option> Conejo</option>
+                        <option> Perro</option>
+                        <option>🐈 Gato</option>
+                        <option>🐰 Conejo</option>
                         <option>🐦 Ave</option>
                         <option>Otro</option>
                     </select>
@@ -441,7 +441,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="form-group">
-                <label> Descripción</label>
+                <label>📝 Descripción</label>
                 <textarea id="descripcion" rows="4" placeholder="Señas particulares..."></textarea>
             </div>
             
@@ -501,7 +501,7 @@ if st.session_state.vista_actual == 'reportar':
                     function(err) {
                         let msg = 'Error';
                         if (err.code === 1) msg = '❌ Permiso denegado';
-                        else if (err.code === 2) msg = '❌ Ubicación no disponible';
+                        else if (err.code === 2) msg = ' Ubicación no disponible';
                         else if (err.code === 3) msg = '❌ Tiempo agotado';
                         status.className = 'status error';
                         status.textContent = msg;
@@ -527,7 +527,7 @@ if st.session_state.vista_actual == 'reportar':
                 }
                 if (!fotoFile) { 
                     status.className = 'status error'; 
-                    status.textContent = ' Debes subir una foto'; 
+                    status.textContent = '❌ Debes subir una foto'; 
                     status.scrollIntoView({behavior: 'smooth'});
                     return; 
                 }
@@ -554,13 +554,24 @@ if st.session_state.vista_actual == 'reportar':
                 const fecha = now.toISOString().slice(0, 19).replace('T', ' ');
                 
                 try {
-                    try {
-                        await fetch(SUPABASE_URL + '/rest/v1/usuarios', {
-                            method: 'POST',
-                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
-                            body: JSON.stringify({ email: email, nombre: nombre, telefono: telefono, tipo_mascota: tipo, fecha_registro: fecha, activo: true })
-                        });
-                    } catch(e) { console.log('Usuario:', e); }
+                    // UPSERT: Si el email ya existe, actualiza en lugar de duplicar
+                    await fetch(SUPABASE_URL + '/rest/v1/usuarios', {
+                        method: 'POST',
+                        headers: { 
+                            'apikey': SUPABASE_KEY, 
+                            'Authorization': 'Bearer ' + SUPABASE_KEY, 
+                            'Content-Type': 'application/json',
+                            'Prefer': 'resolution=merge-duplicates'
+                        },
+                        body: JSON.stringify({ 
+                            email: email, 
+                            nombre: nombre, 
+                            telefono: telefono, 
+                            tipo_mascota: tipo, 
+                            fecha_registro: fecha, 
+                            activo: true 
+                        })
+                    });
                     
                     const fileExtension = fotoFile.name.split('.').pop().toLowerCase();
                     const fileName = Date.now() + '_' + Math.random().toString(36).substr(2, 9) + '.' + fileExtension;
@@ -597,7 +608,7 @@ if st.session_state.vista_actual == 'reportar':
                         document.getElementById('lon').value = '';
                         document.getElementById('coords-display').style.display = 'none';
                         document.getElementById('preview-container').style.display = 'none';
-                        document.getElementById('fileLabel').textContent = ' Seleccionar foto';
+                        document.getElementById('fileLabel').textContent = '📁 Seleccionar foto';
                         document.getElementById('fileLabel').classList.remove('has-file');
                         if (window.parent) window.parent.postMessage({ type: 'published' }, '*');
                     } else {
@@ -621,7 +632,7 @@ if st.session_state.vista_actual == 'reportar':
     st.components.v1.html(form_html, height=2000)
 
 # ════════════════════════════════════════════════════════════
-# VISTA: VER REPORTES - CON POPUP COMPLETO EN EL MAPA
+# VISTA: VER REPORTES
 # ════════════════════════════════════════════════════════════
 elif st.session_state.vista_actual == 'ver':
     st.subheader("🔍 Reportes de Mascotas")
@@ -635,7 +646,7 @@ elif st.session_state.vista_actual == 'ver':
         with col1:
             f_estado = st.selectbox("🔴 Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         col3, col4 = st.columns(2, gap="small")
         with col3:
@@ -692,7 +703,6 @@ elif st.session_state.vista_actual == 'ver':
                     color_marcador = 'green'
                     icono = '🟢'
                 
-                # POPUP COMPLETO CON FOTO Y DESCRIPCIÓN
                 popup_html = f"""
                 <div style="width: 320px; font-family: Arial, sans-serif; font-size: 13px;">
                     <h3 style="margin: 0 0 8px 0; color: #333;">{icono} {nombre}</h3>
@@ -712,7 +722,7 @@ elif st.session_state.vista_actual == 'ver':
                         <tr><td style="padding: 2px 0;"><b>📞 Contacto:</b></td><td>{contacto}</td></tr>
                     </table>
                     
-                    {'<div style="background: #f9f9f9; padding: 8px; border-radius: 6px; border-left: 3px solid #667eea; margin-top: 8px;"><b> Descripción:</b><br><span style="color: #555;">' + descripcion + '</span></div>' if descripcion else ''}
+                    {'<div style="background: #f9f9f9; padding: 8px; border-radius: 6px; border-left: 3px solid #667eea; margin-top: 8px;"><b>📝 Descripción:</b><br><span style="color: #555;">' + descripcion + '</span></div>' if descripcion else ''}
                 </div>
                 """
                 
@@ -739,20 +749,20 @@ elif st.session_state.vista_actual == 'ver':
                             if foto_url:
                                 st.image(foto_url, caption=row['nombre'], use_container_width=True)
                             else:
-                                st.markdown(" Sin foto")
+                                st.markdown("📷 Sin foto")
                         
                         with col_info:
                             badge_color = "#FF5252" if est == "Perdida" else "#4CAF50"
                             st.markdown(f"""
                             <div style="background:{'#FFF5F5' if est=='Perdida' else '#F1F8E9'}; padding:15px; border-radius:10px; border-left:5px solid {badge_color}; font-size: 13px;">
                                 <span style="background:{badge_color}; color:white; padding:4px 12px; border-radius:15px; font-weight:bold; font-size:12px;">{emoji} {row['estado']}</span>
-                                <h3 style="margin:10px 0 8px 0; font-size: 16px;"> {row['nombre']}</h3>
+                                <h3 style="margin:10px 0 8px 0; font-size: 16px;">🐾 {row['nombre']}</h3>
                                 <p style="margin: 4px 0;"><b>Especie:</b> {row.get('especie', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Raza:</b> {row.get('raza', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Color:</b> {row.get('color', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Tamaño:</b> {row.get('tamano', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>📅 Fecha:</b> {row['fecha']}</p>
-                                <p style="margin: 4px 0;"><b> Contacto:</b> {row.get('contacto', 'N/A')}</p>
+                                <p style="margin: 4px 0;"><b>📞 Contacto:</b> {row.get('contacto', 'N/A')}</p>
                             </div>
                             """, unsafe_allow_html=True)
                         
@@ -761,16 +771,16 @@ elif st.session_state.vista_actual == 'ver':
         st.info("🐾 Sin reportes")
 
 # ════════════════════════════════════════════════════════════
-# VISTA: ADMIN
+# VISTA: ADMIN - CON ELIMINAR USUARIOS Y LIMPIAR DUPLICADOS
 # ════════════════════════════════════════════════════════════
 elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
-    st.subheader("⚙️ Panel de Administración")
+    st.subheader("️ Panel de Administración")
     
     if st.button("⬅️ Volver al inicio", key="btn_volver_admin", use_container_width=True):
         st.session_state.vista_actual = 'reportar'
         st.rerun()
     
-    at1, at2 = st.tabs(["️ Gestionar Reportes", "👥 Gestionar Usuarios"])
+    at1, at2 = st.tabs(["🗑️ Gestionar Reportes", "👥 Gestionar Usuarios"])
     
     with at1:
         st.markdown("### Eliminar Reportes")
@@ -789,7 +799,7 @@ elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
                     st.markdown(f"**{row['nombre']}** - {row['estado']}")
                     st.markdown(f"*{row.get('especie', 'N/A')}* | {row['fecha']}")
                 with c3:
-                    if st.button("🗑️", key=f"d{row['id']}"):
+                    if st.button("️", key=f"d{row['id']}"):
                         supabase.table("reportes").delete().eq("id", row['id']).execute()
                         st.success("✅ Eliminado")
                         time.sleep(1)
@@ -799,6 +809,38 @@ elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
             st.info("No hay reportes para gestionar")
     
     with at2:
+        st.markdown("### 👥 Gestión de Usuarios")
+        
+        # Botón para limpiar duplicados automáticamente
+        if st.button("🧹 Limpiar Usuarios Duplicados", use_container_width=True, type="primary", key="btn_limpiar_duplicados"):
+            try:
+                # Obtener todos los usuarios
+                usuarios = supabase.table("usuarios").select("*").order("fecha_registro", desc=True).execute().data
+                
+                if usuarios:
+                    emails_vistos = set()
+                    duplicados_eliminados = 0
+                    
+                    for user in usuarios:
+                        email = user.get('email', '')
+                        if email in emails_vistos:
+                            # Es duplicado, eliminar
+                            supabase.table("usuarios").delete().eq("id", user['id']).execute()
+                            duplicados_eliminados += 1
+                        else:
+                            emails_vistos.add(email)
+                    
+                    st.success(f"✅ Se eliminaron {duplicados_eliminados} usuario(s) duplicado(s)")
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.info("No hay usuarios para limpiar")
+            except Exception as e:
+                st.error(f" Error al limpiar duplicados: {str(e)}")
+        
+        st.markdown("---")
+        
+        # Agregar nuevo usuario
         st.markdown("### Agregar Nuevo Usuario")
         c1, c2, c3 = st.columns(3, gap="small")
         with c1: ne = st.text_input("Email", key="ne")
@@ -808,28 +850,54 @@ elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
         if st.button("Agregar Usuario", key="ba", use_container_width=True, type="primary"):
             if ne and nn:
                 try:
-                    supabase.table("usuarios").insert({
-                        "email": ne, "nombre": nn, "telefono": nt,
-                        "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"), "activo": True
-                    }).execute()
-                    st.success("✅ Usuario agregado correctamente")
-                    time.sleep(1)
-                    st.rerun()
+                    # Verificar si ya existe
+                    existing = supabase.table("usuarios").select("id").eq("email", ne).execute().data
+                    if existing:
+                        st.warning(f"⚠️ El usuario con email '{ne}' ya existe. No se creará duplicado.")
+                    else:
+                        supabase.table("usuarios").insert({
+                            "email": ne, "nombre": nn, "telefono": nt,
+                            "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"), "activo": True
+                        }).execute()
+                        st.success("✅ Usuario agregado correctamente")
+                        time.sleep(1)
+                        st.rerun()
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
             else:
-                st.error("❌ Email y Nombre son obligatorios")
+                st.error(" Email y Nombre son obligatorios")
         
         st.markdown("---")
+        
+        # Lista de usuarios con opción de eliminar
         st.markdown("### Usuarios Registrados")
         usuarios = supabase.table("usuarios").select("*").order("fecha_registro", desc=True).execute().data
         
         if usuarios:
+            st.markdown(f"**Total de usuarios:** {len(usuarios)}")
+            st.markdown("---")
+            
             for user in usuarios:
-                st.markdown(f"**{user['nombre']}** - {user['email']} (Tel: {user.get('telefono', 'N/A')})")
+                c1, c2, c3 = st.columns([3, 4, 1], gap="small")
+                with c1:
+                    st.markdown(f"**{user.get('nombre', 'N/A')}**")
+                    st.markdown(f"📧 {user.get('email', 'N/A')}")
+                with c2:
+                    st.markdown(f"📞 {user.get('telefono', 'N/A')}")
+                    st.markdown(f"📅 {user.get('fecha_registro', 'N/A')}")
+                with c3:
+                    if st.button("🗑️", key=f"del_user_{user['id']}"):
+                        try:
+                            supabase.table("usuarios").delete().eq("id", user['id']).execute()
+                            st.success("✅ Usuario eliminado")
+                            time.sleep(1)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Error: {str(e)}")
+                st.markdown("---")
         else:
             st.info("No hay usuarios registrados")
 
 # FOOTER
 st.markdown("---")
-st.markdown("<div style='text-align:center;color:#999;padding:1.5rem;font-size:12px;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#999;padding:1.5rem;font-size:12px;'>© 2026 Red de Alerta </div>", unsafe_allow_html=True)
