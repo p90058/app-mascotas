@@ -16,7 +16,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="")
 
-# CSS - Botones mejorados
+# CSS
 st.markdown("""
 <style>
     .header {
@@ -30,83 +30,44 @@ st.markdown("""
     }
     .header h1 { font-size: 2rem; margin: 0; font-weight: 800; }
     
-    /* Ocultar botones de Streamlit */
-    button[kind="primary"][data-testid="stBaseButton-primary"],
-    button[kind="secondary"][data-testid="stBaseButton-secondary"] {
-        display: none !important;
-    }
-    
-    /* Contenedor de botones personalizados */
-    .custom-nav-container {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        margin: 1rem 0 2rem 0;
-        flex-wrap: wrap;
-        padding: 0 10px;
-    }
-    
-    /* Botones personalizados */
-    .custom-nav-btn {
-        flex: 1;
-        min-width: 280px;
-        max-width: 450px;
-        padding: 30px 25px;
-        border-radius: 10px;
-        border: none;
-        cursor: pointer;
-        font-size: 20px;
-        font-weight: bold;
-        color: white;
-        text-align: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-    }
-    
-    .custom-nav-btn:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    }
-    
-    .custom-nav-btn:active {
-        transform: translateY(-2px);
+    /* Estilizar botones de navegación */
+    div[data-testid="stHorizontalBlock"] > div > div > button {
+        width: 100% !important;
+        min-height: 140px !important;
+        padding: 30px 25px !important;
+        border-radius: 10px !important;
+        border: none !important;
+        font-size: 20px !important;
+        font-weight: bold !important;
+        color: white !important;
+        text-align: center !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+        transition: all 0.3s ease !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 12px !important;
     }
     
     /* Botón Reportar - Gradiente rojo/naranja */
-    .custom-btn-reportar {
-        background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%);
+    div[data-testid="stHorizontalBlock"] > div:first-child > div > button {
+        background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%) !important;
     }
     
     /* Botón Ver Alertas - Gradiente azul/morado */
-    .custom-btn-ver {
-        background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
+    div[data-testid="stHorizontalBlock"] > div:last-child > div > button {
+        background: linear-gradient(135deg, #4834d4 0%, #686de0 100%) !important;
     }
     
-    /* Iconos grandes */
-    .custom-nav-icon {
-        font-size: 48px;
-        margin-bottom: 5px;
+    /* Efecto hover */
+    div[data-testid="stHorizontalBlock"] > div > div > button:hover {
+        transform: translateY(-4px) !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25) !important;
     }
     
-    /* Título del botón */
-    .custom-nav-title {
-        font-size: 22px;
-        font-weight: bold;
-        margin: 0;
-    }
-    
-    /* Subtítulo */
-    .custom-nav-subtitle {
-        font-size: 13px;
-        font-weight: normal;
-        opacity: 0.95;
-        margin: 0;
-        line-height: 1.4;
+    div[data-testid="stHorizontalBlock"] > div > div > button:active {
+        transform: translateY(-2px) !important;
     }
     
     #MainMenu, footer { visibility: hidden; }
@@ -114,26 +75,20 @@ st.markdown("""
     @media (max-width: 768px) {
         .header { padding: 2rem 1rem; }
         .header h1 { font-size: 1.6rem; }
-        .custom-nav-container {
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+        div[data-testid="stHorizontalBlock"] > div > div > button {
+            min-height: 120px !important;
+            padding: 25px 20px !important;
+            font-size: 18px !important;
         }
-        .custom-nav-btn {
-            min-width: 100%;
-            max-width: 100%;
-            padding: 25px 20px;
-        }
-        .custom-nav-icon { font-size: 42px; }
-        .custom-nav-title { font-size: 20px; }
-        .custom-nav-subtitle { font-size: 12px; }
     }
     
     @media (max-width: 480px) {
         .header h1 { font-size: 1.3rem; }
-        .custom-nav-btn { padding: 22px 18px; }
-        .custom-nav-icon { font-size: 38px; }
-        .custom-nav-title { font-size: 18px; }
+        div[data-testid="stHorizontalBlock"] > div > div > button {
+            min-height: 110px !important;
+            padding: 22px 18px !important;
+            font-size: 16px !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -170,65 +125,16 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 # ═══════════════════════════════════════════════════════════
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
-# Botones ocultos de Streamlit (funcionan pero no se ven)
+# Botones de navegación funcionales
 col_nav1, col_nav2 = st.columns(2)
 with col_nav1:
-    if st.button("📸 Reportar Mascota", key="btn_reportar_hidden", use_container_width=True):
+    if st.button("📸\n\nReportar Mascota\n\nPublica una alerta de mascota perdida o encontrada", key="btn_reportar", use_container_width=True):
         st.session_state.vista_actual = 'reportar'
         st.rerun()
 with col_nav2:
-    if st.button("🔍 Ver Alertas", key="btn_ver_hidden", use_container_width=True):
+    if st.button("🔍\n\nVer Alertas\n\nConsulta las alertas activas con fotos y detalles", key="btn_ver", use_container_width=True):
         st.session_state.vista_actual = 'ver'
         st.rerun()
-
-# Botones personalizados con diseño mejorado
-st.markdown("""
-<div class="custom-nav-container">
-    <button class="custom-nav-btn custom-btn-reportar" onclick="triggerNavButton('btn_reportar_hidden')">
-        <span class="custom-nav-icon">📸</span>
-        <span class="custom-nav-title">Reportar Mascota</span>
-        <span class="custom-nav-subtitle">Publica una alerta de mascota perdida o encontrada</span>
-    </button>
-    <button class="custom-nav-btn custom-btn-ver" onclick="triggerNavButton('btn_ver_hidden')">
-        <span class="custom-nav-icon">🔍</span>
-        <span class="custom-nav-title">Ver Alertas</span>
-        <span class="custom-nav-subtitle">Consulta las alertas activas con fotos y detalles</span>
-    </button>
-</div>
-
-<script>
-function triggerNavButton(key) {
-    var allButtons = document.querySelectorAll('button');
-    for (var i = 0; i < allButtons.length; i++) {
-        var btn = allButtons[i];
-        var text = btn.textContent || btn.innerText;
-        
-        if (key === 'btn_reportar_hidden' && text.includes('Reportar Mascota')) {
-            btn.click();
-            return;
-        }
-        if (key === 'btn_ver_hidden' && text.includes('Ver Alertas')) {
-            btn.click();
-            return;
-        }
-    }
-    
-    var streamlitButtons = document.querySelectorAll('[data-testid="stBaseButton-primary"], [data-testid="stBaseButton-secondary"]');
-    for (var j = 0; j < streamlitButtons.length; j++) {
-        var btn = streamlitButtons[j];
-        var text = btn.textContent || btn.innerText;
-        if (key === 'btn_reportar_hidden' && text.includes('Reportar')) {
-            btn.click();
-            return;
-        }
-        if (key === 'btn_ver_hidden' && text.includes('Ver Alertas')) {
-            btn.click();
-            return;
-        }
-    }
-}
-</script>
-""", unsafe_allow_html=True)
 
 st.markdown("---")
 
