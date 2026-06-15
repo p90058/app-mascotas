@@ -129,15 +129,14 @@ if 'show_admin' not in st.session_state:
 if 'vista_actual' not in st.session_state:
     st.session_state.vista_actual = 'reportar'
 
-# ═══════════════════════════════════════════════════════════
-# LOGIN ADMIN - CORREGIDO (campos completamente vacíos)
+# ══════════════════════════════════════════════════════════
+# LOGIN ADMIN
 # ═══════════════════════════════════════════════════════════
 if st.session_state.show_admin and not st.session_state.is_admin:
     st.markdown('<div class="header"><h1>🔐 Acceso Administrador</h1></div>', unsafe_allow_html=True)
     
     st.markdown("### Ingresa tus credenciales")
     
-    # Campo dummy para evitar autocompletado del navegador
     st.text_input("Usuario", key="dummy_user", value="", help=" ", label_visibility="collapsed")
     
     codigo = st.text_input("Código de administrador", key="login_codigo", value="")
@@ -199,15 +198,15 @@ with st.sidebar:
             st.session_state.vista_actual = 'reportar'
             st.rerun()
     else:
-        if st.button("🔐 Acceso Admin", key="bfa", use_container_width=True):
+        if st.button(" Acceso Admin", key="bfa", use_container_width=True):
             st.session_state.show_admin = True
             st.rerun()
 
 # ════════════════════════════════════════════════════════════
 # VISTA: REPORTAR
-# ═════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════
 if st.session_state.vista_actual == 'reportar':
-    st.subheader("📝 Registrar Mascota")
+    st.subheader(" Registrar Mascota")
     
     form_html = """
     <!DOCTYPE html>
@@ -373,7 +372,7 @@ if st.session_state.vista_actual == 'reportar':
                 <input type="hidden" id="lon" value="">
             </div>
             
-            <div class="section-title">🐾 Datos Mascota</div>
+            <div class="section-title"> Datos Mascota</div>
             <div class="row">
                 <div class="form-group">
                     <label>Estado *</label>
@@ -386,8 +385,8 @@ if st.session_state.vista_actual == 'reportar':
                     <label>Especie *</label>
                     <select id="especie" required>
                         <option>🐕 Perro</option>
-                        <option>🐈 Gato</option>
-                        <option>🐰 Conejo</option>
+                        <option> Gato</option>
+                        <option> Conejo</option>
                         <option>🐦 Ave</option>
                         <option>Otro</option>
                     </select>
@@ -442,7 +441,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="form-group">
-                <label>📝 Descripción</label>
+                <label> Descripción</label>
                 <textarea id="descripcion" rows="4" placeholder="Señas particulares..."></textarea>
             </div>
             
@@ -528,7 +527,7 @@ if st.session_state.vista_actual == 'reportar':
                 }
                 if (!fotoFile) { 
                     status.className = 'status error'; 
-                    status.textContent = '❌ Debes subir una foto'; 
+                    status.textContent = ' Debes subir una foto'; 
                     status.scrollIntoView({behavior: 'smooth'});
                     return; 
                 }
@@ -598,7 +597,7 @@ if st.session_state.vista_actual == 'reportar':
                         document.getElementById('lon').value = '';
                         document.getElementById('coords-display').style.display = 'none';
                         document.getElementById('preview-container').style.display = 'none';
-                        document.getElementById('fileLabel').textContent = '📁 Seleccionar foto';
+                        document.getElementById('fileLabel').textContent = ' Seleccionar foto';
                         document.getElementById('fileLabel').classList.remove('has-file');
                         if (window.parent) window.parent.postMessage({ type: 'published' }, '*');
                     } else {
@@ -622,7 +621,7 @@ if st.session_state.vista_actual == 'reportar':
     st.components.v1.html(form_html, height=2000)
 
 # ════════════════════════════════════════════════════════════
-# VISTA: VER REPORTES
+# VISTA: VER REPORTES - CON POPUP COMPLETO EN EL MAPA
 # ════════════════════════════════════════════════════════════
 elif st.session_state.vista_actual == 'ver':
     st.subheader("🔍 Reportes de Mascotas")
@@ -636,7 +635,7 @@ elif st.session_state.vista_actual == 'ver':
         with col1:
             f_estado = st.selectbox("🔴 Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         col3, col4 = st.columns(2, gap="small")
         with col3:
@@ -676,6 +675,15 @@ elif st.session_state.vista_actual == 'ver':
                 lon = row['longitud']
                 nombre = row['nombre']
                 estado = row.get('estado', '')
+                especie = row.get('especie', 'N/A')
+                raza = row.get('raza', 'N/A')
+                color = row.get('color', 'N/A')
+                tamano = row.get('tamano', 'N/A')
+                sexo = row.get('sexo', 'N/A')
+                fecha = row['fecha']
+                contacto = row.get('contacto', 'N/A')
+                descripcion = row.get('descripcion', '')
+                foto_url = row.get('foto_url', '')
                 
                 if 'Perdida' in str(estado):
                     color_marcador = 'red'
@@ -684,24 +692,38 @@ elif st.session_state.vista_actual == 'ver':
                     color_marcador = 'green'
                     icono = '🟢'
                 
+                # POPUP COMPLETO CON FOTO Y DESCRIPCIÓN
                 popup_html = f"""
-                <div style="width: 280px; font-size: 13px;">
-                    <h3 style="margin: 0 0 8px 0;">{icono} {nombre}</h3>
-                    <div style="background: {'#FFE5E5' if 'Perdida' in str(estado) else '#DCEDC8'}; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; display: inline-block; font-weight: bold;">
+                <div style="width: 320px; font-family: Arial, sans-serif; font-size: 13px;">
+                    <h3 style="margin: 0 0 8px 0; color: #333;">{icono} {nombre}</h3>
+                    <div style="background: {'#FFE5E5' if 'Perdida' in str(estado) else '#DCEDC8'}; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; display: inline-block; font-weight: bold; color: {'#FF5252' if 'Perdida' in str(estado) else '#4CAF50'};">
                         {estado}
                     </div>
-                    <p><b>Contacto:</b> {row.get('contacto', 'N/A')}</p>
+                    
+                    {'<img src="' + foto_url + '" style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; border: 2px solid #ddd;" onerror="this.style.display=\'none\'">' if foto_url else '<p style="color: #999; font-style: italic;">📷 Sin foto disponible</p>'}
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
+                        <tr><td style="padding: 2px 0;"><b>Especie:</b></td><td>{especie}</td></tr>
+                        <tr><td style="padding: 2px 0;"><b>Raza:</b></td><td>{raza}</td></tr>
+                        <tr><td style="padding: 2px 0;"><b>Color:</b></td><td>{color}</td></tr>
+                        <tr><td style="padding: 2px 0;"><b>Tamaño:</b></td><td>{tamano}</td></tr>
+                        <tr><td style="padding: 2px 0;"><b>Sexo:</b></td><td>{sexo}</td></tr>
+                        <tr><td style="padding: 2px 0;"><b>📅 Fecha:</b></td><td>{fecha}</td></tr>
+                        <tr><td style="padding: 2px 0;"><b>📞 Contacto:</b></td><td>{contacto}</td></tr>
+                    </table>
+                    
+                    {'<div style="background: #f9f9f9; padding: 8px; border-radius: 6px; border-left: 3px solid #667eea; margin-top: 8px;"><b> Descripción:</b><br><span style="color: #555;">' + descripcion + '</span></div>' if descripcion else ''}
                 </div>
                 """
                 
                 folium.Marker(
                     location=[lat, lon],
-                    popup=folium.Popup(popup_html, max_width=300),
+                    popup=folium.Popup(popup_html, max_width=350),
                     tooltip=f"{nombre} - {estado}",
                     icon=folium.Icon(color=color_marcador, icon='paw', prefix='fa')
                 ).add_to(mapa)
             
-            st_folium(mapa, width=None, height=300, returned_objects=[])
+            st_folium(mapa, width=None, height=400, returned_objects=[])
             
             st.markdown("---")
             
@@ -717,20 +739,20 @@ elif st.session_state.vista_actual == 'ver':
                             if foto_url:
                                 st.image(foto_url, caption=row['nombre'], use_container_width=True)
                             else:
-                                st.markdown("📷 Sin foto")
+                                st.markdown(" Sin foto")
                         
                         with col_info:
                             badge_color = "#FF5252" if est == "Perdida" else "#4CAF50"
                             st.markdown(f"""
                             <div style="background:{'#FFF5F5' if est=='Perdida' else '#F1F8E9'}; padding:15px; border-radius:10px; border-left:5px solid {badge_color}; font-size: 13px;">
                                 <span style="background:{badge_color}; color:white; padding:4px 12px; border-radius:15px; font-weight:bold; font-size:12px;">{emoji} {row['estado']}</span>
-                                <h3 style="margin:10px 0 8px 0; font-size: 16px;">🐾 {row['nombre']}</h3>
+                                <h3 style="margin:10px 0 8px 0; font-size: 16px;"> {row['nombre']}</h3>
                                 <p style="margin: 4px 0;"><b>Especie:</b> {row.get('especie', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Raza:</b> {row.get('raza', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Color:</b> {row.get('color', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Tamaño:</b> {row.get('tamano', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>📅 Fecha:</b> {row['fecha']}</p>
-                                <p style="margin: 4px 0;"><b>📞 Contacto:</b> {row.get('contacto', 'N/A')}</p>
+                                <p style="margin: 4px 0;"><b> Contacto:</b> {row.get('contacto', 'N/A')}</p>
                             </div>
                             """, unsafe_allow_html=True)
                         
@@ -748,7 +770,7 @@ elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
         st.session_state.vista_actual = 'reportar'
         st.rerun()
     
-    at1, at2 = st.tabs(["🗑️ Gestionar Reportes", "👥 Gestionar Usuarios"])
+    at1, at2 = st.tabs(["️ Gestionar Reportes", "👥 Gestionar Usuarios"])
     
     with at1:
         st.markdown("### Eliminar Reportes")
