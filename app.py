@@ -14,34 +14,54 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="")
+st.set_page_config(
+    page_title="Alerta Mascotas",
+    layout="wide",
+    page_icon="🐶",
+    initial_sidebar_state="collapsed"
+)
 
-# CSS - Botones con colores
+# CSS - Responsive mejorado para celular
 st.markdown("""
 <style>
+    /* Meta viewport para móvil */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    
+    * {
+        font-family: 'Inter', sans-serif;
+        box-sizing: border-box;
+    }
+    
     .header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 2.5rem 1rem;
-        border-radius: 20px;
+        padding: 1.5rem 1rem;
+        border-radius: 15px;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     }
-    .header h1 { font-size: 2rem; margin: 0; font-weight: 800; }
+    .header h1 { 
+        font-size: 1.5rem; 
+        margin: 0; 
+        font-weight: 700;
+        line-height: 1.3;
+    }
     
-    /* Botones de navegación con colores */
+    /* Botones de navegación responsive */
     div[data-testid="stHorizontalBlock"] > div:first-child > div > button {
         background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%) !important;
         color: white !important;
         border: none !important;
         border-radius: 10px !important;
-        min-height: 140px !important;
-        padding: 30px 25px !important;
-        font-size: 18px !important;
+        min-height: 120px !important;
+        padding: 20px 15px !important;
+        font-size: 14px !important;
         font-weight: bold !important;
-        box-shadow: 0 6px 20px rgba(238, 90, 36, 0.3) !important;
+        box-shadow: 0 4px 15px rgba(238, 90, 36, 0.3) !important;
         transition: all 0.3s ease !important;
+        white-space: normal !important;
+        line-height: 1.4 !important;
     }
     
     div[data-testid="stHorizontalBlock"] > div:last-child > div > button {
@@ -49,44 +69,88 @@ st.markdown("""
         color: white !important;
         border: none !important;
         border-radius: 10px !important;
-        min-height: 140px !important;
-        padding: 30px 25px !important;
-        font-size: 18px !important;
+        min-height: 120px !important;
+        padding: 20px 15px !important;
+        font-size: 14px !important;
         font-weight: bold !important;
-        box-shadow: 0 6px 20px rgba(72, 52, 212, 0.3) !important;
+        box-shadow: 0 4px 15px rgba(72, 52, 212, 0.3) !important;
         transition: all 0.3s ease !important;
+        white-space: normal !important;
+        line-height: 1.4 !important;
     }
     
-    /* Efecto hover */
     div[data-testid="stHorizontalBlock"] > div > div > button:hover {
-        transform: translateY(-4px) !important;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.25) !important;
-    }
-    
-    div[data-testid="stHorizontalBlock"] > div > div > button:active {
         transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
     }
     
-    #MainMenu, footer { visibility: hidden; }
-    
+    /* Ajustes para móvil */
     @media (max-width: 768px) {
-        .header { padding: 2rem 1rem; }
-        .header h1 { font-size: 1.6rem; }
+        .header {
+            padding: 1.2rem 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .header h1 { 
+            font-size: 1.2rem;
+        }
         div[data-testid="stHorizontalBlock"] > div > div > button {
-            min-height: 120px !important;
-            padding: 25px 20px !important;
-            font-size: 16px !important;
+            min-height: 100px !important;
+            padding: 15px 12px !important;
+            font-size: 13px !important;
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 5px !important;
+            font-size: 12px !important;
+        }
+        .stTabs [data-baseweb="tab"] {
+            padding: 5px 10px !important;
+            font-size: 12px !important;
         }
     }
     
     @media (max-width: 480px) {
-        .header h1 { font-size: 1.3rem; }
+        .header h1 { 
+            font-size: 1.1rem;
+        }
         div[data-testid="stHorizontalBlock"] > div > div > button {
-            min-height: 110px !important;
-            padding: 22px 18px !important;
-            font-size: 15px !important;
+            min-height: 90px !important;
+            padding: 12px 10px !important;
+            font-size: 12px !important;
+        }
+        input, select, textarea {
+            font-size: 14px !important;
+            padding: 8px !important;
+        }
+        .stButton > button {
+            font-size: 14px !important;
+            padding: 10px !important;
         }
     }
+    
+    /* Ajustar tabs para móvil */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2px !important;
+        flex-wrap: wrap !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+    }
+    
+    /* Ajustar sidebar */
+    section[data-testid="stSidebar"] {
+        width: 250px !important;
+    }
+    
+    /* Mejorar scroll en móvil */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+    
+    #MainMenu, footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -104,7 +168,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
     codigo = st.text_input("Código")
     password = st.text_input("Contraseña", type="password")
     
-    if st.button("Ingresar"):
+    if st.button("Ingresar", use_container_width=True):
         if codigo == "ADMIN2024" and password == "admin123":
             st.session_state.is_admin = True
             st.session_state.show_admin = False
@@ -112,7 +176,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
         else:
             st.error("❌ Incorrecto")
     
-    if st.button("⬅️ Volver"):
+    if st.button("⬅️ Volver", use_container_width=True):
         st.session_state.show_admin = False
         st.rerun()
     st.stop()
@@ -123,7 +187,7 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
 # Botones de navegación funcionales
-col_nav1, col_nav2 = st.columns(2)
+col_nav1, col_nav2 = st.columns(2, gap="small")
 with col_nav1:
     if st.button("📸\n\nReportar Mascota\n\nPublica una alerta de mascota perdida o encontrada", key="btn_reportar", use_container_width=True):
         st.session_state.vista_actual = 'reportar'
@@ -138,11 +202,11 @@ st.markdown("---")
 with st.sidebar:
     if st.session_state.is_admin:
         st.markdown("### 👑 Administrador")
-        if st.button("🚪 Salir"):
+        if st.button("🚪 Salir", use_container_width=True):
             st.session_state.is_admin = False
             st.rerun()
     else:
-        if st.button("🔐 Acceso Admin", key="bfa"):
+        if st.button("🔐 Acceso Admin", key="bfa", use_container_width=True):
             st.session_state.show_admin = True
             st.rerun()
 
@@ -157,124 +221,113 @@ if st.session_state.vista_actual == 'reportar':
     <html>
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <style>
-            * { box-sizing: border-box; font-family: Arial, sans-serif; }
-            body { padding: 20px; background: #f5f5f5; margin: 0; }
-            .form-group { margin-bottom: 15px; }
-            label { display: block; font-weight: bold; margin-bottom: 6px; color: #333; font-size: 15px; }
+            * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
+            body { padding: 15px; background: #f5f5f5; margin: 0; font-size: 14px; }
+            .form-group { margin-bottom: 12px; }
+            label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 14px; }
             input, select, textarea {
                 width: 100%;
-                padding: 12px;
+                padding: 10px;
                 border: 2px solid #ddd;
                 border-radius: 8px;
-                font-size: 15px;
+                font-size: 14px;
+                -webkit-appearance: none;
             }
             input:focus, select:focus, textarea:focus {
                 border-color: #667eea;
                 outline: none;
-                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             }
-            .row { display: flex; gap: 10px; flex-wrap: wrap; }
-            .row > div { flex: 1; min-width: 140px; }
+            .row { display: flex; gap: 8px; flex-wrap: wrap; }
+            .row > div { flex: 1; min-width: 120px; }
             .btn-gps {
                 width: 100%;
-                padding: 16px;
+                padding: 14px;
                 background: linear-gradient(135deg, #4CAF50, #45a049);
                 color: white;
                 border: none;
-                border-radius: 10px;
+                border-radius: 8px;
                 cursor: pointer;
                 font-weight: bold;
-                font-size: 16px;
-                margin: 15px 0;
-                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+                font-size: 15px;
+                margin: 12px 0;
             }
-            .btn-gps:hover { opacity: 0.9; }
-            .btn-gps:disabled { opacity: 0.6; cursor: not-allowed; }
+            .btn-gps:active { opacity: 0.9; }
+            .btn-gps:disabled { opacity: 0.6; }
             .btn-submit {
                 width: 100%;
-                padding: 18px;
+                padding: 16px;
                 background: linear-gradient(135deg, #667eea, #764ba2);
                 color: white;
                 border: none;
-                border-radius: 10px;
+                border-radius: 8px;
                 cursor: pointer;
                 font-weight: bold;
-                font-size: 18px;
-                margin-top: 20px;
-                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                font-size: 16px;
+                margin-top: 15px;
             }
-            .btn-submit:hover { opacity: 0.9; }
-            .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+            .btn-submit:active { opacity: 0.9; }
+            .btn-submit:disabled { opacity: 0.6; }
             .status {
-                padding: 12px;
+                padding: 10px;
                 border-radius: 8px;
-                margin: 12px 0;
+                margin: 10px 0;
                 font-weight: bold;
-                font-size: 14px;
+                font-size: 13px;
                 display: none;
             }
             .status.success { background: #d4edda; color: #155724; display: block; }
             .status.error { background: #f8d7da; color: #721c24; display: block; }
             .status.info { background: #d1ecf1; color: #0c5460; display: block; }
             .section-title {
-                font-size: 18px;
+                font-size: 16px;
                 font-weight: bold;
-                margin: 20px 0 12px 0;
-                padding-bottom: 8px;
-                border-bottom: 3px solid #667eea;
+                margin: 15px 0 10px 0;
+                padding-bottom: 6px;
+                border-bottom: 2px solid #667eea;
                 color: #333;
             }
             .gps-box {
                 background: #e8f5e9;
-                border: 3px solid #4CAF50;
-                border-radius: 12px;
-                padding: 18px;
-                margin: 15px 0;
+                border: 2px solid #4CAF50;
+                border-radius: 10px;
+                padding: 15px;
+                margin: 12px 0;
             }
             #coords-display {
                 background: white;
-                padding: 12px;
+                padding: 10px;
                 border-radius: 8px;
-                margin-top: 12px;
+                margin-top: 10px;
                 display: none;
-                font-size: 14px;
+                font-size: 13px;
             }
-            .file-upload { position: relative; display: inline-block; width: 100%; }
+            .file-upload { position: relative; width: 100%; }
             .file-upload input[type="file"] { display: none; }
             .file-upload-label {
                 display: block;
-                padding: 16px;
+                padding: 14px;
                 background: #f0f0f0;
-                border: 3px dashed #ccc;
-                border-radius: 10px;
+                border: 2px dashed #ccc;
+                border-radius: 8px;
                 text-align: center;
                 cursor: pointer;
-                transition: all 0.3s;
-                font-size: 15px;
+                font-size: 14px;
             }
-            .file-upload-label:hover { background: #e0e0e0; border-color: #667eea; }
+            .file-upload-label:active { background: #e0e0e0; }
             .file-upload-label.has-file { background: #d4edda; border-color: #28a745; color: #155724; }
-            #preview-container { margin-top: 12px; display: none; }
-            #preview-container img { max-width: 100%; max-height: 250px; border-radius: 10px; border: 3px solid #ddd; }
-            
-            @media (max-width: 600px) {
-                body { padding: 12px; }
-                .row { flex-direction: column; gap: 0; }
-                .row > div { min-width: 100%; }
-                label { font-size: 14px; }
-                input, select, textarea { font-size: 14px; padding: 10px; }
-                .btn-gps { font-size: 15px; padding: 14px; }
-                .btn-submit { font-size: 16px; padding: 16px; }
-                .section-title { font-size: 16px; }
-                .file-upload-label { font-size: 14px; padding: 14px; }
-            }
+            #preview-container { margin-top: 10px; display: none; }
+            #preview-container img { max-width: 100%; max-height: 200px; border-radius: 8px; }
             
             @media (max-width: 400px) {
-                body { padding: 8px; }
-                .btn-gps { font-size: 14px; padding: 12px; }
-                .btn-submit { font-size: 15px; padding: 14px; }
+                body { padding: 10px; font-size: 13px; }
+                .row { flex-direction: column; gap: 0; }
+                .row > div { min-width: 100%; }
+                input, select, textarea { font-size: 13px; padding: 9px; }
+                .btn-gps { font-size: 14px; padding: 13px; }
+                .btn-submit { font-size: 15px; padding: 15px; }
+                .section-title { font-size: 15px; }
             }
         </style>
     </head>
@@ -290,10 +343,10 @@ if st.session_state.vista_actual == 'reportar':
                     <label>Email *</label>
                     <input type="email" id="email" required>
                 </div>
-                <div class="form-group">
-                    <label>Teléfono *</label>
-                    <input type="tel" id="telefono" required>
-                </div>
+            </div>
+            <div class="form-group">
+                <label>Teléfono *</label>
+                <input type="tel" id="telefono" required>
             </div>
             
             <div class="form-group">
@@ -308,13 +361,13 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="gps-box">
-                <div class="section-title" style="border:none; margin:0 0 15px 0;">📍 Ubicación GPS</div>
+                <div class="section-title" style="border:none; margin:0 0 12px 0;">📍 Ubicación GPS</div>
                 <button type="button" class="btn-gps" id="btnGPS" onclick="getGPS()">
-                    📍 Obtener mi ubicación automáticamente
+                    📍 Obtener ubicación
                 </button>
                 <div id="gpsStatus" class="status"></div>
                 <div id="coords-display">
-                    <strong>✅ Coordenadas obtenidas:</strong><br>
+                    <strong>✅ Coordenadas:</strong><br>
                     Lat: <span id="latDisplay"></span><br>
                     Lon: <span id="lonDisplay"></span>
                 </div>
@@ -322,7 +375,7 @@ if st.session_state.vista_actual == 'reportar':
                 <input type="hidden" id="lon" value="">
             </div>
             
-            <div class="section-title">🐾 Datos de la Mascota</div>
+            <div class="section-title">🐾 Datos Mascota</div>
             <div class="row">
                 <div class="form-group">
                     <label>Estado *</label>
@@ -349,7 +402,7 @@ if st.session_state.vista_actual == 'reportar':
                     <input type="text" id="raza" placeholder="Ej: Labrador">
                 </div>
                 <div class="form-group">
-                    <label>Nombre de la mascota *</label>
+                    <label>Nombre *</label>
                     <input type="text" id="nombreMascota" required>
                 </div>
             </div>
@@ -367,21 +420,22 @@ if st.session_state.vista_actual == 'reportar':
                         <option>Grande</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Sexo</label>
-                    <select id="sexo">
-                        <option>Macho</option>
-                        <option>Hembra</option>
-                    </select>
-                </div>
             </div>
             
             <div class="form-group">
-                <label>📷 Foto de la mascota *</label>
+                <label>Sexo</label>
+                <select id="sexo">
+                    <option>Macho</option>
+                    <option>Hembra</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>📷 Foto *</label>
                 <div class="file-upload">
                     <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
                     <label for="foto" class="file-upload-label" id="fileLabel">
-                        📁 Haz clic para seleccionar una foto (JPG, PNG)
+                        📁 Seleccionar foto
                     </label>
                 </div>
                 <div id="preview-container">
@@ -391,7 +445,7 @@ if st.session_state.vista_actual == 'reportar':
             
             <div class="form-group">
                 <label>📝 Descripción</label>
-                <textarea id="descripcion" rows="4" placeholder="Señas particulares..."></textarea>
+                <textarea id="descripcion" rows="3" placeholder="Señas particulares..."></textarea>
             </div>
             
             <div id="submitStatus" class="status"></div>
@@ -428,11 +482,11 @@ if st.session_state.vista_actual == 'reportar':
                 const coordsDisplay = document.getElementById('coords-display');
                 if (!navigator.geolocation) {
                     status.className = 'status error';
-                    status.textContent = '❌ Tu navegador no soporta GPS';
+                    status.textContent = '❌ GPS no soportado';
                     return;
                 }
                 status.className = 'status info';
-                status.textContent = '⏳ Solicitando permiso de ubicación...';
+                status.textContent = '⏳ Obteniendo...';
                 btn.disabled = true;
                 navigator.geolocation.getCurrentPosition(
                     function(pos) {
@@ -443,15 +497,15 @@ if st.session_state.vista_actual == 'reportar':
                         document.getElementById('latDisplay').textContent = lat.toFixed(6);
                         document.getElementById('lonDisplay').textContent = lon.toFixed(6);
                         status.className = 'status success';
-                        status.textContent = '✅ ¡Ubicación obtenida correctamente!';
+                        status.textContent = '✅ Ubicación obtenida';
                         coordsDisplay.style.display = 'block';
                         btn.disabled = false;
                     },
                     function(err) {
                         let msg = 'Error';
-                        if (err.code === 1) msg = '❌ Permiso denegado. Permite el acceso.';
-                        else if (err.code === 2) msg = '❌ Ubicación no disponible.';
-                        else if (err.code === 3) msg = '❌ Tiempo agotado.';
+                        if (err.code === 1) msg = '❌ Permiso denegado';
+                        else if (err.code === 2) msg = '❌ Ubicación no disponible';
+                        else if (err.code === 3) msg = '❌ Tiempo agotado';
                         status.className = 'status error';
                         status.textContent = msg;
                         btn.disabled = false;
@@ -473,7 +527,7 @@ if st.session_state.vista_actual == 'reportar':
                 
                 btn.disabled = true;
                 status.className = 'status info';
-                status.textContent = '⏳ Subiendo foto y guardando...';
+                status.textContent = '⏳ Guardando...';
                 
                 const nombre = document.getElementById('nombre').value;
                 const email = document.getElementById('email').value;
@@ -528,13 +582,13 @@ if st.session_state.vista_actual == 'reportar':
                     
                     if (response.ok) {
                         status.className = 'status success';
-                        status.textContent = '✅ ¡Alerta publicada con éxito!';
+                        status.textContent = '✅ ¡Publicado!';
                         document.getElementById('mascotaForm').reset();
                         document.getElementById('lat').value = '';
                         document.getElementById('lon').value = '';
                         document.getElementById('coords-display').style.display = 'none';
                         document.getElementById('preview-container').style.display = 'none';
-                        document.getElementById('fileLabel').textContent = '📁 Haz clic para seleccionar una foto (JPG, PNG)';
+                        document.getElementById('fileLabel').textContent = '📁 Seleccionar foto';
                         document.getElementById('fileLabel').classList.remove('has-file');
                         if (window.parent) window.parent.postMessage({ type: 'published' }, '*');
                     } else {
@@ -553,7 +607,7 @@ if st.session_state.vista_actual == 'reportar':
     </html>
     """
     
-    st.components.v1.html(form_html, height=1800)
+    st.components.v1.html(form_html, height=1600)
 
 # ════════════════════════════════════════════════════════════
 # VISTA: VER REPORTES
@@ -565,21 +619,23 @@ elif st.session_state.vista_actual == 'ver':
     if datos:
         df = pd.DataFrame(datos)
         
-        col1, col2, col3 = st.columns(3)
+        # Filtros en una sola columna para móvil
+        st.markdown("### Filtros")
+        col1, col2 = st.columns(2, gap="small")
         with col1:
             f_estado = st.selectbox("🔴 Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
             f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+        
+        col3, col4 = st.columns(2, gap="small")
         with col3:
             razas_unicas = sorted([r for r in df['raza'].dropna().unique().tolist() if r and str(r).strip()]) if 'raza' in df.columns else []
             f_raza = st.selectbox("🐕 Raza", ["Todas"] + razas_unicas, key="fr")
-        
-        col4, col5 = st.columns(2)
         with col4:
             colores_unicos = sorted([c for c in df['color'].dropna().unique().tolist() if c and str(c).strip()]) if 'color' in df.columns else []
             f_color = st.selectbox("🎨 Color", ["Todos"] + colores_unicos, key="fc")
-        with col5:
-            f_sexo = st.selectbox("⚧ Sexo", ["Todos", "Macho", "Hembra"], key="fx")
+        
+        f_sexo = st.selectbox("⚧ Sexo", ["Todos", "Macho", "Hembra"], key="fx")
         
         df_f = df.copy()
         if f_estado != "Todos":
@@ -596,6 +652,7 @@ elif st.session_state.vista_actual == 'ver':
         if not df_f.empty:
             st.markdown(f"**{len(df_f)} reporte(s) encontrado(s)**")
             
+            # Mapa responsive
             import folium
             from streamlit_folium import st_folium
             
@@ -609,44 +666,6 @@ elif st.session_state.vista_actual == 'ver':
                 lon = row['longitud']
                 nombre = row['nombre']
                 estado = row.get('estado', '')
-                especie = row.get('especie', 'N/A')
-                raza = row.get('raza', 'N/A')
-                color = row.get('color', 'N/A')
-                tamano = row.get('tamano', 'N/A')
-                sexo = row.get('sexo', 'N/A')
-                fecha = row['fecha']
-                contacto = row.get('contacto', 'N/A')
-                descripcion = row.get('descripcion', '')
-                foto_url = row.get('foto_url', '')
-                
-                direccion = "Dirección no disponible"
-                try:
-                    url_geo = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&zoom=18&addressdetails=1"
-                    headers = {'User-Agent': 'AlertaMascotas/1.0'}
-                    response_geo = requests.get(url_geo, headers=headers, timeout=5)
-                    if response_geo.status_code == 200:
-                        data_geo = response_geo.json()
-                        addr = data_geo.get('address', {})
-                        calle = addr.get('road', '') or addr.get('street', '') or addr.get('path', '')
-                        numero = addr.get('house_number', '')
-                        barrio = addr.get('neighbourhood', '') or addr.get('suburb', '') or addr.get('city_district', '')
-                        ciudad = addr.get('city', '') or addr.get('town', '') or addr.get('village', '')
-                        provincia = addr.get('state', '')
-                        
-                        if calle:
-                            direccion = f"{calle} {numero}".strip()
-                            if barrio:
-                                direccion += f", {barrio}"
-                            if ciudad:
-                                direccion += f", {ciudad}"
-                            if provincia:
-                                direccion += f", {provincia}"
-                        elif ciudad:
-                            direccion = f"{ciudad}, {provincia}" if provincia else ciudad
-                except:
-                    pass
-                
-                time.sleep(0.3)
                 
                 if 'Perdida' in str(estado):
                     color_marcador = 'red'
@@ -656,54 +675,33 @@ elif st.session_state.vista_actual == 'ver':
                     icono = '🟢'
                 
                 popup_html = f"""
-                <div style="width: 340px; font-family: Arial, sans-serif;">
-                    <h3 style="margin: 0 0 10px 0; color: #333;">{icono} {nombre}</h3>
-                    <div style="background: {'#FFE5E5' if 'Perdida' in str(estado) else '#DCEDC8'}; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; display: inline-block; font-weight: bold; color: {'#FF5252' if 'Perdida' in str(estado) else '#4CAF50'};">
+                <div style="width: 280px; font-size: 13px;">
+                    <h3 style="margin: 0 0 8px 0;">{icono} {nombre}</h3>
+                    <div style="background: {'#FFE5E5' if 'Perdida' in str(estado) else '#DCEDC8'}; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; display: inline-block; font-weight: bold;">
                         {estado}
                     </div>
-                    {'<img src="' + foto_url + '" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 10px;" onerror="this.style.display=\'none\'">' if foto_url else ''}
-                    
-                    <div style="background: #FFF9C4; border-left: 4px solid #FFC107; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px;">
-                        <b>📍 Ubicación:</b><br>
-                        <span style="font-size: 13px; color: #333;">{direccion}</span>
-                    </div>
-                    
-                    <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
-                        <tr><td style="padding: 3px 0;"><b>Especie:</b></td><td>{especie}</td></tr>
-                        <tr><td style="padding: 3px 0;"><b>Raza:</b></td><td>{raza}</td></tr>
-                        <tr><td style="padding: 3px 0;"><b>Color:</b></td><td>{color}</td></tr>
-                        <tr><td style="padding: 3px 0;"><b>Tamaño:</b></td><td>{tamano}</td></tr>
-                        <tr><td style="padding: 3px 0;"><b>Sexo:</b></td><td>{sexo}</td></tr>
-                        <tr><td style="padding: 3px 0;"><b>📅 Fecha:</b></td><td>{fecha}</td></tr>
-                        <tr><td style="padding: 3px 0;"><b>📞 Contacto:</b></td><td>{contacto}</td></tr>
-                    </table>
-                    {'<p style="margin-top: 10px; font-size: 13px; color: #666;"><b>📝 Descripción:</b> ' + descripcion + '</p>' if descripcion else ''}
-                    
-                    <div style="margin-top: 10px; text-align: center;">
-                        <a href="https://www.google.com/maps?q={lat},{lon}" target="_blank" style="background: #4285F4; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold;">
-                            🗺️ Ver en Google Maps
-                        </a>
-                    </div>
+                    <p><b>Contacto:</b> {row.get('contacto', 'N/A')}</p>
                 </div>
                 """
                 
                 folium.Marker(
                     location=[lat, lon],
-                    popup=folium.Popup(popup_html, max_width=370),
+                    popup=folium.Popup(popup_html, max_width=300),
                     tooltip=f"{nombre} - {estado}",
                     icon=folium.Icon(color=color_marcador, icon='paw', prefix='fa')
                 ).add_to(mapa)
             
-            st_folium(mapa, width=None, height=500, returned_objects=[])
+            st_folium(mapa, width=None, height=300, returned_objects=[])
             
             st.markdown("---")
             
+            # Tarjetas de reportes
             for est, emoji, clase in [("Perdida", "🔴", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
                     for _, row in subset.iterrows():
-                        col_img, col_info = st.columns([1, 2])
+                        col_img, col_info = st.columns([1, 2], gap="small")
                         
                         with col_img:
                             foto_url = row.get('foto_url', '')
@@ -715,17 +713,15 @@ elif st.session_state.vista_actual == 'ver':
                         with col_info:
                             badge_color = "#FF5252" if est == "Perdida" else "#4CAF50"
                             st.markdown(f"""
-                            <div style="background:{'#FFF5F5' if est=='Perdida' else '#F1F8E9'}; padding:20px; border-radius:15px; border-left:6px solid {badge_color};">
-                                <span style="background:{badge_color}; color:white; padding:6px 16px; border-radius:20px; font-weight:bold; font-size:14px;">{emoji} {row['estado']}</span>
-                                <h2 style="margin:15px 0 10px 0;">🐾 {row['nombre']}</h2>
-                                <p><strong>Especie:</strong> {row.get('especie', 'N/A')}</p>
-                                <p><strong>Raza:</strong> {row.get('raza', 'N/A')}</p>
-                                <p><strong>Color:</strong> {row.get('color', 'N/A')}</p>
-                                <p><strong>Tamaño:</strong> {row.get('tamano', 'N/A')}</p>
-                                <p><strong>Sexo:</strong> {row.get('sexo', 'N/A')}</p>
-                                <p><strong>📅 Fecha:</strong> {row['fecha']}</p>
-                                <p><strong>📞 Contacto:</strong> {row.get('contacto', 'N/A')}</p>
-                                {f"<p><strong>📝 Descripción:</strong> {row.get('descripcion', '')}</p>" if row.get('descripcion') else ''}
+                            <div style="background:{'#FFF5F5' if est=='Perdida' else '#F1F8E9'}; padding:15px; border-radius:10px; border-left:5px solid {badge_color}; font-size: 13px;">
+                                <span style="background:{badge_color}; color:white; padding:4px 12px; border-radius:15px; font-weight:bold; font-size:12px;">{emoji} {row['estado']}</span>
+                                <h3 style="margin:10px 0 8px 0; font-size: 16px;">🐾 {row['nombre']}</h3>
+                                <p style="margin: 4px 0;"><b>Especie:</b> {row.get('especie', 'N/A')}</p>
+                                <p style="margin: 4px 0;"><b>Raza:</b> {row.get('raza', 'N/A')}</p>
+                                <p style="margin: 4px 0;"><b>Color:</b> {row.get('color', 'N/A')}</p>
+                                <p style="margin: 4px 0;"><b>Tamaño:</b> {row.get('tamano', 'N/A')}</p>
+                                <p style="margin: 4px 0;"><b>📅 Fecha:</b> {row['fecha']}</p>
+                                <p style="margin: 4px 0;"><b>📞 Contacto:</b> {row.get('contacto', 'N/A')}</p>
                             </div>
                             """, unsafe_allow_html=True)
                         
@@ -743,7 +739,7 @@ if st.session_state.is_admin and st.session_state.vista_actual != 'admin':
 
 if st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
     st.subheader("⚙️ Admin")
-    if st.button("⬅️ Volver", key="btn_volver_admin"):
+    if st.button("⬅️ Volver", key="btn_volver_admin", use_container_width=True):
         st.session_state.vista_actual = 'reportar'
         st.rerun()
     
@@ -753,10 +749,10 @@ if st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
         reports = supabase.table("reportes").select("*").order("fecha", desc=True).execute().data
         if reports:
             for row in reports:
-                c1, c2, c3 = st.columns([2, 3, 1])
+                c1, c2, c3 = st.columns([2, 3, 1], gap="small")
                 with c1:
                     if row.get('foto_url'):
-                        st.image(row['foto_url'], width=100)
+                        st.image(row['foto_url'], width=80)
                 with c2:
                     st.markdown(f"**{row['nombre']}** - {row['estado']}")
                 with c3:
@@ -765,12 +761,12 @@ if st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
                         st.rerun()
     
     with at2:
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3 = st.columns(3, gap="small")
         with c1: ne = st.text_input("Email", key="ne")
         with c2: nn = st.text_input("Nombre", key="nn")
         with c3: nt = st.text_input("Tel", key="nt")
         
-        if st.button("Agregar", key="ba"):
+        if st.button("Agregar", key="ba", use_container_width=True):
             if ne and nn:
                 supabase.table("usuarios").insert({
                     "email": ne, "nombre": nn, "telefono": nt,
@@ -781,4 +777,4 @@ if st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
 
 # FOOTER
 st.markdown("---")
-st.markdown("<div style='text-align:center;color:#999;padding:2rem;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#999;padding:1.5rem;font-size:12px;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
