@@ -16,7 +16,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 st.set_page_config(page_title="Alerta Mascotas", layout="wide", page_icon="")
 
-# CSS
+# CSS - Botones con colores
 st.markdown("""
 <style>
     .header {
@@ -30,34 +30,31 @@ st.markdown("""
     }
     .header h1 { font-size: 2rem; margin: 0; font-weight: 800; }
     
-    /* Estilizar botones de navegación */
-    div[data-testid="stHorizontalBlock"] > div > div > button {
-        width: 100% !important;
-        min-height: 140px !important;
-        padding: 30px 25px !important;
-        border-radius: 10px !important;
-        border: none !important;
-        font-size: 20px !important;
-        font-weight: bold !important;
-        color: white !important;
-        text-align: center !important;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
-        transition: all 0.3s ease !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 12px !important;
-    }
-    
-    /* Botón Reportar - Gradiente rojo/naranja */
+    /* Botones de navegación con colores */
     div[data-testid="stHorizontalBlock"] > div:first-child > div > button {
         background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        min-height: 140px !important;
+        padding: 30px 25px !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        box-shadow: 0 6px 20px rgba(238, 90, 36, 0.3) !important;
+        transition: all 0.3s ease !important;
     }
     
-    /* Botón Ver Alertas - Gradiente azul/morado */
     div[data-testid="stHorizontalBlock"] > div:last-child > div > button {
         background: linear-gradient(135deg, #4834d4 0%, #686de0 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 10px !important;
+        min-height: 140px !important;
+        padding: 30px 25px !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        box-shadow: 0 6px 20px rgba(72, 52, 212, 0.3) !important;
+        transition: all 0.3s ease !important;
     }
     
     /* Efecto hover */
@@ -78,7 +75,7 @@ st.markdown("""
         div[data-testid="stHorizontalBlock"] > div > div > button {
             min-height: 120px !important;
             padding: 25px 20px !important;
-            font-size: 18px !important;
+            font-size: 16px !important;
         }
     }
     
@@ -87,7 +84,7 @@ st.markdown("""
         div[data-testid="stHorizontalBlock"] > div > div > button {
             min-height: 110px !important;
             padding: 22px 18px !important;
-            font-size: 16px !important;
+            font-size: 15px !important;
         }
     }
 </style>
