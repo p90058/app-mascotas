@@ -129,23 +129,23 @@ if 'show_admin' not in st.session_state:
 if 'vista_actual' not in st.session_state:
     st.session_state.vista_actual = 'reportar'
 
-# ═══════════════════════════════════════════════════════════
-# LOGIN ADMIN - CORREGIDO
+# ══════════════════════════════════════════════════════════
+# LOGIN ADMIN
 # ═══════════════════════════════════════════════════════════
 if st.session_state.show_admin and not st.session_state.is_admin:
     st.markdown('<div class="header"><h1>🔐 Acceso Administrador</h1></div>', unsafe_allow_html=True)
     
     st.markdown("### Ingresa tus credenciales")
-    codigo = st.text_input("Código de administrador", placeholder="ADMIN2024")
-    password = st.text_input("Contraseña", type="password", placeholder="admin123")
+    codigo = st.text_input("Código de administrador", placeholder="ADMIND2024", key="login_codigo")
+    password = st.text_input("Contraseña", type="password", placeholder="admind123", key="login_password")
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🔓 Ingresar", use_container_width=True, type="primary"):
-            if codigo == "ADMIN2024" and password == "admin123":
+        if st.button("🔓 Ingresar", use_container_width=True, type="primary", key="btn_login"):
+            if codigo == "ADMIND2024" and password == "admind123":
                 st.session_state.is_admin = True
                 st.session_state.show_admin = False
-                st.session_state.vista_actual = 'admin'  # ← CORRECCIÓN: Cambiar a vista admin
+                st.session_state.vista_actual = 'admin'
                 st.success("✅ Bienvenido Administrador!")
                 time.sleep(1)
                 st.rerun()
@@ -153,11 +153,11 @@ if st.session_state.show_admin and not st.session_state.is_admin:
                 st.error("❌ Código o contraseña incorrectos")
     
     with col2:
-        if st.button("⬅️ Volver", use_container_width=True):
+        if st.button("⬅️ Volver", use_container_width=True, key="btn_volver_login"):
             st.session_state.show_admin = False
             st.rerun()
     
-    st.stop()  # ← Detener ejecución aquí
+    st.stop()
 
 # ═══════════════════════════════════════════════════════════
 # TÍTULO Y BOTONES DE NAVEGACIÓN
@@ -177,21 +177,20 @@ with col_nav2:
 st.markdown("---")
 
 # ═══════════════════════════════════════════════════════════
-# SIDEBAR - CORREGIDO CON BOTÓN PARA IR A ADMIN
+# SIDEBAR
 # ═══════════════════════════════════════════════════════════
 with st.sidebar:
     if st.session_state.is_admin:
         st.markdown("### 👑 Administrador")
         st.success("✅ Sesión activa")
         
-        # Botón para ir al panel de admin
-        if st.button("⚙️ Panel de Administración", use_container_width=True, type="primary"):
+        if st.button("⚙️ Panel de Administración", use_container_width=True, type="primary", key="btn_panel_admin"):
             st.session_state.vista_actual = 'admin'
             st.rerun()
         
         st.markdown("---")
         
-        if st.button("🚪 Cerrar Sesión", use_container_width=True):
+        if st.button("🚪 Cerrar Sesión", use_container_width=True, key="btn_logout"):
             st.session_state.is_admin = False
             st.session_state.vista_actual = 'reportar'
             st.rerun()
@@ -204,7 +203,7 @@ with st.sidebar:
 # VISTA: REPORTAR
 # ═════════════════════════════════════════════════════════════
 if st.session_state.vista_actual == 'reportar':
-    st.subheader("📝 Registrar Mascota")
+    st.subheader(" Registrar Mascota")
     
     form_html = """
     <!DOCTYPE html>
@@ -385,7 +384,7 @@ if st.session_state.vista_actual == 'reportar':
                         <option>🐕 Perro</option>
                         <option>🐈 Gato</option>
                         <option>🐰 Conejo</option>
-                        <option> Ave</option>
+                        <option>🐦 Ave</option>
                         <option>Otro</option>
                     </select>
                 </div>
@@ -426,7 +425,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="form-group">
-                <label>📷 Foto *</label>
+                <label> Foto *</label>
                 <div class="file-upload">
                     <input type="file" id="foto" accept="image/*" required onchange="handleFileSelect(event)">
                     <label for="foto" class="file-upload-label" id="fileLabel">
@@ -519,7 +518,7 @@ if st.session_state.vista_actual == 'reportar':
                 
                 if (!lat || !lon) { 
                     status.className = 'status error'; 
-                    status.textContent = ' Primero obtén la ubicación GPS'; 
+                    status.textContent = '❌ Primero obtén la ubicación GPS'; 
                     status.scrollIntoView({behavior: 'smooth'});
                     return; 
                 }
@@ -633,7 +632,7 @@ elif st.session_state.vista_actual == 'ver':
         with col1:
             f_estado = st.selectbox("🔴 Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox(" Especie", ["Todas", " Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", " Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         col3, col4 = st.columns(2, gap="small")
         with col3:
@@ -702,7 +701,7 @@ elif st.session_state.vista_actual == 'ver':
             
             st.markdown("---")
             
-            for est, emoji, clase in [("Perdida", "🔴", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
+            for est, emoji, clase in [("Perdida", "", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
                     st.markdown(f"### {emoji} {est}s ({len(subset)})")
@@ -721,7 +720,7 @@ elif st.session_state.vista_actual == 'ver':
                             st.markdown(f"""
                             <div style="background:{'#FFF5F5' if est=='Perdida' else '#F1F8E9'}; padding:15px; border-radius:10px; border-left:5px solid {badge_color}; font-size: 13px;">
                                 <span style="background:{badge_color}; color:white; padding:4px 12px; border-radius:15px; font-weight:bold; font-size:12px;">{emoji} {row['estado']}</span>
-                                <h3 style="margin:10px 0 8px 0; font-size: 16px;"> {row['nombre']}</h3>
+                                <h3 style="margin:10px 0 8px 0; font-size: 16px;">🐾 {row['nombre']}</h3>
                                 <p style="margin: 4px 0;"><b>Especie:</b> {row.get('especie', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Raza:</b> {row.get('raza', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Color:</b> {row.get('color', 'N/A')}</p>
@@ -736,16 +735,16 @@ elif st.session_state.vista_actual == 'ver':
         st.info("🐾 Sin reportes")
 
 # ════════════════════════════════════════════════════════════
-# VISTA: ADMIN - CORREGIDA
+# VISTA: ADMIN
 # ════════════════════════════════════════════════════════════
 elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
     st.subheader("⚙️ Panel de Administración")
     
-    if st.button("️ Volver al inicio", key="btn_volver_admin", use_container_width=True):
+    if st.button("⬅️ Volver al inicio", key="btn_volver_admin", use_container_width=True):
         st.session_state.vista_actual = 'reportar'
         st.rerun()
     
-    at1, at2 = st.tabs(["🗑️ Gestionar Reportes", "👥 Gestionar Usuarios"])
+    at1, at2 = st.tabs(["🗑️ Gestionar Reportes", " Gestionar Usuarios"])
     
     with at1:
         st.markdown("### Eliminar Reportes")
@@ -807,4 +806,4 @@ elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
 
 # FOOTER
 st.markdown("---")
-st.markdown("<div style='text-align:center;color:#999;padding:1.5rem;font-size:12px;'>© 2026 Red de Alerta 🐾</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center;color:#999;padding:1.5rem;font-size:12px;'>© 2026 Red de Alerta </div>", unsafe_allow_html=True)
