@@ -21,10 +21,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# CSS - Responsive mejorado para celular
+# CSS - Responsive mejorado
 st.markdown("""
 <style>
-    /* Meta viewport para móvil */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     
     * {
@@ -48,7 +47,6 @@ st.markdown("""
         line-height: 1.3;
     }
     
-    /* Botones de navegación responsive */
     div[data-testid="stHorizontalBlock"] > div:first-child > div > button {
         background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%) !important;
         color: white !important;
@@ -84,50 +82,25 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(0,0,0,0.2) !important;
     }
     
-    /* Ajustes para móvil */
     @media (max-width: 768px) {
-        .header {
-            padding: 1.2rem 0.8rem;
-            margin-bottom: 1rem;
-        }
-        .header h1 { 
-            font-size: 1.2rem;
-        }
+        .header { padding: 1.2rem 0.8rem; margin-bottom: 1rem; }
+        .header h1 { font-size: 1.2rem; }
         div[data-testid="stHorizontalBlock"] > div > div > button {
             min-height: 100px !important;
             padding: 15px 12px !important;
             font-size: 13px !important;
         }
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 5px !important;
-            font-size: 12px !important;
-        }
-        .stTabs [data-baseweb="tab"] {
-            padding: 5px 10px !important;
-            font-size: 12px !important;
-        }
     }
     
     @media (max-width: 480px) {
-        .header h1 { 
-            font-size: 1.1rem;
-        }
+        .header h1 { font-size: 1.1rem; }
         div[data-testid="stHorizontalBlock"] > div > div > button {
             min-height: 90px !important;
             padding: 12px 10px !important;
             font-size: 12px !important;
         }
-        input, select, textarea {
-            font-size: 14px !important;
-            padding: 8px !important;
-        }
-        .stButton > button {
-            font-size: 14px !important;
-            padding: 10px !important;
-        }
     }
     
-    /* Ajustar tabs para móvil */
     .stTabs [data-baseweb="tab-list"] {
         gap: 2px !important;
         flex-wrap: wrap !important;
@@ -137,12 +110,6 @@ st.markdown("""
         font-size: 13px !important;
     }
     
-    /* Ajustar sidebar */
-    section[data-testid="stSidebar"] {
-        width: 250px !important;
-    }
-    
-    /* Mejorar scroll en móvil */
     .block-container {
         padding-top: 1rem !important;
         padding-bottom: 2rem !important;
@@ -186,7 +153,6 @@ if st.session_state.show_admin and not st.session_state.is_admin:
 # ═══════════════════════════════════════════════════════════
 st.markdown('<div class="header"><h1 style="margin:0;">🐾 Red de Alerta de Mascotas</h1></div>', unsafe_allow_html=True)
 
-# Botones de navegación funcionales
 col_nav1, col_nav2 = st.columns(2, gap="small")
 with col_nav1:
     if st.button("📸\n\nReportar Mascota\n\nPublica una alerta de mascota perdida o encontrada", key="btn_reportar", use_container_width=True):
@@ -211,11 +177,12 @@ with st.sidebar:
             st.rerun()
 
 # ════════════════════════════════════════════════════════════
-# VISTA: REPORTAR
+# VISTA: REPORTAR - FORMULARIO COMPLETO Y SCROLLEABLE
 # ═════════════════════════════════════════════════════════════
 if st.session_state.vista_actual == 'reportar':
     st.subheader("📝 Registrar Mascota")
     
+    # Altura aumentada para que quepa todo en móvil
     form_html = """
     <!DOCTYPE html>
     <html>
@@ -224,9 +191,9 @@ if st.session_state.vista_actual == 'reportar':
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <style>
             * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; }
-            body { padding: 15px; background: #f5f5f5; margin: 0; font-size: 14px; }
-            .form-group { margin-bottom: 12px; }
-            label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 14px; }
+            body { padding: 10px; background: #f5f5f5; margin: 0; font-size: 14px; }
+            .form-group { margin-bottom: 10px; }
+            label { display: block; font-weight: bold; margin-bottom: 4px; color: #333; font-size: 13px; }
             input, select, textarea {
                 width: 100%;
                 padding: 10px;
@@ -239,8 +206,9 @@ if st.session_state.vista_actual == 'reportar':
                 border-color: #667eea;
                 outline: none;
             }
+            textarea { resize: vertical; min-height: 80px; }
             .row { display: flex; gap: 8px; flex-wrap: wrap; }
-            .row > div { flex: 1; min-width: 120px; }
+            .row > div { flex: 1; min-width: 45%; }
             .btn-gps {
                 width: 100%;
                 padding: 14px;
@@ -251,13 +219,13 @@ if st.session_state.vista_actual == 'reportar':
                 cursor: pointer;
                 font-weight: bold;
                 font-size: 15px;
-                margin: 12px 0;
+                margin: 10px 0;
             }
             .btn-gps:active { opacity: 0.9; }
             .btn-gps:disabled { opacity: 0.6; }
             .btn-submit {
                 width: 100%;
-                padding: 16px;
+                padding: 18px;
                 background: linear-gradient(135deg, #667eea, #764ba2);
                 color: white;
                 border: none;
@@ -266,6 +234,10 @@ if st.session_state.vista_actual == 'reportar':
                 font-weight: bold;
                 font-size: 16px;
                 margin-top: 15px;
+                margin-bottom: 20px;
+                position: sticky;
+                bottom: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             }
             .btn-submit:active { opacity: 0.9; }
             .btn-submit:disabled { opacity: 0.6; }
@@ -281,7 +253,7 @@ if st.session_state.vista_actual == 'reportar':
             .status.error { background: #f8d7da; color: #721c24; display: block; }
             .status.info { background: #d1ecf1; color: #0c5460; display: block; }
             .section-title {
-                font-size: 16px;
+                font-size: 15px;
                 font-weight: bold;
                 margin: 15px 0 10px 0;
                 padding-bottom: 6px;
@@ -292,8 +264,8 @@ if st.session_state.vista_actual == 'reportar':
                 background: #e8f5e9;
                 border: 2px solid #4CAF50;
                 border-radius: 10px;
-                padding: 15px;
-                margin: 12px 0;
+                padding: 12px;
+                margin: 10px 0;
             }
             #coords-display {
                 background: white;
@@ -321,13 +293,13 @@ if st.session_state.vista_actual == 'reportar':
             #preview-container img { max-width: 100%; max-height: 200px; border-radius: 8px; }
             
             @media (max-width: 400px) {
-                body { padding: 10px; font-size: 13px; }
+                body { padding: 8px; font-size: 13px; }
                 .row { flex-direction: column; gap: 0; }
                 .row > div { min-width: 100%; }
                 input, select, textarea { font-size: 13px; padding: 9px; }
                 .btn-gps { font-size: 14px; padding: 13px; }
-                .btn-submit { font-size: 15px; padding: 15px; }
-                .section-title { font-size: 15px; }
+                .btn-submit { font-size: 15px; padding: 16px; }
+                .section-title { font-size: 14px; }
             }
         </style>
     </head>
@@ -361,7 +333,7 @@ if st.session_state.vista_actual == 'reportar':
             </div>
             
             <div class="gps-box">
-                <div class="section-title" style="border:none; margin:0 0 12px 0;">📍 Ubicación GPS</div>
+                <div class="section-title" style="border:none; margin:0 0 10px 0; font-size:14px;">📍 Ubicación GPS</div>
                 <button type="button" class="btn-gps" id="btnGPS" onclick="getGPS()">
                     📍 Obtener ubicación
                 </button>
@@ -445,7 +417,7 @@ if st.session_state.vista_actual == 'reportar':
             
             <div class="form-group">
                 <label>📝 Descripción</label>
-                <textarea id="descripcion" rows="3" placeholder="Señas particulares..."></textarea>
+                <textarea id="descripcion" rows="4" placeholder="Señas particulares..."></textarea>
             </div>
             
             <div id="submitStatus" class="status"></div>
@@ -522,12 +494,23 @@ if st.session_state.vista_actual == 'reportar':
                 const lon = document.getElementById('lon').value;
                 const fotoFile = document.getElementById('foto').files[0];
                 
-                if (!lat || !lon) { status.className = 'status error'; status.textContent = '❌ Primero obtén la ubicación GPS'; return; }
-                if (!fotoFile) { status.className = 'status error'; status.textContent = '❌ Debes subir una foto'; return; }
+                if (!lat || !lon) { 
+                    status.className = 'status error'; 
+                    status.textContent = '❌ Primero obtén la ubicación GPS'; 
+                    status.scrollIntoView({behavior: 'smooth'});
+                    return; 
+                }
+                if (!fotoFile) { 
+                    status.className = 'status error'; 
+                    status.textContent = '❌ Debes subir una foto'; 
+                    status.scrollIntoView({behavior: 'smooth'});
+                    return; 
+                }
                 
                 btn.disabled = true;
                 status.className = 'status info';
                 status.textContent = '⏳ Guardando...';
+                status.scrollIntoView({behavior: 'smooth'});
                 
                 const nombre = document.getElementById('nombre').value;
                 const email = document.getElementById('email').value;
@@ -583,6 +566,7 @@ if st.session_state.vista_actual == 'reportar':
                     if (response.ok) {
                         status.className = 'status success';
                         status.textContent = '✅ ¡Publicado!';
+                        status.scrollIntoView({behavior: 'smooth'});
                         document.getElementById('mascotaForm').reset();
                         document.getElementById('lat').value = '';
                         document.getElementById('lon').value = '';
@@ -595,10 +579,12 @@ if st.session_state.vista_actual == 'reportar':
                         const error = await response.json();
                         status.className = 'status error';
                         status.textContent = '❌ Error: ' + (error.message || 'Desconocido');
+                        status.scrollIntoView({behavior: 'smooth'});
                     }
                 } catch (error) {
                     status.className = 'status error';
                     status.textContent = '❌ Error: ' + error.message;
+                    status.scrollIntoView({behavior: 'smooth'});
                 }
                 btn.disabled = false;
             });
@@ -607,7 +593,8 @@ if st.session_state.vista_actual == 'reportar':
     </html>
     """
     
-    st.components.v1.html(form_html, height=1600)
+    # Altura aumentada para que quepa todo el formulario en móvil
+    st.components.v1.html(form_html, height=2000)
 
 # ════════════════════════════════════════════════════════════
 # VISTA: VER REPORTES
@@ -619,7 +606,6 @@ elif st.session_state.vista_actual == 'ver':
     if datos:
         df = pd.DataFrame(datos)
         
-        # Filtros en una sola columna para móvil
         st.markdown("### Filtros")
         col1, col2 = st.columns(2, gap="small")
         with col1:
@@ -652,7 +638,6 @@ elif st.session_state.vista_actual == 'ver':
         if not df_f.empty:
             st.markdown(f"**{len(df_f)} reporte(s) encontrado(s)**")
             
-            # Mapa responsive
             import folium
             from streamlit_folium import st_folium
             
@@ -695,7 +680,6 @@ elif st.session_state.vista_actual == 'ver':
             
             st.markdown("---")
             
-            # Tarjetas de reportes
             for est, emoji, clase in [("Perdida", "🔴", "reporte-perdida"), ("Encontrada", "🟢", "reporte-encontrada")]:
                 subset = df_f[df_f['estado'].str.contains(est, na=False)]
                 if not subset.empty:
