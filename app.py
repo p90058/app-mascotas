@@ -129,24 +129,35 @@ if 'show_admin' not in st.session_state:
 if 'vista_actual' not in st.session_state:
     st.session_state.vista_actual = 'reportar'
 
-# LOGIN ADMIN
+# ═══════════════════════════════════════════════════════════
+# LOGIN ADMIN - CORREGIDO
+# ═══════════════════════════════════════════════════════════
 if st.session_state.show_admin and not st.session_state.is_admin:
-    st.markdown('<div class="header"><h1>🔐 Admin</h1></div>', unsafe_allow_html=True)
-    codigo = st.text_input("Código")
-    password = st.text_input("Contraseña", type="password")
+    st.markdown('<div class="header"><h1>🔐 Acceso Administrador</h1></div>', unsafe_allow_html=True)
     
-    if st.button("Ingresar", use_container_width=True):
-        if codigo == "ADMIN2024" and password == "admin123":
-            st.session_state.is_admin = True
+    st.markdown("### Ingresa tus credenciales")
+    codigo = st.text_input("Código de administrador", placeholder="ADMIN2024")
+    password = st.text_input("Contraseña", type="password", placeholder="admin123")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔓 Ingresar", use_container_width=True, type="primary"):
+            if codigo == "ADMIN2024" and password == "admin123":
+                st.session_state.is_admin = True
+                st.session_state.show_admin = False
+                st.session_state.vista_actual = 'admin'  # ← CORRECCIÓN: Cambiar a vista admin
+                st.success("✅ Bienvenido Administrador!")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("❌ Código o contraseña incorrectos")
+    
+    with col2:
+        if st.button("⬅️ Volver", use_container_width=True):
             st.session_state.show_admin = False
             st.rerun()
-        else:
-            st.error("❌ Incorrecto")
     
-    if st.button("⬅️ Volver", use_container_width=True):
-        st.session_state.show_admin = False
-        st.rerun()
-    st.stop()
+    st.stop()  # ← Detener ejecución aquí
 
 # ═══════════════════════════════════════════════════════════
 # TÍTULO Y BOTONES DE NAVEGACIÓN
@@ -165,11 +176,24 @@ with col_nav2:
 
 st.markdown("---")
 
+# ═══════════════════════════════════════════════════════════
+# SIDEBAR - CORREGIDO CON BOTÓN PARA IR A ADMIN
+# ═══════════════════════════════════════════════════════════
 with st.sidebar:
     if st.session_state.is_admin:
         st.markdown("### 👑 Administrador")
-        if st.button("🚪 Salir", use_container_width=True):
+        st.success("✅ Sesión activa")
+        
+        # Botón para ir al panel de admin
+        if st.button("⚙️ Panel de Administración", use_container_width=True, type="primary"):
+            st.session_state.vista_actual = 'admin'
+            st.rerun()
+        
+        st.markdown("---")
+        
+        if st.button("🚪 Cerrar Sesión", use_container_width=True):
             st.session_state.is_admin = False
+            st.session_state.vista_actual = 'reportar'
             st.rerun()
     else:
         if st.button("🔐 Acceso Admin", key="bfa", use_container_width=True):
@@ -177,12 +201,11 @@ with st.sidebar:
             st.rerun()
 
 # ════════════════════════════════════════════════════════════
-# VISTA: REPORTAR - FORMULARIO COMPLETO Y SCROLLEABLE
+# VISTA: REPORTAR
 # ═════════════════════════════════════════════════════════════
 if st.session_state.vista_actual == 'reportar':
     st.subheader("📝 Registrar Mascota")
     
-    # Altura aumentada para que quepa todo en móvil
     form_html = """
     <!DOCTYPE html>
     <html>
@@ -362,7 +385,7 @@ if st.session_state.vista_actual == 'reportar':
                         <option>🐕 Perro</option>
                         <option>🐈 Gato</option>
                         <option>🐰 Conejo</option>
-                        <option>🐦 Ave</option>
+                        <option> Ave</option>
                         <option>Otro</option>
                     </select>
                 </div>
@@ -496,7 +519,7 @@ if st.session_state.vista_actual == 'reportar':
                 
                 if (!lat || !lon) { 
                     status.className = 'status error'; 
-                    status.textContent = '❌ Primero obtén la ubicación GPS'; 
+                    status.textContent = ' Primero obtén la ubicación GPS'; 
                     status.scrollIntoView({behavior: 'smooth'});
                     return; 
                 }
@@ -593,7 +616,6 @@ if st.session_state.vista_actual == 'reportar':
     </html>
     """
     
-    # Altura aumentada para que quepa todo el formulario en móvil
     st.components.v1.html(form_html, height=2000)
 
 # ════════════════════════════════════════════════════════════
@@ -611,7 +633,7 @@ elif st.session_state.vista_actual == 'ver':
         with col1:
             f_estado = st.selectbox("🔴 Estado", ["Todos", "Perdida", "Encontrada"], key="fe")
         with col2:
-            f_especie = st.selectbox("🐾 Especie", ["Todas", "🐕 Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
+            f_especie = st.selectbox(" Especie", ["Todas", " Perro", "🐈 Gato", "🐰 Conejo", "🐦 Ave", "Otro"], key="fs")
         
         col3, col4 = st.columns(2, gap="small")
         with col3:
@@ -699,7 +721,7 @@ elif st.session_state.vista_actual == 'ver':
                             st.markdown(f"""
                             <div style="background:{'#FFF5F5' if est=='Perdida' else '#F1F8E9'}; padding:15px; border-radius:10px; border-left:5px solid {badge_color}; font-size: 13px;">
                                 <span style="background:{badge_color}; color:white; padding:4px 12px; border-radius:15px; font-weight:bold; font-size:12px;">{emoji} {row['estado']}</span>
-                                <h3 style="margin:10px 0 8px 0; font-size: 16px;">🐾 {row['nombre']}</h3>
+                                <h3 style="margin:10px 0 8px 0; font-size: 16px;"> {row['nombre']}</h3>
                                 <p style="margin: 4px 0;"><b>Especie:</b> {row.get('especie', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Raza:</b> {row.get('raza', 'N/A')}</p>
                                 <p style="margin: 4px 0;"><b>Color:</b> {row.get('color', 'N/A')}</p>
@@ -714,24 +736,25 @@ elif st.session_state.vista_actual == 'ver':
         st.info("🐾 Sin reportes")
 
 # ════════════════════════════════════════════════════════════
-# VISTA: ADMIN
+# VISTA: ADMIN - CORREGIDA
 # ════════════════════════════════════════════════════════════
-if st.session_state.is_admin and st.session_state.vista_actual != 'admin':
-    if st.button("⚙️ Panel de Administración", use_container_width=True):
-        st.session_state.vista_actual = 'admin'
-        st.rerun()
-
-if st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
-    st.subheader("⚙️ Admin")
-    if st.button("⬅️ Volver", key="btn_volver_admin", use_container_width=True):
+elif st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
+    st.subheader("⚙️ Panel de Administración")
+    
+    if st.button("️ Volver al inicio", key="btn_volver_admin", use_container_width=True):
         st.session_state.vista_actual = 'reportar'
         st.rerun()
     
-    at1, at2 = st.tabs(["Reportes", "Usuarios"])
+    at1, at2 = st.tabs(["🗑️ Gestionar Reportes", "👥 Gestionar Usuarios"])
     
     with at1:
+        st.markdown("### Eliminar Reportes")
         reports = supabase.table("reportes").select("*").order("fecha", desc=True).execute().data
+        
         if reports:
+            st.markdown(f"**Total de reportes:** {len(reports)}")
+            st.markdown("---")
+            
             for row in reports:
                 c1, c2, c3 = st.columns([2, 3, 1], gap="small")
                 with c1:
@@ -739,25 +762,48 @@ if st.session_state.vista_actual == 'admin' and st.session_state.is_admin:
                         st.image(row['foto_url'], width=80)
                 with c2:
                     st.markdown(f"**{row['nombre']}** - {row['estado']}")
+                    st.markdown(f"*{row.get('especie', 'N/A')}* | {row['fecha']}")
                 with c3:
                     if st.button("🗑️", key=f"d{row['id']}"):
                         supabase.table("reportes").delete().eq("id", row['id']).execute()
+                        st.success("✅ Eliminado")
+                        time.sleep(1)
                         st.rerun()
+                st.markdown("---")
+        else:
+            st.info("No hay reportes para gestionar")
     
     with at2:
+        st.markdown("### Agregar Nuevo Usuario")
         c1, c2, c3 = st.columns(3, gap="small")
         with c1: ne = st.text_input("Email", key="ne")
         with c2: nn = st.text_input("Nombre", key="nn")
         with c3: nt = st.text_input("Tel", key="nt")
         
-        if st.button("Agregar", key="ba", use_container_width=True):
+        if st.button("Agregar Usuario", key="ba", use_container_width=True, type="primary"):
             if ne and nn:
-                supabase.table("usuarios").insert({
-                    "email": ne, "nombre": nn, "telefono": nt,
-                    "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"), "activo": True
-                }).execute()
-                st.success("✅ Agregado")
-                st.rerun()
+                try:
+                    supabase.table("usuarios").insert({
+                        "email": ne, "nombre": nn, "telefono": nt,
+                        "fecha_registro": datetime.now().strftime("%Y-%m-%d %H:%M"), "activo": True
+                    }).execute()
+                    st.success("✅ Usuario agregado correctamente")
+                    time.sleep(1)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+            else:
+                st.error("❌ Email y Nombre son obligatorios")
+        
+        st.markdown("---")
+        st.markdown("### Usuarios Registrados")
+        usuarios = supabase.table("usuarios").select("*").order("fecha_registro", desc=True).execute().data
+        
+        if usuarios:
+            for user in usuarios:
+                st.markdown(f"**{user['nombre']}** - {user['email']} (Tel: {user.get('telefono', 'N/A')})")
+        else:
+            st.info("No hay usuarios registrados")
 
 # FOOTER
 st.markdown("---")
